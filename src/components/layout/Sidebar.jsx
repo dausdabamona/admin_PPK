@@ -25,7 +25,8 @@ import {
   CalendarDays,
   ClipboardList,
   Star,
-  FolderArchive
+  FolderArchive,
+  Shield
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -80,6 +81,11 @@ const menuItems = [
       { name: 'Checklist SPJ', path: '/pjlp/checklist', icon: ListChecks },
       { name: 'Arsip Dokumen', path: '/pjlp/arsip', icon: FolderArchive }
     ]
+  },
+  {
+    name: 'Audit Control',
+    path: '/audit',
+    icon: Shield
   },
   {
     name: 'Pengaturan',

@@ -30,6 +30,9 @@ import PjlpPenilaian from './pages/pjlp/PjlpPenilaian'
 import PjlpChecklist from './pages/pjlp/PjlpChecklist'
 import PjlpArsip from './pages/pjlp/PjlpArsip'
 
+// Audit
+import AuditDashboard from './pages/audit/AuditDashboard'
+
 function App() {
   return (
     <Routes>
@@ -67,6 +70,9 @@ function App() {
       <Route path="/pjlp/penilaian" element={<PjlpPenilaian />} />
       <Route path="/pjlp/checklist" element={<PjlpChecklist />} />
       <Route path="/pjlp/arsip" element={<PjlpArsip />} />
+
+      {/* Audit */}
+      <Route path="/audit" element={<AuditDashboard />} />
 
       {/* Settings */}
       <Route path="/settings" element={<Settings />} />
