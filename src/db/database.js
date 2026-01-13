@@ -740,7 +740,6 @@ export const CHECKLIST_DALAM_KOTA = [
   { id: 'rincian_biaya', nama: 'Rincian Biaya Perjalanan Dinas', wajib: true },
   { id: 'pengeluaran_riil', nama: 'Daftar Pengeluaran Riil', wajib: true },
   { id: 'kwitansi_rampung', nama: 'Kwitansi Rampung', wajib: true },
-  { id: 'ssp_pph', nama: 'SSP PPh (jika ada)', wajib: false },
   { id: 'laporan_perjadin', nama: 'Laporan Perjalanan Dinas', wajib: true }
 ]
 
@@ -751,7 +750,6 @@ export const CHECKLIST_LUAR_KOTA = [
   { id: 'pengeluaran_riil', nama: 'Daftar Pengeluaran Riil', wajib: true },
   { id: 'boarding_pass', nama: 'Boarding Pass / Tiket', wajib: true },
   { id: 'kwitansi_rampung', nama: 'Kwitansi Rampung', wajib: true },
-  { id: 'ssp_pph', nama: 'SSP PPh', wajib: false },
   { id: 'laporan_perjadin', nama: 'Laporan Perjalanan Dinas', wajib: true }
 ]
 
