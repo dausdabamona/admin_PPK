@@ -19,7 +19,13 @@ import {
   Banknote,
   Receipt,
   Calculator,
-  ListChecks
+  ListChecks,
+  UserCheck,
+  FileSignature,
+  CalendarDays,
+  ClipboardList,
+  Star,
+  FolderArchive
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -59,6 +65,20 @@ const menuItems = [
       { name: 'Realisasi', path: '/swakelola/realisasi', icon: Receipt },
       { name: 'Rampung', path: '/swakelola/rampung', icon: Calculator },
       { name: 'Checklist SPJ', path: '/swakelola/checklist', icon: ListChecks }
+    ]
+  },
+  {
+    name: 'PJLP',
+    icon: UserCheck,
+    submenu: [
+      { name: 'Data PJLP', path: '/pjlp/master', icon: Users },
+      { name: 'Perencanaan', path: '/pjlp/perencanaan', icon: ClipboardList },
+      { name: 'Kontrak', path: '/pjlp/kontrak', icon: FileSignature },
+      { name: 'Presensi', path: '/pjlp/presensi', icon: CalendarDays },
+      { name: 'Pembayaran', path: '/pjlp/pembayaran', icon: Wallet },
+      { name: 'Penilaian Triwulan', path: '/pjlp/penilaian', icon: Star },
+      { name: 'Checklist SPJ', path: '/pjlp/checklist', icon: ListChecks },
+      { name: 'Arsip Dokumen', path: '/pjlp/arsip', icon: FolderArchive }
     ]
   },
   {
@@ -130,7 +150,8 @@ export default function Sidebar() {
   const [openMenus, setOpenMenus] = useState({
     'Master Data': true,
     'Perjalanan Dinas': true,
-    'Swakelola': true
+    'Swakelola': true,
+    'PJLP': true
   })
 
   const toggleMenu = (menuName) => {
@@ -175,7 +196,7 @@ export default function Sidebar() {
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
           <span>Offline Ready</span>
         </div>
-        <p className="text-xs text-gray-400 mt-1">v2.0.0</p>
+        <p className="text-xs text-gray-400 mt-1">v3.0.0</p>
       </div>
     </aside>
   )

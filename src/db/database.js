@@ -3,8 +3,8 @@ import Dexie from 'dexie'
 // Create database instance
 export const db = new Dexie('SIPBJ_SPJ_Database')
 
-// Database schema version 2 - Added Swakelola tables
-db.version(2).stores({
+// Database schema version 3 - Added PJLP tables
+db.version(3).stores({
   // ==================== EXISTING TABLES ====================
   // Master Data: Pegawai
   pegawai: '++id, nip, nama, jabatan, golongan, pangkat, rekening, bank, unitKerja, createdAt',
@@ -65,7 +65,44 @@ db.version(2).stores({
   swakelolaRampung: '++id, kegiatanId, uangMukaId, realisasiId, tanggal, totalUangMuka, totalRealisasi, selisih, statusSelisih, nomorKwitansi, keterangan, createdAt',
 
   // Checklist SPJ Swakelola
-  swakelolaChecklist: '++id, kegiatanId, rampungId, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt'
+  swakelolaChecklist: '++id, kegiatanId, rampungId, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt',
+
+  // ==================== PJLP TABLES ====================
+  // Master Data PJLP
+  pjlpMaster: '++id, nik, npwp, nama, posisi, unitKerja, rekening, bank, bpjsKesehatan, bpjsKetenagakerjaan, honorBulanan, masaKontrakMulai, masaKontrakSelesai, statusAktif, createdAt',
+
+  // Perencanaan PJLP
+  pjlpPerencanaan: '++id, tahun, nomorDokumen, tanggal, analisisKebutuhan, analisisBebanKerja, torKak, posisiDibutuhkan, jumlahOrang, honorBulanan, durasiKontrak, totalNilai, biayaBpjsKesehatan, biayaBpjsKetenagakerjaan, biayaThr, estimasiPph, totalHps, keterangan, status, createdAt',
+
+  // Kontrak PJLP
+  pjlpKontrak: '++id, pjlpId, nomorKontrak, tanggalKontrak, periodeAwal, periodeAkhir, honorBulanan, nilaiKontrak, posisi, lokasiKerja, lingkupPekerjaan, outputPekerjaan, status, createdAt',
+
+  // SPK (Surat Perintah Kerja)
+  pjlpSpk: '++id, kontrakId, pjlpId, nomorSpk, tanggalSpk, periodeAwal, periodeAkhir, nilaiKontrak, keterangan, createdAt',
+
+  // SPMK (Surat Perintah Mulai Kerja)
+  pjlpSpmk: '++id, kontrakId, pjlpId, spkId, nomorSpmk, tanggalSpmk, tanggalMulaiKerja, keterangan, createdAt',
+
+  // Presensi Bulanan
+  pjlpPresensi: '++id, pjlpId, kontrakId, bulan, tahun, hariKerja, hadir, izin, sakit, alpa, terlambat, keterangan, createdAt',
+
+  // Laporan Bulanan
+  pjlpLaporanBulanan: '++id, pjlpId, kontrakId, bulan, tahun, uraianPekerjaan, outputDicapai, kendala, solusi, tanggalLaporan, status, createdAt',
+
+  // Pembayaran Bulanan
+  pjlpPembayaran: '++id, pjlpId, kontrakId, bulan, tahun, honorBruto, potonganPph, tarifPph, potonganBpjsKesehatan, potonganBpjsKetenagakerjaan, potonganLain, totalPotongan, honorNetto, rekening, bank, tanggalBayar, status, keterangan, createdAt',
+
+  // Kwitansi PJLP
+  pjlpKwitansi: '++id, pembayaranId, pjlpId, nomorKwitansi, tanggal, jumlah, terbilang, keterangan, createdAt',
+
+  // Penilaian Kinerja Triwulan
+  pjlpPenilaian: '++id, pjlpId, kontrakId, tahun, triwulan, nilaiKualitas, bobotKualitas, nilaiWaktu, bobotWaktu, nilaiBiaya, bobotBiaya, nilaiLayanan, bobotLayanan, nilaiAkhir, kategori, catatanPenilai, namaPenilai, tanggalPenilaian, createdAt',
+
+  // Checklist SPJ PJLP
+  pjlpChecklist: '++id, pjlpId, kontrakId, bulan, tahun, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt',
+
+  // Arsip Digital PJLP
+  pjlpArsip: '++id, pjlpId, tahun, jenisDokumen, bulan, triwulan, namaDokumen, namaFile, ukuranFile, pathArsip, keterangan, createdAt'
 })
 
 // Checklist templates for SPPD
@@ -135,6 +172,156 @@ export const STATUS_SWAKELOLA = {
   AKTIF: 'aktif',
   PROSES: 'proses',
   SELESAI: 'selesai'
+}
+
+// ==================== PJLP CONSTANTS ====================
+
+// Checklist SPJ PJLP (Kepmen KP No.56 Tahun 2024)
+export const CHECKLIST_PJLP = [
+  { id: 'kontrak_spk', nama: 'Surat Perintah Kerja (SPK)', wajib: true },
+  { id: 'spmk', nama: 'Surat Perintah Mulai Kerja (SPMK)', wajib: true },
+  { id: 'presensi', nama: 'Daftar Hadir/Presensi Bulanan', wajib: true },
+  { id: 'laporan_bulanan', nama: 'Laporan Pekerjaan Bulanan', wajib: true },
+  { id: 'bap', nama: 'Berita Acara Pemeriksaan', wajib: true },
+  { id: 'penilaian_triwulan', nama: 'Form Penilaian Kinerja Triwulan', wajib: false },
+  { id: 'kwitansi', nama: 'Kwitansi Pembayaran', wajib: true },
+  { id: 'ssp_pph', nama: 'SSP PPh 21', wajib: true },
+  { id: 'bukti_bpjs', nama: 'Bukti Pembayaran BPJS', wajib: false },
+  { id: 'bast', nama: 'Berita Acara Serah Terima', wajib: false }
+]
+
+// Posisi/Jabatan PJLP
+export const POSISI_PJLP = [
+  { id: 'tenaga_keamanan', nama: 'Tenaga Keamanan' },
+  { id: 'tenaga_kebersihan', nama: 'Tenaga Kebersihan' },
+  { id: 'pengemudi', nama: 'Pengemudi' },
+  { id: 'resepsionis', nama: 'Resepsionis' },
+  { id: 'petugas_arsip', nama: 'Petugas Arsip' },
+  { id: 'operator_komputer', nama: 'Operator Komputer' },
+  { id: 'teknisi', nama: 'Teknisi' },
+  { id: 'pramusaji', nama: 'Pramusaji' },
+  { id: 'juru_taman', nama: 'Juru Taman' },
+  { id: 'lainnya', nama: 'Lainnya' }
+]
+
+// Status PJLP
+export const STATUS_PJLP = {
+  AKTIF: 'aktif',
+  NON_AKTIF: 'non_aktif',
+  SELESAI_KONTRAK: 'selesai_kontrak'
+}
+
+// Status Kontrak PJLP
+export const STATUS_KONTRAK_PJLP = {
+  DRAFT: 'draft',
+  AKTIF: 'aktif',
+  SELESAI: 'selesai',
+  BATAL: 'batal'
+}
+
+// Status Pembayaran PJLP
+export const STATUS_PEMBAYARAN_PJLP = {
+  DRAFT: 'draft',
+  SIAP_BAYAR: 'siap_bayar',
+  DIBAYAR: 'dibayar',
+  BATAL: 'batal'
+}
+
+// Bobot Penilaian Kinerja PJLP (sesuai pedoman KKP/LKPP)
+export const BOBOT_PENILAIAN_PJLP = {
+  kualitas: 40,
+  waktu: 20,
+  biaya: 20,
+  layanan: 20
+}
+
+// Kategori Penilaian Kinerja
+export const KATEGORI_PENILAIAN_PJLP = [
+  { min: 0, max: 50, kategori: 'Kurang', kode: 'K' },
+  { min: 50.01, max: 70, kategori: 'Cukup', kode: 'C' },
+  { min: 70.01, max: 85, kategori: 'Baik', kode: 'B' },
+  { min: 85.01, max: 100, kategori: 'Sangat Baik', kode: 'SB' }
+]
+
+// Tarif PPh 21 Non NPWP (lebih tinggi 20%)
+export const TARIF_PPH_PJLP = {
+  withNpwp: 0.025, // 2.5% untuk yang punya NPWP
+  withoutNpwp: 0.03 // 3% untuk yang tidak punya NPWP (lebih tinggi 20%)
+}
+
+// Tarif BPJS
+export const TARIF_BPJS = {
+  kesehatan: 0.01, // 1% dari gaji (ditanggung pekerja)
+  ketenagakerjaan: 0.02 // 2% dari gaji (ditanggung pekerja)
+}
+
+// Jenis Dokumen Arsip PJLP
+export const JENIS_DOKUMEN_PJLP = [
+  { id: 'kontrak', nama: 'Kontrak/SPK' },
+  { id: 'spmk', nama: 'SPMK' },
+  { id: 'presensi', nama: 'Daftar Hadir' },
+  { id: 'laporan', nama: 'Laporan Bulanan' },
+  { id: 'kwitansi', nama: 'Kwitansi' },
+  { id: 'penilaian', nama: 'Penilaian Triwulan' },
+  { id: 'ssp', nama: 'SSP PPh' },
+  { id: 'bast', nama: 'BAST' },
+  { id: 'lainnya', nama: 'Dokumen Lainnya' }
+]
+
+// Bulan Indonesia
+export const BULAN_INDONESIA = [
+  { value: 1, label: 'Januari' },
+  { value: 2, label: 'Februari' },
+  { value: 3, label: 'Maret' },
+  { value: 4, label: 'April' },
+  { value: 5, label: 'Mei' },
+  { value: 6, label: 'Juni' },
+  { value: 7, label: 'Juli' },
+  { value: 8, label: 'Agustus' },
+  { value: 9, label: 'September' },
+  { value: 10, label: 'Oktober' },
+  { value: 11, label: 'November' },
+  { value: 12, label: 'Desember' }
+]
+
+// Triwulan
+export const TRIWULAN = [
+  { value: 1, label: 'Triwulan I (Jan-Mar)', bulan: [1, 2, 3] },
+  { value: 2, label: 'Triwulan II (Apr-Jun)', bulan: [4, 5, 6] },
+  { value: 3, label: 'Triwulan III (Jul-Sep)', bulan: [7, 8, 9] },
+  { value: 4, label: 'Triwulan IV (Okt-Des)', bulan: [10, 11, 12] }
+]
+
+// Helper: Get kategori penilaian from nilai
+export function getKategoriPenilaian(nilai) {
+  const kategori = KATEGORI_PENILAIAN_PJLP.find(k => nilai >= k.min && nilai <= k.max)
+  return kategori ? kategori.kategori : 'N/A'
+}
+
+// Helper: Calculate PPh PJLP
+export function calculatePphPjlp(honorBruto, hasNpwp = false) {
+  const tarif = hasNpwp ? TARIF_PPH_PJLP.withNpwp : TARIF_PPH_PJLP.withoutNpwp
+  return Math.round(honorBruto * tarif)
+}
+
+// Helper: Calculate BPJS
+export function calculateBpjs(honorBruto) {
+  return {
+    kesehatan: Math.round(honorBruto * TARIF_BPJS.kesehatan),
+    ketenagakerjaan: Math.round(honorBruto * TARIF_BPJS.ketenagakerjaan)
+  }
+}
+
+// Helper: Generate path arsip PJLP
+export function generatePathArsipPjlp(tahun, namaPjlp) {
+  const namaClean = namaPjlp.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()
+  return `ARSIP/${tahun}/PJLP/${namaClean}/`
+}
+
+// Helper: Generate nama file arsip PJLP
+export function generateNamaFileArsipPjlp(tahun, jenis, bulanOrTriwulan, namaPjlp, ext = 'pdf') {
+  const namaClean = namaPjlp.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()
+  return `${tahun}-PJLP-${jenis.toUpperCase()}-${bulanOrTriwulan}-${namaClean}.${ext}`
 }
 
 // Initialize default settings

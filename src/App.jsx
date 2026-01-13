@@ -20,6 +20,16 @@ import SwakelolaRealisasi from './pages/swakelola/SwakelolaRealisasi'
 import SwakelolaRampung from './pages/swakelola/SwakelolaRampung'
 import SwakelolaChecklist from './pages/swakelola/SwakelolaChecklist'
 
+// PJLP Pages
+import PjlpMaster from './pages/pjlp/PjlpMaster'
+import PjlpPerencanaan from './pages/pjlp/PjlpPerencanaan'
+import PjlpKontrak from './pages/pjlp/PjlpKontrak'
+import PjlpPresensi from './pages/pjlp/PjlpPresensi'
+import PjlpPembayaran from './pages/pjlp/PjlpPembayaran'
+import PjlpPenilaian from './pages/pjlp/PjlpPenilaian'
+import PjlpChecklist from './pages/pjlp/PjlpChecklist'
+import PjlpArsip from './pages/pjlp/PjlpArsip'
+
 function App() {
   return (
     <Routes>
@@ -47,6 +57,16 @@ function App() {
       <Route path="/swakelola/realisasi" element={<SwakelolaRealisasi />} />
       <Route path="/swakelola/rampung" element={<SwakelolaRampung />} />
       <Route path="/swakelola/checklist" element={<SwakelolaChecklist />} />
+
+      {/* PJLP */}
+      <Route path="/pjlp/master" element={<PjlpMaster />} />
+      <Route path="/pjlp/perencanaan" element={<PjlpPerencanaan />} />
+      <Route path="/pjlp/kontrak" element={<PjlpKontrak />} />
+      <Route path="/pjlp/presensi" element={<PjlpPresensi />} />
+      <Route path="/pjlp/pembayaran" element={<PjlpPembayaran />} />
+      <Route path="/pjlp/penilaian" element={<PjlpPenilaian />} />
+      <Route path="/pjlp/checklist" element={<PjlpChecklist />} />
+      <Route path="/pjlp/arsip" element={<PjlpArsip />} />
 
       {/* Settings */}
       <Route path="/settings" element={<Settings />} />

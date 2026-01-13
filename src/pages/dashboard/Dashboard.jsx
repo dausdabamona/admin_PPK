@@ -13,7 +13,11 @@ import {
   Clock,
   FolderKanban,
   Banknote,
-  Receipt
+  Receipt,
+  UserCheck,
+  FileSignature,
+  CalendarDays,
+  Star
 } from 'lucide-react'
 import Layout from '../../components/layout/Layout'
 import StatsCard from '../../components/ui/StatsCard'
@@ -111,6 +115,38 @@ export default function Dashboard() {
     }))
   }) || []
 
+  // PJLP stats
+  const pjlpAktifCount = useLiveQuery(() =>
+    db.pjlpMaster.where('statusAktif').equals('Aktif').count()
+  ) || 0
+
+  const pjlpKontrakAktifCount = useLiveQuery(() =>
+    db.pjlpKontrak.where('status').equals('Aktif').count()
+  ) || 0
+
+  // Total PJLP Pembayaran bulan ini
+  const totalPjlpBulanIni = useLiveQuery(async () => {
+    const now = new Date()
+    const bulan = now.getMonth() + 1
+    const tahun = now.getFullYear()
+
+    const pembayaran = await db.pjlpPembayaran
+      .where('[bulan+tahun]')
+      .equals([bulan, tahun])
+      .toArray()
+
+    return pembayaran.reduce((sum, p) => sum + (p.honorNetto || 0), 0)
+  }) || 0
+
+  // PJLP dengan penilaian terbaru
+  const pjlpPenilaianTerbaru = useLiveQuery(async () => {
+    const penilaian = await db.pjlpPenilaian.orderBy('createdAt').reverse().limit(5).toArray()
+    return Promise.all(penilaian.map(async (p) => {
+      const pjlp = await db.pjlpMaster.get(p.pjlpId)
+      return { ...p, pjlp }
+    }))
+  }) || []
+
   if (loading) {
     return (
       <Layout title="Dashboard">
@@ -194,6 +230,38 @@ export default function Dashboard() {
           subtitle="Total SPJ selesai"
           icon={ClipboardCheck}
           color="success"
+        />
+      </div>
+
+      {/* Stats Cards - PJLP */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <StatsCard
+          title="PJLP Aktif"
+          value={pjlpAktifCount}
+          subtitle="Tenaga PJLP aktif"
+          icon={UserCheck}
+          color="primary"
+        />
+        <StatsCard
+          title="Kontrak Aktif"
+          value={pjlpKontrakAktifCount}
+          subtitle="Kontrak berjalan"
+          icon={FileSignature}
+          color="info"
+        />
+        <StatsCard
+          title="Pembayaran Bulan Ini"
+          value={formatRupiah(totalPjlpBulanIni)}
+          subtitle="Total honor PJLP"
+          icon={Wallet}
+          color="success"
+        />
+        <StatsCard
+          title="Penilaian"
+          value={pjlpPenilaianTerbaru?.length || 0}
+          subtitle="Penilaian triwulan"
+          icon={Star}
+          color="warning"
         />
       </div>
 
@@ -307,6 +375,63 @@ export default function Dashboard() {
               <p className="text-xs text-gray-500">Selesaikan SPJ</p>
             </div>
             <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 transition-colors" />
+          </div>
+        </Link>
+      </div>
+
+      {/* Quick Actions - PJLP */}
+      <h3 className="text-sm font-medium text-gray-500 mb-3">PJLP (Penyedia Jasa Lainnya Perseorangan)</h3>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <Link
+          to="/pjlp/master"
+          className="card p-4 hover:shadow-md transition-shadow group"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <UserCheck className="w-8 h-8 text-violet-600 mb-2" />
+              <p className="font-medium text-gray-900">Data PJLP</p>
+              <p className="text-xs text-gray-500">Kelola data PJLP</p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-violet-600 transition-colors" />
+          </div>
+        </Link>
+        <Link
+          to="/pjlp/kontrak"
+          className="card p-4 hover:shadow-md transition-shadow group"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <FileSignature className="w-8 h-8 text-cyan-600 mb-2" />
+              <p className="font-medium text-gray-900">Kontrak</p>
+              <p className="text-xs text-gray-500">SPK & SPMK</p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-cyan-600 transition-colors" />
+          </div>
+        </Link>
+        <Link
+          to="/pjlp/pembayaran"
+          className="card p-4 hover:shadow-md transition-shadow group"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <Wallet className="w-8 h-8 text-rose-600 mb-2" />
+              <p className="font-medium text-gray-900">Pembayaran</p>
+              <p className="text-xs text-gray-500">Honor bulanan</p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-rose-600 transition-colors" />
+          </div>
+        </Link>
+        <Link
+          to="/pjlp/penilaian"
+          className="card p-4 hover:shadow-md transition-shadow group"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <Star className="w-8 h-8 text-orange-600 mb-2" />
+              <p className="font-medium text-gray-900">Penilaian</p>
+              <p className="text-xs text-gray-500">Evaluasi triwulan</p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-orange-600 transition-colors" />
           </div>
         </Link>
       </div>
