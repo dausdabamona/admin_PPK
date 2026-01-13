@@ -8,7 +8,7 @@ import { Card, CardHeader, CardBody, CardTitle, CardDescription } from '../../co
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell, TableEmpty, TablePagination } from '../../components/ui/Table'
 import Button from '../../components/ui/Button'
 import Modal, { ModalFooter } from '../../components/ui/Modal'
-import { Input, Select, CurrencyInput, TextArea } from '../../components/ui/Input'
+import { Input, Select, CurrencyInput, Textarea } from '../../components/ui/Input'
 import Badge from '../../components/ui/Badge'
 import db, { BULAN_INDONESIA, STATUS_PEMBAYARAN_PJLP, TARIF_PPH_PJLP, TARIF_BPJS, calculatePphPjlp, calculateBpjs } from '../../db/database'
 import { formatTanggal, formatDateInput, formatRupiah, terbilangRupiah } from '../../utils/formatters'
@@ -591,7 +591,7 @@ export default function PjlpPembayaran() {
               </div>
             )}
 
-            <TextArea
+            <Textarea
               label="Keterangan"
               name="keterangan"
               value={formData.keterangan}
