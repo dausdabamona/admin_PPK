@@ -33,7 +33,8 @@ import {
   HeartHandshake,
   Truck,
   Award,
-  BarChart3
+  BarChart3,
+  Stamp
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -109,6 +110,7 @@ const menuItems = [
     submenu: [
       { name: 'Master Penerima', path: '/honorarium/master', icon: Users },
       { name: 'Dasar Penugasan', path: '/honorarium/penugasan', icon: FileSignature },
+      { name: 'SK KPA Penetapan', path: '/honorarium/sk-kpa', icon: Stamp },
       { name: 'Daftar Nominatif', path: '/honorarium/nominatif', icon: ClipboardList },
       { name: 'Kwitansi', path: '/honorarium/kwitansi', icon: Receipt },
       { name: 'Rekap Pembayaran', path: '/honorarium/rekap', icon: BarChart3 },

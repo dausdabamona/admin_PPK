@@ -46,6 +46,7 @@ import PengadaanChecklist from './pages/pengadaan/PengadaanChecklist'
 // Honorarium & Jasa Profesi
 import HonorMaster from './pages/honorarium/HonorMaster'
 import HonorAssignment from './pages/honorarium/HonorAssignment'
+import HonorSkKpa from './pages/honorarium/HonorSkKpa'
 import HonorNominatif from './pages/honorarium/HonorNominatif'
 import HonorReceipt from './pages/honorarium/HonorReceipt'
 import HonorRekap from './pages/honorarium/HonorRekap'
@@ -105,6 +106,7 @@ function App() {
       {/* Honorarium & Jasa Profesi */}
       <Route path="/honorarium/master" element={<HonorMaster />} />
       <Route path="/honorarium/penugasan" element={<HonorAssignment />} />
+      <Route path="/honorarium/sk-kpa" element={<HonorSkKpa />} />
       <Route path="/honorarium/nominatif" element={<HonorNominatif />} />
       <Route path="/honorarium/kwitansi" element={<HonorReceipt />} />
       <Route path="/honorarium/rekap" element={<HonorRekap />} />
