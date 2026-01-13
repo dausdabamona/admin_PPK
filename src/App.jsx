@@ -42,6 +42,14 @@ import PengadaanSerahTerima from './pages/pengadaan/PengadaanSerahTerima'
 import PengadaanPembayaran from './pages/pengadaan/PengadaanPembayaran'
 import PengadaanChecklist from './pages/pengadaan/PengadaanChecklist'
 
+// Honorarium & Jasa Profesi
+import HonorMaster from './pages/honorarium/HonorMaster'
+import HonorAssignment from './pages/honorarium/HonorAssignment'
+import HonorNominatif from './pages/honorarium/HonorNominatif'
+import HonorReceipt from './pages/honorarium/HonorReceipt'
+import HonorRekap from './pages/honorarium/HonorRekap'
+import HonorChecklist from './pages/honorarium/HonorChecklist'
+
 function App() {
   return (
     <Routes>
@@ -91,6 +99,14 @@ function App() {
       <Route path="/pengadaan/serah-terima" element={<PengadaanSerahTerima />} />
       <Route path="/pengadaan/pembayaran" element={<PengadaanPembayaran />} />
       <Route path="/pengadaan/checklist" element={<PengadaanChecklist />} />
+
+      {/* Honorarium & Jasa Profesi */}
+      <Route path="/honorarium/master" element={<HonorMaster />} />
+      <Route path="/honorarium/penugasan" element={<HonorAssignment />} />
+      <Route path="/honorarium/nominatif" element={<HonorNominatif />} />
+      <Route path="/honorarium/kwitansi" element={<HonorReceipt />} />
+      <Route path="/honorarium/rekap" element={<HonorRekap />} />
+      <Route path="/honorarium/checklist" element={<HonorChecklist />} />
 
       {/* Settings */}
       <Route path="/settings" element={<Settings />} />

@@ -293,12 +293,12 @@ export default function PengadaanSerahTerima() {
       setEditingPhoId(existingPho.id)
       setPhoData({
         nomorPho: existingPho.nomorPho || '',
-        tanggalPho: formatDateInput(existingPho.tanggalPho),
+        tanggalPho: existingPho.tanggalPho ? formatDateInput(existingPho.tanggalPho) : formatDateInput(new Date()),
         progresAkhir: existingPho.progresAkhir?.toString() || '100',
         catatanPho: existingPho.catatanPho || '',
         masaPemeliharaan: existingPho.masaPemeliharaan?.toString() || '',
-        tanggalMulaiPemeliharaan: formatDateInput(existingPho.tanggalMulaiPemeliharaan),
-        tanggalSelesaiPemeliharaan: formatDateInput(existingPho.tanggalSelesaiPemeliharaan)
+        tanggalMulaiPemeliharaan: existingPho.tanggalMulaiPemeliharaan ? formatDateInput(existingPho.tanggalMulaiPemeliharaan) : '',
+        tanggalSelesaiPemeliharaan: existingPho.tanggalSelesaiPemeliharaan ? formatDateInput(existingPho.tanggalSelesaiPemeliharaan) : ''
       })
     } else {
       setEditingPhoId(null)

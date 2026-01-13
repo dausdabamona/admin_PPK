@@ -206,7 +206,7 @@ export default function PengadaanKontrak() {
 
       const data = {
         paketId: selectedPaket.id,
-        vendorId: parseInt(kontrakData.vendorId),
+        vendorId: parseInt(kontrakData.vendorId, 10) || null,
         nomorKontrak: kontrakData.nomorKontrak,
         tanggalKontrak: new Date(kontrakData.tanggalKontrak),
         nilaiKontrak: nilaiKontrak,

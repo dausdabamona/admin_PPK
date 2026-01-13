@@ -153,22 +153,25 @@ export const CurrencyInput = forwardRef(function CurrencyInput(
     required = false,
     value,
     onChange,
+    name,
     ...props
   },
   ref
 ) {
   const formatCurrency = (val) => {
-    if (!val) return ''
+    if (!val || val === '0' || val === 0) return ''
     const num = val.toString().replace(/[^0-9]/g, '')
+    if (!num || num === '0') return ''
     return new Intl.NumberFormat('id-ID').format(num)
   }
 
   const handleChange = (e) => {
     const rawValue = e.target.value.replace(/[^0-9]/g, '')
+    // Use name from props to ensure it's always available
+    const fieldName = name || e.target.name
     onChange && onChange({
-      ...e,
       target: {
-        ...e.target,
+        name: fieldName,
         value: rawValue
       }
     })
@@ -189,6 +192,7 @@ export const CurrencyInput = forwardRef(function CurrencyInput(
         <input
           ref={ref}
           type="text"
+          name={name}
           value={formatCurrency(value)}
           onChange={handleChange}
           className={`input pl-10 ${error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''} ${className}`}

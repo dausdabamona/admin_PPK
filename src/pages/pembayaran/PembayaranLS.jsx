@@ -21,6 +21,7 @@ const initialFormData = {
   transport: '',
   penginapan: '',
   jumlahMalam: '',
+  uangMuka: '',
   keterangan: ''
 }
 
@@ -85,7 +86,9 @@ export default function PembayaranLS() {
   // Calculate totals
   const totalUangHarian = parseInt(formData.uangHarian || 0) * parseInt(formData.jumlahHari || 0)
   const totalPenginapan = parseInt(formData.penginapan || 0) * parseInt(formData.jumlahMalam || 0)
-  const totalLS = totalUangHarian + parseInt(formData.transport || 0) + totalPenginapan
+  const subtotalBiaya = totalUangHarian + parseInt(formData.transport || 0) + totalPenginapan
+  const uangMuka = parseInt(formData.uangMuka || 0)
+  const totalLS = subtotalBiaya - uangMuka
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -148,6 +151,7 @@ export default function PembayaranLS() {
         transport: pembayaran.transport?.toString() || '',
         penginapan: pembayaran.penginapan?.toString() || '',
         jumlahMalam: pembayaran.jumlahMalam?.toString() || '',
+        uangMuka: pembayaran.uangMuka?.toString() || '',
         keterangan: pembayaran.keterangan || ''
       })
     } else {
@@ -186,6 +190,8 @@ export default function PembayaranLS() {
         penginapan: parseInt(formData.penginapan) || 0,
         jumlahMalam: parseInt(formData.jumlahMalam) || 0,
         totalPenginapan: totalPenginapan,
+        subtotalBiaya: subtotalBiaya,
+        uangMuka: uangMuka,
         totalLS: totalLS,
         keterangan: formData.keterangan,
         updatedAt: new Date()
@@ -402,6 +408,8 @@ export default function PembayaranLS() {
                 name="uangHarian"
                 value={formData.uangHarian}
                 onChange={handleInputChange}
+                placeholder="Masukkan tarif"
+                helper="Dapat diedit manual sesuai SBM tujuan"
               />
               <Input
                 label="Jumlah Hari"
@@ -437,6 +445,8 @@ export default function PembayaranLS() {
                     name="penginapan"
                     value={formData.penginapan}
                     onChange={handleInputChange}
+                    placeholder="Masukkan tarif"
+                    helper="Dapat diedit manual sesuai SBM tujuan"
                   />
                   <Input
                     label="Jumlah Malam"
@@ -455,16 +465,46 @@ export default function PembayaranLS() {
               </>
             )}
 
+            {/* Subtotal Biaya */}
+            <div className="p-3 bg-blue-50 rounded border border-blue-200">
+              <div className="flex justify-between text-sm">
+                <span className="text-blue-900">Subtotal Biaya Perjalanan</span>
+                <strong className="text-blue-700">{formatRupiah(subtotalBiaya)}</strong>
+              </div>
+            </div>
+
+            {/* Uang Muka */}
+            <CurrencyInput
+              label="Uang Muka / Panjar (jika ada)"
+              name="uangMuka"
+              value={formData.uangMuka}
+              onChange={handleInputChange}
+              placeholder="Masukkan jika ada uang muka"
+              helper="Uang muka yang sudah diterima sebelumnya (akan dikurangi dari total)"
+            />
+
             {/* Total */}
             <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Calculator className="w-5 h-5 text-green-600" />
-                  <span className="font-medium text-green-900">Total Pembayaran LS</span>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-green-800">Subtotal Biaya</span>
+                  <span className="text-green-700">{formatRupiah(subtotalBiaya)}</span>
                 </div>
-                <span className="text-xl font-bold text-green-600">
-                  {formatRupiah(totalLS)}
-                </span>
+                {uangMuka > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-orange-800">Dikurangi Uang Muka</span>
+                    <span className="text-orange-600">- {formatRupiah(uangMuka)}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between pt-2 border-t border-green-200">
+                  <div className="flex items-center gap-2">
+                    <Calculator className="w-5 h-5 text-green-600" />
+                    <span className="font-medium text-green-900">Total Pembayaran LS</span>
+                  </div>
+                  <span className="text-xl font-bold text-green-600">
+                    {formatRupiah(totalLS)}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -536,9 +576,19 @@ export default function PembayaranLS() {
                     <span>{formatRupiah(viewingData.totalPenginapan)}</span>
                   </div>
                 )}
+                <div className="flex justify-between font-medium pt-2 border-t">
+                  <span>Subtotal Biaya</span>
+                  <span>{formatRupiah(viewingData.subtotalBiaya || viewingData.totalLS + (viewingData.uangMuka || 0))}</span>
+                </div>
+                {viewingData.uangMuka > 0 && (
+                  <div className="flex justify-between text-orange-600">
+                    <span>Dikurangi Uang Muka</span>
+                    <span>- {formatRupiah(viewingData.uangMuka)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between font-bold pt-2 border-t">
-                  <span>Total</span>
-                  <span>{formatRupiah(viewingData.totalLS)}</span>
+                  <span>Total Pembayaran LS</span>
+                  <span className="text-green-600">{formatRupiah(viewingData.totalLS)}</span>
                 </div>
               </div>
             </div>

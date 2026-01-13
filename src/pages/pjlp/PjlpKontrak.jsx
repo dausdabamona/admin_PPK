@@ -131,9 +131,9 @@ export default function PjlpKontrak() {
       setFormData({
         pjlpId: kontrak.pjlpId?.toString() || '',
         nomorKontrak: kontrak.nomorKontrak || '',
-        tanggalKontrak: formatDateInput(kontrak.tanggalKontrak),
-        periodeAwal: formatDateInput(kontrak.periodeAwal),
-        periodeAkhir: formatDateInput(kontrak.periodeAkhir),
+        tanggalKontrak: kontrak.tanggalKontrak ? formatDateInput(kontrak.tanggalKontrak) : formatDateInput(new Date()),
+        periodeAwal: kontrak.periodeAwal ? formatDateInput(kontrak.periodeAwal) : '',
+        periodeAkhir: kontrak.periodeAkhir ? formatDateInput(kontrak.periodeAkhir) : '',
         honorBulanan: kontrak.honorBulanan?.toString() || '',
         posisi: kontrak.posisi || '',
         lokasiKerja: kontrak.lokasiKerja || '',
@@ -246,7 +246,7 @@ export default function PjlpKontrak() {
     const currentYear = new Date().getFullYear()
     setSpmkData({
       nomorSpmk: `SPMK-PJLP/${String(count + 1).padStart(4, '0')}/${currentYear}`,
-      tanggalMulaiKerja: formatDateInput(kontrak.periodeAwal)
+      tanggalMulaiKerja: kontrak.periodeAwal ? formatDateInput(kontrak.periodeAwal) : formatDateInput(new Date())
     })
     setIsSpmkModalOpen(true)
   }

@@ -1,35 +1,33 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
-  Plus, Pencil, Trash2, Search, Users, Eye, FileText
+  Plus, Pencil, Trash2, Search, Users, Eye, Download
 } from 'lucide-react'
 import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardBody, CardTitle, CardDescription } from '../../components/ui/Card'
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell, TableEmpty, TablePagination } from '../../components/ui/Table'
 import Button from '../../components/ui/Button'
 import Modal, { ModalFooter } from '../../components/ui/Modal'
-import { Input, Select, CurrencyInput, Textarea } from '../../components/ui/Input'
+import { Input, Select } from '../../components/ui/Input'
 import Badge from '../../components/ui/Badge'
-import db, { POSISI_PJLP, STATUS_PJLP } from '../../db/database'
-import { formatTanggal, formatDateInput, formatRupiah } from '../../utils/formatters'
+import db, { GOLONGAN_OPTIONS } from '../../db/database'
+import { formatTanggal } from '../../utils/formatters'
 
 const initialFormData = {
   nik: '',
   npwp: '',
   nama: '',
-  posisi: '',
+  golongan: '',
+  pangkat: '',
+  jabatan: '',
   unitKerja: '',
   rekening: '',
   bank: '',
-  bpjsKesehatan: '',
-  bpjsKetenagakerjaan: '',
-  honorBulanan: '',
-  masaKontrakMulai: '',
-  masaKontrakSelesai: '',
+  statusPns: 'pns',
   statusAktif: 'aktif'
 }
 
-export default function PjlpMaster() {
+export default function HonorMaster() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -39,43 +37,47 @@ export default function PjlpMaster() {
   const [formData, setFormData] = useState(initialFormData)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
-  const [filterPosisi, setFilterPosisi] = useState('')
+  const [filterStatusPns, setFilterStatusPns] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const itemsPerPage = 10
 
   // Fetch data
-  const allPjlp = useLiveQuery(() =>
-    db.pjlpMaster.orderBy('createdAt').reverse().toArray()
+  const allRecipients = useLiveQuery(() =>
+    db.honorRecipient.orderBy('createdAt').reverse().toArray()
   ) || []
 
   // Filter
-  const filteredPjlp = allPjlp.filter(p => {
-    const matchSearch = p.nama?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.nik?.includes(searchQuery) ||
-      p.npwp?.includes(searchQuery)
-    const matchStatus = !filterStatus || p.statusAktif === filterStatus
-    const matchPosisi = !filterPosisi || p.posisi === filterPosisi
-    return matchSearch && matchStatus && matchPosisi
+  const filteredRecipients = allRecipients.filter(r => {
+    const matchSearch = r.nama?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.nik?.includes(searchQuery) ||
+      r.npwp?.includes(searchQuery)
+    const matchStatus = !filterStatus || r.statusAktif === filterStatus
+    const matchPns = !filterStatusPns || r.statusPns === filterStatusPns
+    return matchSearch && matchStatus && matchPns
   })
 
   // Pagination
-  const totalPages = Math.ceil(filteredPjlp.length / itemsPerPage)
-  const paginatedPjlp = filteredPjlp.slice(
+  const totalPages = Math.ceil(filteredRecipients.length / itemsPerPage)
+  const paginatedRecipients = filteredRecipients.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   )
 
   // Options
-  const posisiOptions = POSISI_PJLP.map(p => ({
-    value: p.id,
-    label: p.nama
+  const golonganOptions = GOLONGAN_OPTIONS.map(g => ({
+    value: g.id,
+    label: g.nama
   }))
 
   const statusOptions = [
     { value: 'aktif', label: 'Aktif' },
-    { value: 'non_aktif', label: 'Non Aktif' },
-    { value: 'selesai_kontrak', label: 'Selesai Kontrak' }
+    { value: 'non_aktif', label: 'Non Aktif' }
+  ]
+
+  const statusPnsOptions = [
+    { value: 'pns', label: 'PNS/ASN' },
+    { value: 'non_pns', label: 'Non PNS' }
   ]
 
   const bankOptions = [
@@ -92,23 +94,21 @@ export default function PjlpMaster() {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleOpenModal = (pjlp = null) => {
-    if (pjlp) {
-      setEditingId(pjlp.id)
+  const handleOpenModal = (recipient = null) => {
+    if (recipient) {
+      setEditingId(recipient.id)
       setFormData({
-        nik: pjlp.nik || '',
-        npwp: pjlp.npwp || '',
-        nama: pjlp.nama || '',
-        posisi: pjlp.posisi || '',
-        unitKerja: pjlp.unitKerja || '',
-        rekening: pjlp.rekening || '',
-        bank: pjlp.bank || '',
-        bpjsKesehatan: pjlp.bpjsKesehatan || '',
-        bpjsKetenagakerjaan: pjlp.bpjsKetenagakerjaan || '',
-        honorBulanan: pjlp.honorBulanan?.toString() || '',
-        masaKontrakMulai: pjlp.masaKontrakMulai ? formatDateInput(pjlp.masaKontrakMulai) : '',
-        masaKontrakSelesai: pjlp.masaKontrakSelesai ? formatDateInput(pjlp.masaKontrakSelesai) : '',
-        statusAktif: pjlp.statusAktif || 'aktif'
+        nik: recipient.nik || '',
+        npwp: recipient.npwp || '',
+        nama: recipient.nama || '',
+        golongan: recipient.golongan || '',
+        pangkat: recipient.pangkat || '',
+        jabatan: recipient.jabatan || '',
+        unitKerja: recipient.unitKerja || '',
+        rekening: recipient.rekening || '',
+        bank: recipient.bank || '',
+        statusPns: recipient.statusPns || 'pns',
+        statusAktif: recipient.statusAktif || 'aktif'
       })
     } else {
       setEditingId(null)
@@ -132,24 +132,22 @@ export default function PjlpMaster() {
         nik: formData.nik,
         npwp: formData.npwp,
         nama: formData.nama,
-        posisi: formData.posisi,
+        golongan: formData.golongan,
+        pangkat: formData.pangkat,
+        jabatan: formData.jabatan,
         unitKerja: formData.unitKerja,
         rekening: formData.rekening,
         bank: formData.bank,
-        bpjsKesehatan: formData.bpjsKesehatan,
-        bpjsKetenagakerjaan: formData.bpjsKetenagakerjaan,
-        honorBulanan: parseInt(formData.honorBulanan) || 0,
-        masaKontrakMulai: formData.masaKontrakMulai ? new Date(formData.masaKontrakMulai) : null,
-        masaKontrakSelesai: formData.masaKontrakSelesai ? new Date(formData.masaKontrakSelesai) : null,
+        statusPns: formData.statusPns,
         statusAktif: formData.statusAktif,
         updatedAt: new Date()
       }
 
       if (editingId) {
-        await db.pjlpMaster.update(editingId, data)
+        await db.honorRecipient.update(editingId, data)
       } else {
         data.createdAt = new Date()
-        await db.pjlpMaster.add(data)
+        await db.honorRecipient.add(data)
       }
 
       handleCloseModal()
@@ -163,7 +161,7 @@ export default function PjlpMaster() {
   const handleDelete = async () => {
     setLoading(true)
     try {
-      await db.pjlpMaster.delete(deletingId)
+      await db.honorRecipient.delete(deletingId)
       setIsDeleteModalOpen(false)
       setDeletingId(null)
     } catch (error) {
@@ -173,8 +171,8 @@ export default function PjlpMaster() {
     }
   }
 
-  const handleView = (pjlp) => {
-    setViewingData(pjlp)
+  const handleView = (recipient) => {
+    setViewingData(recipient)
     setIsViewModalOpen(true)
   }
 
@@ -183,48 +181,55 @@ export default function PjlpMaster() {
     setIsDeleteModalOpen(true)
   }
 
-  const getPosisiLabel = (posisiId) => {
-    return POSISI_PJLP.find(p => p.id === posisiId)?.nama || posisiId
-  }
-
   const getStatusBadge = (status) => {
     const variants = {
       aktif: 'success',
-      non_aktif: 'danger',
-      selesai_kontrak: 'default'
+      non_aktif: 'danger'
     }
     const labels = {
       aktif: 'Aktif',
-      non_aktif: 'Non Aktif',
-      selesai_kontrak: 'Selesai Kontrak'
+      non_aktif: 'Non Aktif'
     }
     return <Badge variant={variants[status] || 'default'}>{labels[status] || status}</Badge>
   }
 
+  const getPnsBadge = (status) => {
+    return status === 'pns'
+      ? <Badge variant="primary">PNS/ASN</Badge>
+      : <Badge variant="warning">Non PNS</Badge>
+  }
+
   // Stats
-  const totalAktif = allPjlp.filter(p => p.statusAktif === 'aktif').length
-  const totalNonAktif = allPjlp.filter(p => p.statusAktif !== 'aktif').length
+  const totalPns = allRecipients.filter(r => r.statusPns === 'pns').length
+  const totalNonPns = allRecipients.filter(r => r.statusPns !== 'pns').length
+  const totalAktif = allRecipients.filter(r => r.statusAktif === 'aktif').length
 
   return (
-    <Layout title="Data PJLP">
+    <Layout title="Master Penerima Honor">
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
           <CardBody className="p-4">
-            <p className="text-sm opacity-80">Total PJLP</p>
-            <p className="text-2xl font-bold">{allPjlp.length}</p>
+            <p className="text-sm opacity-80">Total Penerima</p>
+            <p className="text-2xl font-bold">{allRecipients.length}</p>
+          </CardBody>
+        </Card>
+        <Card className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white">
+          <CardBody className="p-4">
+            <p className="text-sm opacity-80">PNS/ASN</p>
+            <p className="text-2xl font-bold">{totalPns}</p>
+          </CardBody>
+        </Card>
+        <Card className="bg-gradient-to-r from-amber-500 to-amber-600 text-white">
+          <CardBody className="p-4">
+            <p className="text-sm opacity-80">Non PNS</p>
+            <p className="text-2xl font-bold">{totalNonPns}</p>
           </CardBody>
         </Card>
         <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
           <CardBody className="p-4">
-            <p className="text-sm opacity-80">PJLP Aktif</p>
+            <p className="text-sm opacity-80">Aktif</p>
             <p className="text-2xl font-bold">{totalAktif}</p>
-          </CardBody>
-        </Card>
-        <Card className="bg-gradient-to-r from-gray-500 to-gray-600 text-white">
-          <CardBody className="p-4">
-            <p className="text-sm opacity-80">Non Aktif / Selesai</p>
-            <p className="text-2xl font-bold">{totalNonAktif}</p>
           </CardBody>
         </Card>
       </div>
@@ -234,22 +239,22 @@ export default function PjlpMaster() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5 text-primary-600" />
-              Master Data PJLP
+              Master Data Penerima Honor
             </CardTitle>
             <CardDescription>
-              Kelola data Penyedia Jasa Lainnya Perseorangan
+              Kelola data penerima honorarium dan jasa profesi
             </CardDescription>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <Select
-              value={filterPosisi}
+              value={filterStatusPns}
               onChange={(e) => {
-                setFilterPosisi(e.target.value)
+                setFilterStatusPns(e.target.value)
                 setCurrentPage(1)
               }}
-              options={posisiOptions}
-              placeholder="Semua Posisi"
-              className="w-full sm:w-40"
+              options={statusPnsOptions}
+              placeholder="Semua Tipe"
+              className="w-full sm:w-36"
             />
             <Select
               value={filterStatus}
@@ -275,7 +280,7 @@ export default function PjlpMaster() {
               />
             </div>
             <Button onClick={() => handleOpenModal()} icon={Plus}>
-              Tambah PJLP
+              Tambah Penerima
             </Button>
           </div>
         </CardHeader>
@@ -287,64 +292,59 @@ export default function PjlpMaster() {
                 <TableHeader>No</TableHeader>
                 <TableHeader>NIK</TableHeader>
                 <TableHeader>Nama</TableHeader>
-                <TableHeader>Posisi</TableHeader>
-                <TableHeader>Honor Bulanan</TableHeader>
-                <TableHeader>Masa Kontrak</TableHeader>
+                <TableHeader>Golongan</TableHeader>
+                <TableHeader>Jabatan</TableHeader>
+                <TableHeader>Tipe</TableHeader>
                 <TableHeader>Status</TableHeader>
                 <TableHeader>Aksi</TableHeader>
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginatedPjlp.length > 0 ? (
-                paginatedPjlp.map((pjlp, index) => (
-                  <TableRow key={pjlp.id}>
+              {paginatedRecipients.length > 0 ? (
+                paginatedRecipients.map((recipient, index) => (
+                  <TableRow key={recipient.id}>
                     <TableCell>
                       {(currentPage - 1) * itemsPerPage + index + 1}
                     </TableCell>
                     <TableCell className="font-mono text-sm">
-                      {pjlp.nik}
+                      {recipient.nik}
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{pjlp.nama}</p>
-                        <p className="text-xs text-gray-500">{pjlp.unitKerja}</p>
+                        <p className="font-medium">{recipient.nama}</p>
+                        <p className="text-xs text-gray-500">{recipient.unitKerja}</p>
                       </div>
                     </TableCell>
                     <TableCell>
-                      {getPosisiLabel(pjlp.posisi)}
-                    </TableCell>
-                    <TableCell className="font-medium text-green-600">
-                      {formatRupiah(pjlp.honorBulanan)}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {pjlp.masaKontrakMulai && pjlp.masaKontrakSelesai ? (
-                        <div>
-                          <p>{formatTanggal(pjlp.masaKontrakMulai, 'short')}</p>
-                          <p className="text-gray-500">s/d {formatTanggal(pjlp.masaKontrakSelesai, 'short')}</p>
-                        </div>
-                      ) : '-'}
+                      {recipient.golongan || '-'}
                     </TableCell>
                     <TableCell>
-                      {getStatusBadge(pjlp.statusAktif)}
+                      {recipient.jabatan || '-'}
+                    </TableCell>
+                    <TableCell>
+                      {getPnsBadge(recipient.statusPns)}
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(recipient.statusAktif)}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={() => handleView(pjlp)}
+                          onClick={() => handleView(recipient)}
                           className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg"
                           title="Lihat"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleOpenModal(pjlp)}
+                          onClick={() => handleOpenModal(recipient)}
                           className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"
                           title="Edit"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => confirmDelete(pjlp.id)}
+                          onClick={() => confirmDelete(recipient.id)}
                           className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"
                           title="Hapus"
                         >
@@ -356,7 +356,7 @@ export default function PjlpMaster() {
                 ))
               ) : (
                 <TableEmpty
-                  message={searchQuery ? 'Tidak ada data yang sesuai pencarian' : 'Belum ada data PJLP'}
+                  message={searchQuery ? 'Tidak ada data yang sesuai pencarian' : 'Belum ada data penerima honor'}
                   colSpan={8}
                 />
               )}
@@ -367,7 +367,7 @@ export default function PjlpMaster() {
             <TablePagination
               currentPage={currentPage}
               totalPages={totalPages}
-              totalItems={filteredPjlp.length}
+              totalItems={filteredRecipients.length}
               itemsPerPage={itemsPerPage}
               onPageChange={setCurrentPage}
             />
@@ -379,7 +379,7 @@ export default function PjlpMaster() {
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        title={editingId ? 'Edit Data PJLP' : 'Tambah Data PJLP'}
+        title={editingId ? 'Edit Data Penerima' : 'Tambah Data Penerima'}
         size="xl"
       >
         <form onSubmit={handleSubmit}>
@@ -406,34 +406,72 @@ export default function PjlpMaster() {
                   maxLength={15}
                 />
               </div>
+              <Input
+                label="Nama Lengkap"
+                name="nama"
+                value={formData.nama}
+                onChange={handleInputChange}
+                required
+                className="mt-3"
+              />
               <div className="grid grid-cols-2 gap-4 mt-3">
-                <Input
-                  label="Nama Lengkap"
-                  name="nama"
-                  value={formData.nama}
+                <Select
+                  label="Tipe Penerima"
+                  name="statusPns"
+                  value={formData.statusPns}
                   onChange={handleInputChange}
+                  options={statusPnsOptions}
                   required
                 />
                 <Select
-                  label="Posisi / Jabatan"
-                  name="posisi"
-                  value={formData.posisi}
+                  label="Status"
+                  name="statusAktif"
+                  value={formData.statusAktif}
                   onChange={handleInputChange}
-                  options={posisiOptions}
-                  required
+                  options={statusOptions}
                 />
               </div>
-              <Input
-                label="Unit Kerja"
-                name="unitKerja"
-                value={formData.unitKerja}
-                onChange={handleInputChange}
-                className="mt-3"
-              />
+            </div>
+
+            {/* Kepegawaian */}
+            <div className="border-b pb-3">
+              <h4 className="font-medium text-gray-700 mb-3">Kepegawaian</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <Select
+                  label="Golongan"
+                  name="golongan"
+                  value={formData.golongan}
+                  onChange={handleInputChange}
+                  options={golonganOptions}
+                  placeholder="Pilih golongan"
+                />
+                <Input
+                  label="Pangkat"
+                  name="pangkat"
+                  value={formData.pangkat}
+                  onChange={handleInputChange}
+                  placeholder="Misal: Penata Tk. I"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4 mt-3">
+                <Input
+                  label="Jabatan"
+                  name="jabatan"
+                  value={formData.jabatan}
+                  onChange={handleInputChange}
+                  placeholder="Jabatan/Posisi"
+                />
+                <Input
+                  label="Unit Kerja"
+                  name="unitKerja"
+                  value={formData.unitKerja}
+                  onChange={handleInputChange}
+                />
+              </div>
             </div>
 
             {/* Rekening */}
-            <div className="border-b pb-3">
+            <div>
               <h4 className="font-medium text-gray-700 mb-3">Informasi Rekening</h4>
               <div className="grid grid-cols-2 gap-4">
                 <Input
@@ -453,61 +491,6 @@ export default function PjlpMaster() {
                 />
               </div>
             </div>
-
-            {/* BPJS */}
-            <div className="border-b pb-3">
-              <h4 className="font-medium text-gray-700 mb-3">BPJS</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <Input
-                  label="No. BPJS Kesehatan"
-                  name="bpjsKesehatan"
-                  value={formData.bpjsKesehatan}
-                  onChange={handleInputChange}
-                />
-                <Input
-                  label="No. BPJS Ketenagakerjaan"
-                  name="bpjsKetenagakerjaan"
-                  value={formData.bpjsKetenagakerjaan}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-
-            {/* Kontrak */}
-            <div>
-              <h4 className="font-medium text-gray-700 mb-3">Honor & Masa Kontrak</h4>
-              <CurrencyInput
-                label="Honor Bulanan"
-                name="honorBulanan"
-                value={formData.honorBulanan}
-                onChange={handleInputChange}
-                required
-              />
-              <div className="grid grid-cols-2 gap-4 mt-3">
-                <Input
-                  label="Masa Kontrak Mulai"
-                  name="masaKontrakMulai"
-                  type="date"
-                  value={formData.masaKontrakMulai}
-                  onChange={handleInputChange}
-                />
-                <Input
-                  label="Masa Kontrak Selesai"
-                  name="masaKontrakSelesai"
-                  type="date"
-                  value={formData.masaKontrakSelesai}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <Select
-                label="Status"
-                name="statusAktif"
-                value={formData.statusAktif}
-                onChange={handleInputChange}
-                options={statusOptions}
-                className="mt-3"
-              />
-            </div>
           </div>
 
           <ModalFooter>
@@ -525,7 +508,7 @@ export default function PjlpMaster() {
       <Modal
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
-        title="Detail PJLP"
+        title="Detail Penerima Honor"
         size="lg"
       >
         {viewingData && (
@@ -548,8 +531,30 @@ export default function PjlpMaster() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs text-gray-500">Posisi</label>
-                <p>{getPosisiLabel(viewingData.posisi)}</p>
+                <label className="text-xs text-gray-500">Tipe</label>
+                <div className="mt-1">{getPnsBadge(viewingData.statusPns)}</div>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Status</label>
+                <div className="mt-1">{getStatusBadge(viewingData.statusAktif)}</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs text-gray-500">Golongan</label>
+                <p>{viewingData.golongan || '-'}</p>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Pangkat</label>
+                <p>{viewingData.pangkat || '-'}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs text-gray-500">Jabatan</label>
+                <p>{viewingData.jabatan || '-'}</p>
               </div>
               <div>
                 <label className="text-xs text-gray-500">Unit Kerja</label>
@@ -568,36 +573,11 @@ export default function PjlpMaster() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs text-gray-500">BPJS Kesehatan</label>
-                <p className="font-mono">{viewingData.bpjsKesehatan || '-'}</p>
-              </div>
-              <div>
-                <label className="text-xs text-gray-500">BPJS Ketenagakerjaan</label>
-                <p className="font-mono">{viewingData.bpjsKetenagakerjaan || '-'}</p>
-              </div>
-            </div>
-
-            <div className="p-4 bg-green-50 rounded-lg">
-              <label className="text-xs text-green-700">Honor Bulanan</label>
-              <p className="text-2xl font-bold text-green-600">{formatRupiah(viewingData.honorBulanan)}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs text-gray-500">Masa Kontrak Mulai</label>
-                <p>{viewingData.masaKontrakMulai ? formatTanggal(viewingData.masaKontrakMulai) : '-'}</p>
-              </div>
-              <div>
-                <label className="text-xs text-gray-500">Masa Kontrak Selesai</label>
-                <p>{viewingData.masaKontrakSelesai ? formatTanggal(viewingData.masaKontrakSelesai) : '-'}</p>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs text-gray-500">Status</label>
-              <div className="mt-1">{getStatusBadge(viewingData.statusAktif)}</div>
+            <div className="text-xs text-gray-400 border-t pt-3">
+              <p>Dibuat: {viewingData.createdAt ? formatTanggal(viewingData.createdAt) : '-'}</p>
+              {viewingData.updatedAt && (
+                <p>Diperbarui: {formatTanggal(viewingData.updatedAt)}</p>
+              )}
             </div>
           </div>
         )}
@@ -611,7 +591,7 @@ export default function PjlpMaster() {
         size="sm"
       >
         <p className="text-gray-600">
-          Apakah Anda yakin ingin menghapus data PJLP ini? Data kontrak dan pembayaran terkait juga akan terpengaruh.
+          Apakah Anda yakin ingin menghapus data penerima honor ini? Data pembayaran terkait mungkin terpengaruh.
         </p>
         <ModalFooter>
           <Button variant="secondary" onClick={() => setIsDeleteModalOpen(false)}>

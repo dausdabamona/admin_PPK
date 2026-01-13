@@ -31,7 +31,9 @@ import {
   Store,
   FileSearch,
   HeartHandshake,
-  Truck
+  Truck,
+  Award,
+  BarChart3
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -98,6 +100,18 @@ const menuItems = [
       { name: 'Serah Terima', path: '/pengadaan/serah-terima', icon: Truck },
       { name: 'Pembayaran', path: '/pengadaan/pembayaran', icon: Wallet },
       { name: 'Checklist SPJ', path: '/pengadaan/checklist', icon: ListChecks }
+    ]
+  },
+  {
+    name: 'Honorarium',
+    icon: Award,
+    submenu: [
+      { name: 'Master Penerima', path: '/honorarium/master', icon: Users },
+      { name: 'Dasar Penugasan', path: '/honorarium/penugasan', icon: FileSignature },
+      { name: 'Daftar Nominatif', path: '/honorarium/nominatif', icon: ClipboardList },
+      { name: 'Kwitansi', path: '/honorarium/kwitansi', icon: Receipt },
+      { name: 'Rekap Pembayaran', path: '/honorarium/rekap', icon: BarChart3 },
+      { name: 'Checklist SPJ', path: '/honorarium/checklist', icon: ListChecks }
     ]
   },
   {
@@ -176,7 +190,8 @@ export default function Sidebar() {
     'Perjalanan Dinas': true,
     'Swakelola': true,
     'PJLP': true,
-    'Pengadaan Langsung': true
+    'Pengadaan Langsung': true,
+    'Honorarium': true
   })
 
   const toggleMenu = (menuName) => {
@@ -221,7 +236,7 @@ export default function Sidebar() {
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
           <span>Offline Ready</span>
         </div>
-        <p className="text-xs text-gray-400 mt-1">v4.0.0</p>
+        <p className="text-xs text-gray-400 mt-1">v5.0.0</p>
       </div>
     </aside>
   )
