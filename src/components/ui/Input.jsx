@@ -170,6 +170,7 @@ export const CurrencyInput = forwardRef(function CurrencyInput(
       ...e,
       target: {
         ...e.target,
+        name: e.target.name,
         value: rawValue
       }
     })
