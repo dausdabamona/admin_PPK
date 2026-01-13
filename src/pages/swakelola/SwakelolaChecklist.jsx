@@ -72,7 +72,11 @@ export default function SwakelolaChecklist() {
   }))
 
   const rampungOptions = allRampung
-    .filter(r => !formData.kegiatanId || r.kegiatanId === parseInt(formData.kegiatanId))
+    .filter(r => {
+      if (!formData.kegiatanId) return true
+      const kegiatanNum = parseInt(formData.kegiatanId, 10)
+      return !isNaN(kegiatanNum) && r.kegiatanId === kegiatanNum
+    })
     .map(r => ({
       value: r.id.toString(),
       label: `${r.nomorKwitansi} - ${formatTanggal(r.tanggal, 'short')}`
@@ -108,7 +112,7 @@ export default function SwakelolaChecklist() {
         kegiatanId: checklist.kegiatanId?.toString() || '',
         rampungId: checklist.rampungId?.toString() || '',
         namaPemeriksa: checklist.namaPemeriksa || '',
-        tanggalPemeriksaan: formatDateInput(checklist.tanggalPemeriksaan),
+        tanggalPemeriksaan: checklist.tanggalPemeriksaan ? formatDateInput(checklist.tanggalPemeriksaan) : formatDateInput(new Date()),
         catatan: checklist.catatan || ''
       })
       setChecklistItems(checklist.items || initializeChecklist())

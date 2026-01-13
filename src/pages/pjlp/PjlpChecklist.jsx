@@ -54,7 +54,7 @@ export default function PjlpChecklist() {
   )
 
   const pjlpList = useLiveQuery(
-    () => db.pjlpMaster.where('statusAktif').equals('Aktif').toArray(),
+    () => db.pjlpMaster.where('statusAktif').equals('aktif').toArray(),
     []
   )
 

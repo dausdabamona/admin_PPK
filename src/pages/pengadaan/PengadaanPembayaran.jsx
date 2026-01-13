@@ -168,8 +168,8 @@ export default function PengadaanPembayaran() {
         potonganDenda: payment.potonganDenda?.toString() || '0',
         potonganLain: payment.potonganLain?.toString() || '0',
         nomorKwitansi: payment.nomorKwitansi || '',
-        tanggalKwitansi: formatDateInput(payment.tanggalKwitansi),
-        tanggalBayar: formatDateInput(payment.tanggalBayar),
+        tanggalKwitansi: payment.tanggalKwitansi ? formatDateInput(payment.tanggalKwitansi) : formatDateInput(new Date()),
+        tanggalBayar: payment.tanggalBayar ? formatDateInput(payment.tanggalBayar) : '',
         rekening: payment.rekening || kontrakVendor?.rekening || '',
         bank: payment.bank || kontrakVendor?.bank || '',
         keterangan: payment.keterangan || ''

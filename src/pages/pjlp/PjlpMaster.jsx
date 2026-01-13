@@ -106,8 +106,8 @@ export default function PjlpMaster() {
         bpjsKesehatan: pjlp.bpjsKesehatan || '',
         bpjsKetenagakerjaan: pjlp.bpjsKetenagakerjaan || '',
         honorBulanan: pjlp.honorBulanan?.toString() || '',
-        masaKontrakMulai: formatDateInput(pjlp.masaKontrakMulai),
-        masaKontrakSelesai: formatDateInput(pjlp.masaKontrakSelesai),
+        masaKontrakMulai: pjlp.masaKontrakMulai ? formatDateInput(pjlp.masaKontrakMulai) : '',
+        masaKontrakSelesai: pjlp.masaKontrakSelesai ? formatDateInput(pjlp.masaKontrakSelesai) : '',
         statusAktif: pjlp.statusAktif || 'aktif'
       })
     } else {

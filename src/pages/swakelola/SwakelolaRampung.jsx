@@ -51,10 +51,12 @@ export default function SwakelolaRampung() {
       const uangMuka = r.uangMukaId ? await db.swakelolaUangMuka.get(r.uangMukaId) : null
       const realisasi = r.realisasiId ? await db.swakelolaRealisasi.get(r.realisasiId) : null
 
-      // Get bendahara
+      // Get bendahara - use filter() instead of where() with object
       let bendahara = null
       if (r.kegiatanId) {
-        const tim = await db.swakelolaTim.where({ kegiatanId: r.kegiatanId, peran: 'bendahara' }).first()
+        const tim = await db.swakelolaTim
+          .filter(t => t.kegiatanId === r.kegiatanId && t.peran === 'bendahara')
+          .first()
         if (tim) {
           bendahara = await db.pegawai.get(tim.pegawaiId)
         }
@@ -104,19 +106,25 @@ export default function SwakelolaRampung() {
       label: `${formatTanggal(r.tanggal, 'short')} - ${formatRupiah(r.totalRealisasi)}`
     }))
 
-  const handleInputChange = async (e) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
 
     // Calculate totals when uang muka or realisasi changes
     if (name === 'uangMukaId' && value) {
-      const um = allUangMuka.find(u => u.id === parseInt(value))
-      setTotalUangMuka(um?.jumlah || 0)
+      const numValue = parseInt(value, 10)
+      if (!isNaN(numValue)) {
+        const um = allUangMuka.find(u => u.id === numValue)
+        setTotalUangMuka(um?.jumlah || 0)
+      }
     }
 
     if (name === 'realisasiId' && value) {
-      const r = allRealisasi.find(rel => rel.id === parseInt(value))
-      setTotalRealisasi(r?.totalRealisasi || 0)
+      const numValue = parseInt(value, 10)
+      if (!isNaN(numValue)) {
+        const r = allRealisasi.find(rel => rel.id === numValue)
+        setTotalRealisasi(r?.totalRealisasi || 0)
+      }
     }
 
     if (name === 'kegiatanId') {
