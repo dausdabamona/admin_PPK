@@ -30,7 +30,7 @@ import {
   Package,
   Store,
   FileSearch,
-  Handshake,
+  HeartHandshake,
   Truck
 } from 'lucide-react'
 import { useState } from 'react'
@@ -94,7 +94,7 @@ const menuItems = [
       { name: 'Master Paket', path: '/pengadaan/paket', icon: Package },
       { name: 'Master Penyedia', path: '/pengadaan/penyedia', icon: Store },
       { name: 'Perencanaan', path: '/pengadaan/perencanaan', icon: FileSearch },
-      { name: 'Kontrak & SPMK', path: '/pengadaan/kontrak', icon: Handshake },
+      { name: 'Kontrak & SPMK', path: '/pengadaan/kontrak', icon: HeartHandshake },
       { name: 'Serah Terima', path: '/pengadaan/serah-terima', icon: Truck },
       { name: 'Pembayaran', path: '/pengadaan/pembayaran', icon: Wallet },
       { name: 'Checklist SPJ', path: '/pengadaan/checklist', icon: ListChecks }

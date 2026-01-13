@@ -21,7 +21,7 @@ import {
   Package,
   Store,
   FileSearch,
-  Handshake
+  HeartHandshake
 } from 'lucide-react'
 import Layout from '../../components/layout/Layout'
 import StatsCard from '../../components/ui/StatsCard'
@@ -376,7 +376,7 @@ export default function Dashboard() {
           title="Kontrak Aktif"
           value={pengadaanKontrakAktifCount}
           subtitle="Kontrak berjalan"
-          icon={Handshake}
+          icon={HeartHandshake}
           color="success"
         />
         <StatsCard
@@ -594,7 +594,7 @@ export default function Dashboard() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <Handshake className="w-8 h-8 text-fuchsia-600 mb-2" />
+              <HeartHandshake className="w-8 h-8 text-fuchsia-600 mb-2" />
               <p className="font-medium text-gray-900">Kontrak</p>
               <p className="text-xs text-gray-500">SPK & SPMK</p>
             </div>
