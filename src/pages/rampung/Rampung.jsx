@@ -11,10 +11,11 @@ import Button from '../../components/ui/Button'
 import Modal, { ModalFooter } from '../../components/ui/Modal'
 import { Input, Select, Textarea, CurrencyInput } from '../../components/ui/Input'
 import Badge, { StatusBadge } from '../../components/ui/Badge'
-import db, { JENIS_PERJADIN } from '../../db/database'
+import db, { JENIS_PERJADIN, recordHistory, AUDIT_ACTIONS, withAuditCreate, withAuditUpdate, generateArchivePath } from '../../db/database'
 import { formatTanggal, formatDateInput, formatRupiah, hitungHari, terbilangRupiah } from '../../utils/formatters'
 import { generateRincianBiayaPDF, generateKwitansiPDF, generatePengeluaranRiilPDF } from '../../utils/documentGenerator'
 import { getSppdChecklistStatus, MissingDocsWarning, ChecklistBadge } from '../../utils/checklistValidator.jsx'
+import DocumentHistory, { RevisionBadge, ArchivePathDisplay } from '../../components/ui/DocumentHistory'
 
 const initialFormData = {
   sppdId: '',
@@ -219,7 +220,10 @@ export default function Rampung() {
     setLoading(true)
 
     try {
-      const data = {
+      // Get previous data for audit if editing
+      const previousData = editingId ? await db.rampung.get(editingId) : null
+
+      const baseData = {
         sppdId: parseInt(formData.sppdId),
         pegawaiId: selectedSPPD?.pegawaiId,
         jenisPerjadin: selectedSPPD?.jenisPerjadin,
@@ -236,19 +240,34 @@ export default function Rampung() {
         nilaiLS: nilaiLS,
         selisih: selisih,
         statusSelisih: getStatusSelisih(),
-        keterangan: formData.keterangan,
-        updatedAt: new Date()
+        keterangan: formData.keterangan
       }
 
       let rampungId
+      let data
+
       if (editingId) {
+        // Update with audit fields
+        data = withAuditUpdate(baseData, previousData?.revision || 0)
         await db.rampung.update(editingId, data)
         rampungId = editingId
+
+        // Record history for update
+        await recordHistory('rampung', editingId, AUDIT_ACTIONS.UPDATE, previousData, { ...data, id: editingId })
+
         // Clear old pengeluaran riil
         await db.pengeluaranRiil.where('rampungId').equals(editingId).delete()
       } else {
-        data.createdAt = new Date()
+        // Create with audit fields and archive path
+        const year = new Date().getFullYear()
+        data = withAuditCreate({
+          ...baseData,
+          archivePath: generateArchivePath('sppd', year, selectedSPPD?.nomor || 'RAMPUNG')
+        })
         rampungId = await db.rampung.add(data)
+
+        // Record history for create
+        await recordHistory('rampung', rampungId, AUDIT_ACTIONS.CREATE, null, { ...data, id: rampungId })
       }
 
       // Save pengeluaran riil items
@@ -279,8 +298,15 @@ export default function Rampung() {
   const handleDelete = async () => {
     setLoading(true)
     try {
+      // Get data before delete for audit
+      const deletedData = await db.rampung.get(deletingId)
+
       await db.pengeluaranRiil.where('rampungId').equals(deletingId).delete()
       await db.rampung.delete(deletingId)
+
+      // Record history for delete
+      await recordHistory('rampung', deletingId, AUDIT_ACTIONS.DELETE, deletedData, null)
+
       setIsDeleteModalOpen(false)
       setDeletingId(null)
     } catch (error) {
@@ -716,10 +742,25 @@ export default function Rampung() {
               </div>
             </div>
 
-            <div>
-              <label className="text-xs text-gray-500">Pegawai</label>
-              <p className="font-medium">{viewingData.pegawai?.nama}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-xs text-gray-500">Pegawai</label>
+                <p className="font-medium">{viewingData.pegawai?.nama}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <RevisionBadge
+                  revision={viewingData.revision}
+                  createdAt={viewingData.createdAt}
+                  updatedAt={viewingData.updatedAt}
+                  createdBy={viewingData.createdBy}
+                />
+              </div>
             </div>
+
+            {/* Archive Path */}
+            {viewingData.archivePath && (
+              <ArchivePathDisplay archivePath={viewingData.archivePath} />
+            )}
 
             <div className="p-4 bg-gray-50 rounded-lg">
               <h4 className="font-medium mb-3">Rincian Realisasi:</h4>
@@ -805,6 +846,15 @@ export default function Rampung() {
                   Pengeluaran Riil
                 </Button>
               )}
+            </div>
+
+            {/* Document History Panel */}
+            <div className="mt-4">
+              <DocumentHistory
+                tableName="rampung"
+                recordId={viewingData.id}
+                title="Riwayat Dokumen Rampung"
+              />
             </div>
           </div>
         )}

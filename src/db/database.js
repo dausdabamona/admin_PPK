@@ -3,7 +3,113 @@ import Dexie from 'dexie'
 // Create database instance
 export const db = new Dexie('SIPBJ_SPJ_Database')
 
-// Database schema version 3 - Added PJLP tables
+// Database schema version 4 - Added audit trail and document history
+db.version(4).stores({
+  // ==================== EXISTING TABLES ====================
+  // Master Data: Pegawai
+  pegawai: '++id, nip, nama, jabatan, golongan, pangkat, rekening, bank, unitKerja, createdAt, createdBy, updatedAt, revision',
+
+  // Master Data: Kota (dengan SBM tarif untuk Dalam Kota dan Luar Kota)
+  kota: '++id, namaKota, provinsi, tarifHarianDalamKota, tarifHarianLuarKota, tarifPenginapan, tarifTransportLokal, tarifTransportAntarKota, createdAt',
+
+  // Master Data: Pejabat (PPK, KPA)
+  pejabat: '++id, nip, nama, jabatan, jenisPejabat, pangkat, golongan, createdAt',
+
+  // Surat Tugas
+  suratTugas: '++id, nomor, tanggal, perihal, dasar, tujuanKegiatan, pegawaiIds, kotaAsal, kotaTujuan, tanggalMulai, tanggalSelesai, transportasi, jenisPerjadin, status, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // SPPD
+  sppd: '++id, nomor, suratTugasId, pegawaiId, tanggal, jenisPerjadin, kotaAsal, kotaTujuan, tanggalBerangkat, tanggalKembali, maksudPerjalanan, tingkatBiaya, keteranganLain, ppkId, kpaId, status, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Pembayaran LS (Awal)
+  pembayaranLS: '++id, sppdId, pegawaiId, tanggal, uangHarian, jumlahHari, totalUangHarian, transport, penginapan, jumlahMalam, totalPenginapan, totalLS, keterangan, createdAt, createdBy, updatedAt, revision',
+
+  // Rampung Perjalanan Dinas
+  rampung: '++id, sppdId, pegawaiId, jenisPerjadin, tanggal, realisasiUangHarian, jumlahHariRealisasi, totalRealisasiUangHarian, realisasiTransport, realisasiPenginapan, jumlahMalamRealisasi, totalRealisasiPenginapan, totalPengeluaranRiil, totalRealisasi, nilaiLS, selisih, statusSelisih, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Detail Pengeluaran Riil
+  pengeluaranRiil: '++id, rampungId, tanggal, uraian, jumlah, bukti, createdAt',
+
+  // Rincian Biaya (untuk dokumen)
+  rincianBiaya: '++id, rampungId, jenisBiaya, uraian, volume, satuan, hargaSatuan, jumlah, createdAt',
+
+  // Kwitansi SPPD
+  kwitansiSPPD: '++id, rampungId, sppdId, pegawaiId, nomor, tanggal, jumlah, terbilang, keterangan, ttdPegawai, ttdPPK, createdAt',
+
+  // Checklist SPJ SPPD
+  checklistSPJ: '++id, sppdId, jenisPerjadin, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt, createdBy, updatedAt, revision',
+
+  // Settings / Konfigurasi
+  settings: '++id, key, value, updatedAt',
+
+  // Nomor Urut (untuk auto numbering)
+  nomorUrut: '++id, jenis, tahun, bulan, nomorTerakhir',
+
+  // ==================== SWAKELOLA TABLES ====================
+  // Master Data: Kegiatan Swakelola
+  swakelolaKegiatan: '++id, kode, nama, tahun, sumberDana, akun, pagu, deskripsi, tanggalMulai, tanggalSelesai, status, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Tim Swakelola
+  swakelolaTim: '++id, kegiatanId, nomorSK, tanggalSK, pegawaiId, peran, honorPerBulan, jumlahBulan, totalHonor, rekening, bank, createdAt',
+
+  // Uang Muka / Panjar Swakelola
+  swakelolaUangMuka: '++id, kegiatanId, nomorKwitansi, tanggal, penerimaId, tipePenerima, jumlah, terbilang, keterangan, rekeningTujuan, bankTujuan, status, createdAt, createdBy, updatedAt, revision',
+
+  // Realisasi Biaya Swakelola
+  swakelolaRealisasi: '++id, kegiatanId, uangMukaId, tanggal, items, totalRealisasi, keterangan, createdAt, createdBy, updatedAt, revision',
+
+  // Item Realisasi Detail
+  swakelolaRealisasiItem: '++id, realisasiId, kategori, uraian, volume, satuan, hargaSatuan, jumlah, tanggal, noBukti, createdAt',
+
+  // Rampung Swakelola
+  swakelolaRampung: '++id, kegiatanId, uangMukaId, realisasiId, tanggal, totalUangMuka, totalRealisasi, selisih, statusSelisih, nomorKwitansi, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Checklist SPJ Swakelola
+  swakelolaChecklist: '++id, kegiatanId, rampungId, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt, createdBy, updatedAt, revision',
+
+  // ==================== PJLP TABLES ====================
+  // Master Data PJLP
+  pjlpMaster: '++id, nik, npwp, nama, posisi, unitKerja, rekening, bank, bpjsKesehatan, bpjsKetenagakerjaan, honorBulanan, masaKontrakMulai, masaKontrakSelesai, statusAktif, createdAt, createdBy, updatedAt, revision',
+
+  // Perencanaan PJLP
+  pjlpPerencanaan: '++id, tahun, nomorDokumen, tanggal, analisisKebutuhan, analisisBebanKerja, torKak, posisiDibutuhkan, jumlahOrang, honorBulanan, durasiKontrak, totalNilai, biayaBpjsKesehatan, biayaBpjsKetenagakerjaan, biayaThr, estimasiPph, totalHps, keterangan, status, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Kontrak PJLP
+  pjlpKontrak: '++id, pjlpId, nomorKontrak, tanggalKontrak, periodeAwal, periodeAkhir, honorBulanan, nilaiKontrak, posisi, lokasiKerja, lingkupPekerjaan, outputPekerjaan, status, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // SPK (Surat Perintah Kerja)
+  pjlpSpk: '++id, kontrakId, pjlpId, nomorSpk, tanggalSpk, periodeAwal, periodeAkhir, nilaiKontrak, keterangan, createdAt',
+
+  // SPMK (Surat Perintah Mulai Kerja)
+  pjlpSpmk: '++id, kontrakId, pjlpId, spkId, nomorSpmk, tanggalSpmk, tanggalMulaiKerja, keterangan, createdAt',
+
+  // Presensi Bulanan
+  pjlpPresensi: '++id, pjlpId, kontrakId, bulan, tahun, hariKerja, hadir, izin, sakit, alpa, terlambat, keterangan, createdAt, createdBy, updatedAt, revision',
+
+  // Laporan Bulanan
+  pjlpLaporanBulanan: '++id, pjlpId, kontrakId, bulan, tahun, uraianPekerjaan, outputDicapai, kendala, solusi, tanggalLaporan, status, createdAt',
+
+  // Pembayaran Bulanan
+  pjlpPembayaran: '++id, pjlpId, kontrakId, bulan, tahun, honorBruto, potonganPph, tarifPph, potonganBpjsKesehatan, potonganBpjsKetenagakerjaan, potonganLain, totalPotongan, honorNetto, rekening, bank, tanggalBayar, status, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Kwitansi PJLP
+  pjlpKwitansi: '++id, pembayaranId, pjlpId, nomorKwitansi, tanggal, jumlah, terbilang, keterangan, createdAt',
+
+  // Penilaian Kinerja Triwulan
+  pjlpPenilaian: '++id, pjlpId, kontrakId, tahun, triwulan, nilaiKualitas, bobotKualitas, nilaiWaktu, bobotWaktu, nilaiBiaya, bobotBiaya, nilaiLayanan, bobotLayanan, nilaiAkhir, kategori, catatanPenilai, namaPenilai, tanggalPenilaian, createdAt, createdBy, updatedAt, revision',
+
+  // Checklist SPJ PJLP
+  pjlpChecklist: '++id, pjlpId, kontrakId, bulan, tahun, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt, createdBy, updatedAt, revision',
+
+  // Arsip Digital PJLP
+  pjlpArsip: '++id, pjlpId, tahun, jenisDokumen, bulan, triwulan, namaDokumen, namaFile, ukuranFile, pathArsip, keterangan, createdAt',
+
+  // ==================== AUDIT TRAIL TABLE ====================
+  // Document History / Audit Trail
+  documentHistory: '++id, tableName, recordId, action, fieldChanges, previousData, newData, createdBy, createdAt, ipAddress, userAgent, archivePath'
+})
+
+// Database schema version 3 - Added PJLP tables (kept for migration)
 db.version(3).stores({
   // ==================== EXISTING TABLES ====================
   // Master Data: Pegawai
@@ -476,6 +582,167 @@ export async function updateSetting(key, value) {
   } else {
     await db.settings.add({ key, value, updatedAt: new Date() })
   }
+}
+
+// ==================== AUDIT TRAIL FUNCTIONS ====================
+
+// Action types for audit trail
+export const AUDIT_ACTIONS = {
+  CREATE: 'create',
+  UPDATE: 'update',
+  DELETE: 'delete',
+  PRINT: 'print',
+  STATUS_CHANGE: 'status_change',
+  APPROVE: 'approve',
+  REJECT: 'reject'
+}
+
+// Get current user (stored in settings or localStorage)
+export function getCurrentUser() {
+  try {
+    const user = localStorage.getItem('currentUser')
+    return user ? JSON.parse(user) : { nama: 'System', nip: '-' }
+  } catch {
+    return { nama: 'System', nip: '-' }
+  }
+}
+
+// Set current user
+export function setCurrentUser(user) {
+  localStorage.setItem('currentUser', JSON.stringify(user))
+}
+
+// Generate archive path for a document
+export function generateArchivePath(module, year, identifier) {
+  const moduleMap = {
+    sppd: 'SPPD',
+    swakelola: 'SWAKELOLA',
+    pjlp: 'PJLP'
+  }
+  const modulePath = moduleMap[module] || module.toUpperCase()
+  const cleanIdentifier = String(identifier).replace(/[^a-zA-Z0-9]/g, '_')
+  return `ARSIP/${year}/${modulePath}/${cleanIdentifier}/`
+}
+
+// Record document history/audit trail
+export async function recordHistory(tableName, recordId, action, previousData = null, newData = null, description = '') {
+  try {
+    const user = getCurrentUser()
+    const fieldChanges = []
+
+    // Calculate field changes if both previous and new data exist
+    if (previousData && newData && action === AUDIT_ACTIONS.UPDATE) {
+      const allKeys = new Set([...Object.keys(previousData), ...Object.keys(newData)])
+      allKeys.forEach(key => {
+        // Skip internal fields
+        if (['id', 'createdAt', 'updatedAt', 'revision'].includes(key)) return
+
+        const oldVal = previousData[key]
+        const newVal = newData[key]
+
+        // Compare values (stringify for objects/arrays)
+        const oldStr = typeof oldVal === 'object' ? JSON.stringify(oldVal) : String(oldVal ?? '')
+        const newStr = typeof newVal === 'object' ? JSON.stringify(newVal) : String(newVal ?? '')
+
+        if (oldStr !== newStr) {
+          fieldChanges.push({
+            field: key,
+            oldValue: oldVal,
+            newValue: newVal
+          })
+        }
+      })
+    }
+
+    await db.documentHistory.add({
+      tableName,
+      recordId,
+      action,
+      fieldChanges,
+      previousData: previousData ? JSON.stringify(previousData) : null,
+      newData: newData ? JSON.stringify(newData) : null,
+      description,
+      createdBy: user.nama,
+      createdByNip: user.nip,
+      createdAt: new Date(),
+      ipAddress: '-', // In PWA, we don't have server-side IP
+      userAgent: navigator.userAgent
+    })
+
+    return true
+  } catch (error) {
+    console.error('Failed to record history:', error)
+    return false
+  }
+}
+
+// Get document history for a specific record
+export async function getDocumentHistory(tableName, recordId) {
+  try {
+    const history = await db.documentHistory
+      .where({ tableName, recordId })
+      .reverse()
+      .sortBy('createdAt')
+
+    return history.reverse() // Most recent first
+  } catch (error) {
+    console.error('Failed to get history:', error)
+    return []
+  }
+}
+
+// Get all history for a table (with optional filters)
+export async function getTableHistory(tableName, limit = 50) {
+  try {
+    const history = await db.documentHistory
+      .where('tableName')
+      .equals(tableName)
+      .reverse()
+      .limit(limit)
+      .toArray()
+
+    return history
+  } catch (error) {
+    console.error('Failed to get table history:', error)
+    return []
+  }
+}
+
+// Helper to add audit fields when creating a record
+export function withAuditCreate(data) {
+  const user = getCurrentUser()
+  return {
+    ...data,
+    createdAt: new Date(),
+    createdBy: user.nama,
+    updatedAt: new Date(),
+    revision: 1
+  }
+}
+
+// Helper to add audit fields when updating a record
+export function withAuditUpdate(data, currentRevision = 0) {
+  const user = getCurrentUser()
+  return {
+    ...data,
+    updatedAt: new Date(),
+    updatedBy: user.nama,
+    revision: currentRevision + 1
+  }
+}
+
+// Format action for display
+export function formatAuditAction(action) {
+  const actionLabels = {
+    [AUDIT_ACTIONS.CREATE]: 'Dibuat',
+    [AUDIT_ACTIONS.UPDATE]: 'Diubah',
+    [AUDIT_ACTIONS.DELETE]: 'Dihapus',
+    [AUDIT_ACTIONS.PRINT]: 'Dicetak',
+    [AUDIT_ACTIONS.STATUS_CHANGE]: 'Status Berubah',
+    [AUDIT_ACTIONS.APPROVE]: 'Disetujui',
+    [AUDIT_ACTIONS.REJECT]: 'Ditolak'
+  }
+  return actionLabels[action] || action
 }
 
 export default db
