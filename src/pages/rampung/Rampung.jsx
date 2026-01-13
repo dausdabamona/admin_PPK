@@ -14,6 +14,7 @@ import Badge, { StatusBadge } from '../../components/ui/Badge'
 import db, { JENIS_PERJADIN } from '../../db/database'
 import { formatTanggal, formatDateInput, formatRupiah, hitungHari, terbilangRupiah } from '../../utils/formatters'
 import { generateRincianBiayaPDF, generateKwitansiPDF, generatePengeluaranRiilPDF } from '../../utils/documentGenerator'
+import { getSppdChecklistStatus, MissingDocsWarning, ChecklistBadge } from '../../utils/checklistValidator.jsx'
 
 const initialFormData = {
   sppdId: '',
@@ -34,6 +35,7 @@ export default function Rampung() {
   const [editingId, setEditingId] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
   const [viewingData, setViewingData] = useState(null)
+  const [checklistStatus, setChecklistStatus] = useState(null)
   const [formData, setFormData] = useState(initialFormData)
   const [selectedSPPD, setSelectedSPPD] = useState(null)
   const [selectedPembayaranLS, setSelectedPembayaranLS] = useState(null)
@@ -291,6 +293,10 @@ export default function Rampung() {
   const handleView = async (rampung) => {
     const pengeluaranRiil = await db.pengeluaranRiil.where('rampungId').equals(rampung.id).toArray()
     const ppk = await db.pejabat.where('jenisPejabat').equals('PPK').first()
+
+    // Check checklist status
+    const status = await getSppdChecklistStatus(rampung.sppdId)
+    setChecklistStatus(status)
 
     setViewingData({
       ...rampung,
@@ -765,6 +771,14 @@ export default function Rampung() {
               Terbilang: {terbilangRupiah(viewingData.totalRealisasi)}
             </div>
 
+            {/* Checklist Status Warning */}
+            {checklistStatus && !checklistStatus.isComplete && (
+              <MissingDocsWarning
+                missingDocs={checklistStatus.missingDocs}
+                completionPercent={checklistStatus.completionPercent}
+              />
+            )}
+
             <div className="flex flex-wrap gap-2 pt-4 border-t">
               <Button
                 variant="secondary"
@@ -777,8 +791,10 @@ export default function Rampung() {
                 variant="secondary"
                 icon={FileText}
                 onClick={() => handlePrintKwitansi(viewingData)}
+                disabled={!checklistStatus?.isComplete}
+                title={!checklistStatus?.isComplete ? 'Checklist SPJ harus 100% lengkap' : ''}
               >
-                Kwitansi
+                Kwitansi {!checklistStatus?.isComplete && '(Checklist Belum Lengkap)'}
               </Button>
               {viewingData.pengeluaranRiilItems?.length > 0 && (
                 <Button
