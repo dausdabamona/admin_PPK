@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
-  Plus, Pencil, Trash2, Search, Wallet, Eye, Printer, CheckCircle, Clock
+  Plus, Pencil, Trash2, Search, Wallet, Eye, Printer, CheckCircle, Clock, AlertCircle
 } from 'lucide-react'
 import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardBody, CardTitle, CardDescription } from '../../components/ui/Card'
@@ -13,6 +13,7 @@ import Badge from '../../components/ui/Badge'
 import db, { BULAN_INDONESIA, STATUS_PEMBAYARAN_PJLP, TARIF_PPH_PJLP, TARIF_BPJS, calculatePphPjlp, calculateBpjs } from '../../db/database'
 import { formatTanggal, formatDateInput, formatRupiah, terbilangRupiah } from '../../utils/formatters'
 import { generateKwitansiPjlpPDF } from '../../utils/pjlpDocGenerator'
+import { getPjlpChecklistStatus, MissingDocsWarning, ChecklistBadge } from '../../utils/checklistValidator.jsx'
 
 const currentYear = new Date().getFullYear()
 const currentMonth = new Date().getMonth() + 1
@@ -34,6 +35,7 @@ export default function PjlpPembayaran() {
   const [editingId, setEditingId] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
   const [viewingData, setViewingData] = useState(null)
+  const [checklistStatus, setChecklistStatus] = useState(null)
   const [formData, setFormData] = useState(initialFormData)
   const [filterBulan, setFilterBulan] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -233,7 +235,16 @@ export default function PjlpPembayaran() {
     }
   }
 
-  const handleView = (pembayaran) => {
+  const handleView = async (pembayaran) => {
+    // Check checklist status
+    const status = await getPjlpChecklistStatus(
+      pembayaran.pjlpId,
+      pembayaran.kontrakId,
+      pembayaran.bulan,
+      pembayaran.tahun
+    )
+    setChecklistStatus(status)
+
     setViewingData(pembayaran)
     setIsViewModalOpen(true)
   }
@@ -243,11 +254,36 @@ export default function PjlpPembayaran() {
     setIsDeleteModalOpen(true)
   }
 
-  const handleSetSiapBayar = async (id) => {
-    await db.pjlpPembayaran.update(id, { status: 'siap_bayar' })
+  const handleSetSiapBayar = async (pembayaran) => {
+    // Check checklist status first
+    const status = await getPjlpChecklistStatus(
+      pembayaran.pjlpId,
+      pembayaran.kontrakId,
+      pembayaran.bulan,
+      pembayaran.tahun
+    )
+
+    if (!status.isComplete) {
+      alert(`Checklist SPJ belum lengkap (${status.completionPercent}%).\n\nDokumen yang belum lengkap:\n${status.missingDocs.slice(0, 5).join('\n')}${status.missingDocs.length > 5 ? '\n...dan ' + (status.missingDocs.length - 5) + ' lainnya' : ''}`)
+      return
+    }
+
+    await db.pjlpPembayaran.update(pembayaran.id, { status: 'siap_bayar' })
   }
 
   const handleSetDibayar = async (pembayaran) => {
+    // Check checklist status first
+    const status = await getPjlpChecklistStatus(
+      pembayaran.pjlpId,
+      pembayaran.kontrakId,
+      pembayaran.bulan,
+      pembayaran.tahun
+    )
+
+    if (!status.isComplete) {
+      alert(`Checklist SPJ belum lengkap (${status.completionPercent}%).\n\nDokumen yang belum lengkap:\n${status.missingDocs.slice(0, 5).join('\n')}${status.missingDocs.length > 5 ? '\n...dan ' + (status.missingDocs.length - 5) + ' lainnya' : ''}`)
+      return
+    }
     const nomorKwitansi = await generateNomorKwitansi(pembayaran.bulan, pembayaran.tahun)
 
     await db.pjlpPembayaran.update(pembayaran.id, {
@@ -430,9 +466,9 @@ export default function PjlpPembayaran() {
                         </button>
                         {pembayaran.status === 'draft' && (
                           <button
-                            onClick={() => handleSetSiapBayar(pembayaran.id)}
+                            onClick={() => handleSetSiapBayar(pembayaran)}
                             className="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded-lg"
-                            title="Set Siap Bayar"
+                            title="Set Siap Bayar (Checklist harus lengkap)"
                           >
                             <Clock className="w-4 h-4" />
                           </button>
@@ -683,6 +719,24 @@ export default function PjlpPembayaran() {
               <div>
                 <label className="text-xs text-gray-500">Tanggal Bayar</label>
                 <p>{formatTanggal(viewingData.tanggalBayar)}</p>
+              </div>
+            )}
+
+            {/* Checklist Status Warning */}
+            {checklistStatus && !checklistStatus.isComplete && (
+              <MissingDocsWarning
+                missingDocs={checklistStatus.missingDocs}
+                completionPercent={checklistStatus.completionPercent}
+              />
+            )}
+
+            {/* Checklist Complete Badge */}
+            {checklistStatus?.isComplete && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-2 text-green-700">
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="font-medium">Checklist SPJ Lengkap (100%)</span>
+                </div>
               </div>
             )}
 

@@ -13,6 +13,7 @@ import Badge from '../../components/ui/Badge'
 import db from '../../db/database'
 import { formatTanggal, formatDateInput, formatRupiah, terbilangRupiah } from '../../utils/formatters'
 import { generateKwitansiRampungSwakelolaPDF } from '../../utils/swakelolaDocGenerator'
+import { getSwakelolaChecklistStatus, MissingDocsWarning, ChecklistBadge } from '../../utils/checklistValidator.jsx'
 
 const initialFormData = {
   kegiatanId: '',
@@ -30,6 +31,7 @@ export default function SwakelolaRampung() {
   const [editingId, setEditingId] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
   const [viewingData, setViewingData] = useState(null)
+  const [checklistStatus, setChecklistStatus] = useState(null)
   const [formData, setFormData] = useState(initialFormData)
   const [selectedKegiatan, setSelectedKegiatan] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
@@ -232,7 +234,11 @@ export default function SwakelolaRampung() {
     }
   }
 
-  const handleView = (rampung) => {
+  const handleView = async (rampung) => {
+    // Check checklist status
+    const status = await getSwakelolaChecklistStatus(rampung.kegiatanId, rampung.id)
+    setChecklistStatus(status)
+
     setViewingData(rampung)
     setIsViewModalOpen(true)
   }
@@ -592,13 +598,23 @@ export default function SwakelolaRampung() {
               <p>{viewingData.keterangan || '-'}</p>
             </div>
 
+            {/* Checklist Status Warning */}
+            {checklistStatus && !checklistStatus.isComplete && (
+              <MissingDocsWarning
+                missingDocs={checklistStatus.missingDocs}
+                completionPercent={checklistStatus.completionPercent}
+              />
+            )}
+
             <div className="pt-4 border-t">
               <Button
                 onClick={() => handlePrint(viewingData)}
                 icon={Printer}
                 className="w-full"
+                disabled={!checklistStatus?.isComplete}
+                title={!checklistStatus?.isComplete ? 'Checklist SPJ harus 100% lengkap' : ''}
               >
-                Cetak Kwitansi Rampung
+                Cetak Kwitansi Rampung {!checklistStatus?.isComplete && '(Checklist Belum Lengkap)'}
               </Button>
             </div>
           </div>

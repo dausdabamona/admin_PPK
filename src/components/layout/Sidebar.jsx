@@ -25,7 +25,13 @@ import {
   CalendarDays,
   ClipboardList,
   Star,
-  FolderArchive
+  FolderArchive,
+  Shield,
+  Package,
+  Store,
+  FileSearch,
+  HeartHandshake,
+  Truck
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -80,6 +86,24 @@ const menuItems = [
       { name: 'Checklist SPJ', path: '/pjlp/checklist', icon: ListChecks },
       { name: 'Arsip Dokumen', path: '/pjlp/arsip', icon: FolderArchive }
     ]
+  },
+  {
+    name: 'Pengadaan Langsung',
+    icon: Package,
+    submenu: [
+      { name: 'Master Paket', path: '/pengadaan/paket', icon: Package },
+      { name: 'Master Penyedia', path: '/pengadaan/penyedia', icon: Store },
+      { name: 'Perencanaan', path: '/pengadaan/perencanaan', icon: FileSearch },
+      { name: 'Kontrak & SPMK', path: '/pengadaan/kontrak', icon: HeartHandshake },
+      { name: 'Serah Terima', path: '/pengadaan/serah-terima', icon: Truck },
+      { name: 'Pembayaran', path: '/pengadaan/pembayaran', icon: Wallet },
+      { name: 'Checklist SPJ', path: '/pengadaan/checklist', icon: ListChecks }
+    ]
+  },
+  {
+    name: 'Audit Control',
+    path: '/audit',
+    icon: Shield
   },
   {
     name: 'Pengaturan',
@@ -151,7 +175,8 @@ export default function Sidebar() {
     'Master Data': true,
     'Perjalanan Dinas': true,
     'Swakelola': true,
-    'PJLP': true
+    'PJLP': true,
+    'Pengadaan Langsung': true
   })
 
   const toggleMenu = (menuName) => {
@@ -196,7 +221,7 @@ export default function Sidebar() {
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
           <span>Offline Ready</span>
         </div>
-        <p className="text-xs text-gray-400 mt-1">v3.0.0</p>
+        <p className="text-xs text-gray-400 mt-1">v4.0.0</p>
       </div>
     </aside>
   )
