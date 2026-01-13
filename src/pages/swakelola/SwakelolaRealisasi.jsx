@@ -491,6 +491,8 @@ export default function SwakelolaRealisasi() {
                   name="hargaSatuan"
                   value={currentItem.hargaSatuan}
                   onChange={handleItemChange}
+                  placeholder="Masukkan harga"
+                  helper="Dapat diedit sesuai nota/kwitansi"
                 />
                 <Input
                   label="Tanggal Bukti"

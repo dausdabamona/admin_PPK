@@ -13,6 +13,30 @@ import Badge, { StatusBadge } from '../../components/ui/Badge'
 import db, { STATUS_SWAKELOLA } from '../../db/database'
 import { formatTanggal, formatDateInput, formatRupiah, getCurrentYear } from '../../utils/formatters'
 
+// Auto-generate kode kegiatan
+const generateKodeKegiatan = async () => {
+  const tahun = getCurrentYear()
+  const prefix = `SWK-${tahun}`
+
+  // Get existing kegiatan for this year
+  const existingKegiatan = await db.swakelolaKegiatan
+    .filter(k => k.kode && k.kode.startsWith(prefix))
+    .toArray()
+
+  // Find the highest number
+  let maxNumber = 0
+  existingKegiatan.forEach(k => {
+    const match = k.kode.match(/SWK-\d{4}-(\d+)/)
+    if (match) {
+      const num = parseInt(match[1])
+      if (num > maxNumber) maxNumber = num
+    }
+  })
+
+  const nextNumber = String(maxNumber + 1).padStart(3, '0')
+  return `${prefix}-${nextNumber}`
+}
+
 const SUMBER_DANA_OPTIONS = [
   { value: 'DIPA', label: 'DIPA' },
   { value: 'PNBP', label: 'PNBP' },
@@ -84,7 +108,7 @@ export default function SwakelolaKegiatan() {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleOpenModal = (kegiatan = null) => {
+  const handleOpenModal = async (kegiatan = null) => {
     if (kegiatan) {
       setEditingId(kegiatan.id)
       setFormData({
@@ -101,7 +125,12 @@ export default function SwakelolaKegiatan() {
       })
     } else {
       setEditingId(null)
-      setFormData(initialFormData)
+      // Auto-generate kode for new kegiatan
+      const generatedKode = await generateKodeKegiatan()
+      setFormData({
+        ...initialFormData,
+        kode: generatedKode
+      })
     }
     setIsModalOpen(true)
   }
@@ -338,6 +367,7 @@ export default function SwakelolaKegiatan() {
               value={formData.kode}
               onChange={handleInputChange}
               placeholder="SWK-2024-001"
+              helper="Otomatis diisi, dapat diedit manual"
               required
             />
             <Input
@@ -379,6 +409,8 @@ export default function SwakelolaKegiatan() {
               name="pagu"
               value={formData.pagu}
               onChange={handleInputChange}
+              placeholder="Masukkan pagu"
+              helper="Dapat diedit manual sesuai RKA"
               required
             />
             <Select
