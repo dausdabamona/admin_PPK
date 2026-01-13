@@ -97,7 +97,8 @@ const menuItems = [
       { name: 'Master Penyedia', path: '/pengadaan/penyedia', icon: Store },
       { name: 'Perencanaan', path: '/pengadaan/perencanaan', icon: FileSearch },
       { name: 'Kontrak & SPMK', path: '/pengadaan/kontrak', icon: HeartHandshake },
-      { name: 'Serah Terima', path: '/pengadaan/serah-terima', icon: Truck },
+      { name: 'BAST Penyedia', path: '/pengadaan/serah-terima', icon: Truck },
+      { name: 'BAST ke KPA', path: '/pengadaan/bast-kpa', icon: Building2 },
       { name: 'Pembayaran', path: '/pengadaan/pembayaran', icon: Wallet },
       { name: 'Checklist SPJ', path: '/pengadaan/checklist', icon: ListChecks }
     ]

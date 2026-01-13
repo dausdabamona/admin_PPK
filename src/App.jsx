@@ -39,6 +39,7 @@ import PengadaanMasterVendor from './pages/pengadaan/PengadaanMasterVendor'
 import PengadaanPerencanaan from './pages/pengadaan/PengadaanPerencanaan'
 import PengadaanKontrak from './pages/pengadaan/PengadaanKontrak'
 import PengadaanSerahTerima from './pages/pengadaan/PengadaanSerahTerima'
+import PengadaanBastKpa from './pages/pengadaan/PengadaanBastKpa'
 import PengadaanPembayaran from './pages/pengadaan/PengadaanPembayaran'
 import PengadaanChecklist from './pages/pengadaan/PengadaanChecklist'
 
@@ -97,6 +98,7 @@ function App() {
       <Route path="/pengadaan/perencanaan" element={<PengadaanPerencanaan />} />
       <Route path="/pengadaan/kontrak" element={<PengadaanKontrak />} />
       <Route path="/pengadaan/serah-terima" element={<PengadaanSerahTerima />} />
+      <Route path="/pengadaan/bast-kpa" element={<PengadaanBastKpa />} />
       <Route path="/pengadaan/pembayaran" element={<PengadaanPembayaran />} />
       <Route path="/pengadaan/checklist" element={<PengadaanChecklist />} />
 
