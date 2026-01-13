@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
-  Settings as SettingsIcon, Save, Download, Upload, Trash2,
-  Database, Building2, RefreshCw, AlertTriangle
+  Settings as SettingsIcon, Save, Download, Upload,
+  Database, Building2, RefreshCw
 } from 'lucide-react'
 import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardBody, CardTitle, CardDescription } from '../../components/ui/Card'
@@ -10,11 +10,10 @@ import Button from '../../components/ui/Button'
 import Modal, { ModalFooter } from '../../components/ui/Modal'
 import { Input } from '../../components/ui/Input'
 import db, { updateSetting } from '../../db/database'
-import { exportAllData, downloadJSON, importAllData, readJSONFile, clearAllData } from '../../utils/exportImport'
+import { exportAllData, downloadJSON, importAllData, readJSONFile } from '../../utils/exportImport'
 
 export default function Settings() {
   const [loading, setLoading] = useState(false)
-  const [isClearModalOpen, setIsClearModalOpen] = useState(false)
   const [importResult, setImportResult] = useState(null)
   const fileInputRef = useRef(null)
 
@@ -123,19 +122,6 @@ export default function Settings() {
       setLoading(false)
       // Reset file input
       e.target.value = ''
-    }
-  }
-
-  const handleClearData = async () => {
-    setLoading(true)
-    try {
-      await clearAllData()
-      setIsClearModalOpen(false)
-      alert('Semua data berhasil dihapus')
-    } catch (error) {
-      alert('Gagal menghapus data: ' + error.message)
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -314,26 +300,6 @@ export default function Settings() {
                 </Button>
               </div>
 
-              {/* Clear Data */}
-              <div className="p-6 border border-red-200 rounded-lg bg-red-50">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-3 bg-red-100 rounded-lg">
-                    <Trash2 className="w-6 h-6 text-red-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-red-900">Hapus Semua Data</h4>
-                    <p className="text-sm text-red-600">Peringatan: Tidak dapat dibatalkan!</p>
-                  </div>
-                </div>
-                <Button
-                  onClick={() => setIsClearModalOpen(true)}
-                  variant="danger"
-                  className="w-full"
-                  icon={Trash2}
-                >
-                  Hapus Data
-                </Button>
-              </div>
             </div>
 
             {/* Import Result */}
@@ -401,44 +367,6 @@ export default function Settings() {
         </Card>
       </div>
 
-      {/* Clear Data Confirmation Modal */}
-      <Modal
-        isOpen={isClearModalOpen}
-        onClose={() => setIsClearModalOpen(false)}
-        title="Konfirmasi Hapus Semua Data"
-        size="md"
-      >
-        <div className="flex items-start gap-4">
-          <div className="p-3 bg-red-100 rounded-full">
-            <AlertTriangle className="w-6 h-6 text-red-600" />
-          </div>
-          <div>
-            <p className="text-gray-600 mb-2">
-              Anda akan menghapus <strong>SEMUA DATA</strong> dari aplikasi ini, termasuk:
-            </p>
-            <ul className="list-disc list-inside text-sm text-gray-600 mb-4">
-              <li>Data Pegawai</li>
-              <li>Data Kota & SBM</li>
-              <li>Surat Tugas</li>
-              <li>SPPD</li>
-              <li>Pembayaran LS</li>
-              <li>Rampung</li>
-              <li>Checklist SPJ</li>
-            </ul>
-            <p className="text-red-600 font-medium">
-              Tindakan ini TIDAK DAPAT dibatalkan!
-            </p>
-          </div>
-        </div>
-        <ModalFooter>
-          <Button variant="secondary" onClick={() => setIsClearModalOpen(false)}>
-            Batal
-          </Button>
-          <Button variant="danger" onClick={handleClearData} loading={loading}>
-            Ya, Hapus Semua Data
-          </Button>
-        </ModalFooter>
-      </Modal>
     </Layout>
   )
 }
