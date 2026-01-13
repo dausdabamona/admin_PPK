@@ -153,6 +153,7 @@ export const CurrencyInput = forwardRef(function CurrencyInput(
     required = false,
     value,
     onChange,
+    name,
     ...props
   },
   ref
@@ -166,11 +167,11 @@ export const CurrencyInput = forwardRef(function CurrencyInput(
 
   const handleChange = (e) => {
     const rawValue = e.target.value.replace(/[^0-9]/g, '')
+    // Use name from props to ensure it's always available
+    const fieldName = name || e.target.name
     onChange && onChange({
-      ...e,
       target: {
-        ...e.target,
-        name: e.target.name,
+        name: fieldName,
         value: rawValue
       }
     })
@@ -191,6 +192,7 @@ export const CurrencyInput = forwardRef(function CurrencyInput(
         <input
           ref={ref}
           type="text"
+          name={name}
           value={formatCurrency(value)}
           onChange={handleChange}
           className={`input pl-10 ${error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''} ${className}`}
