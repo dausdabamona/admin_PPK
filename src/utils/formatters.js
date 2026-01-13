@@ -123,3 +123,9 @@ export function getCurrentMonth() {
 export function padNumber(num, length = 3) {
   return String(num).padStart(length, '0')
 }
+
+// Alias for terbilang (angkaTerbilang)
+export function angkaTerbilang(angka) {
+  if (angka === 0) return 'nol'
+  return terbilang(angka).trim().replace(/\s+/g, ' ').toLowerCase()
+}

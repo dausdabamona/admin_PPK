@@ -3,8 +3,9 @@ import Dexie from 'dexie'
 // Create database instance
 export const db = new Dexie('SIPBJ_SPJ_Database')
 
-// Database schema version 1
-db.version(1).stores({
+// Database schema version 2 - Added Swakelola tables
+db.version(2).stores({
+  // ==================== EXISTING TABLES ====================
   // Master Data: Pegawai
   pegawai: '++id, nip, nama, jabatan, golongan, pangkat, rekening, bank, unitKerja, createdAt',
 
@@ -17,7 +18,7 @@ db.version(1).stores({
   // Surat Tugas
   suratTugas: '++id, nomor, tanggal, perihal, dasar, tujuanKegiatan, pegawaiIds, kotaAsal, kotaTujuan, tanggalMulai, tanggalSelesai, transportasi, jenisPerjadin, status, createdAt',
 
-  // SPPD - includes jenisPerjadin (dalam_kota / luar_kota)
+  // SPPD
   sppd: '++id, nomor, suratTugasId, pegawaiId, tanggal, jenisPerjadin, kotaAsal, kotaTujuan, tanggalBerangkat, tanggalKembali, maksudPerjalanan, tingkatBiaya, keteranganLain, ppkId, kpaId, status, createdAt',
 
   // Pembayaran LS (Awal)
@@ -35,17 +36,39 @@ db.version(1).stores({
   // Kwitansi SPPD
   kwitansiSPPD: '++id, rampungId, sppdId, pegawaiId, nomor, tanggal, jumlah, terbilang, keterangan, ttdPegawai, ttdPPK, createdAt',
 
-  // Checklist SPJ SPPD - includes jenisPerjadin for different checklist types
+  // Checklist SPJ SPPD
   checklistSPJ: '++id, sppdId, jenisPerjadin, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt',
 
   // Settings / Konfigurasi
   settings: '++id, key, value, updatedAt',
 
   // Nomor Urut (untuk auto numbering)
-  nomorUrut: '++id, jenis, tahun, bulan, nomorTerakhir'
+  nomorUrut: '++id, jenis, tahun, bulan, nomorTerakhir',
+
+  // ==================== SWAKELOLA TABLES ====================
+  // Master Data: Kegiatan Swakelola
+  swakelolaKegiatan: '++id, kode, nama, tahun, sumberDana, akun, pagu, deskripsi, tanggalMulai, tanggalSelesai, status, createdAt',
+
+  // Tim Swakelola
+  swakelolaTim: '++id, kegiatanId, nomorSK, tanggalSK, pegawaiId, peran, honorPerBulan, jumlahBulan, totalHonor, rekening, bank, createdAt',
+
+  // Uang Muka / Panjar Swakelola
+  swakelolaUangMuka: '++id, kegiatanId, nomorKwitansi, tanggal, penerimaId, tipePenerima, jumlah, terbilang, keterangan, rekeningTujuan, bankTujuan, status, createdAt',
+
+  // Realisasi Biaya Swakelola
+  swakelolaRealisasi: '++id, kegiatanId, uangMukaId, tanggal, items, totalRealisasi, keterangan, createdAt',
+
+  // Item Realisasi Detail
+  swakelolaRealisasiItem: '++id, realisasiId, kategori, uraian, volume, satuan, hargaSatuan, jumlah, tanggal, noBukti, createdAt',
+
+  // Rampung Swakelola
+  swakelolaRampung: '++id, kegiatanId, uangMukaId, realisasiId, tanggal, totalUangMuka, totalRealisasi, selisih, statusSelisih, nomorKwitansi, keterangan, createdAt',
+
+  // Checklist SPJ Swakelola
+  swakelolaChecklist: '++id, kegiatanId, rampungId, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt'
 })
 
-// Checklist templates
+// Checklist templates for SPPD
 export const CHECKLIST_DALAM_KOTA = [
   { id: 'surat_tugas', nama: 'Surat Tugas', wajib: true },
   { id: 'sppd', nama: 'SPPD Dalam Kota', wajib: true },
@@ -67,10 +90,51 @@ export const CHECKLIST_LUAR_KOTA = [
   { id: 'laporan_perjadin', nama: 'Laporan Perjalanan Dinas', wajib: true }
 ]
 
+// Checklist template for Swakelola (Kepmen KP No.56 Tahun 2024)
+export const CHECKLIST_SWAKELOLA = [
+  { id: 'sk_tim', nama: 'SK / Surat Tugas Tim Swakelola', wajib: true },
+  { id: 'rab', nama: 'RAB Swakelola', wajib: true },
+  { id: 'kwitansi_uang_muka', nama: 'Kwitansi Uang Muka', wajib: true },
+  { id: 'bukti_realisasi', nama: 'Bukti Realisasi (Nota, Kuitansi)', wajib: true },
+  { id: 'rincian_biaya', nama: 'Rincian Biaya Realisasi', wajib: true },
+  { id: 'kwitansi_rampung', nama: 'Kwitansi Rampung Swakelola', wajib: true },
+  { id: 'ssp_setoran', nama: 'SSP Setoran Sisa (jika lebih bayar)', wajib: false },
+  { id: 'laporan_kegiatan', nama: 'Laporan Pelaksanaan Kegiatan', wajib: true }
+]
+
+// Kategori Realisasi Swakelola
+export const KATEGORI_REALISASI_SWAKELOLA = [
+  { id: 'belanja_bahan', nama: 'Belanja Bahan', kode: '521211' },
+  { id: 'honor_tim', nama: 'Honor Tim Pelaksana', kode: '521213' },
+  { id: 'transport_lokal', nama: 'Transport Lokal', kode: '524119' },
+  { id: 'sewa_alat', nama: 'Sewa Peralatan', kode: '522141' },
+  { id: 'konsumsi', nama: 'Konsumsi Rapat/Kegiatan', kode: '521211' },
+  { id: 'pengeluaran_riil', nama: 'Pengeluaran Riil Lainnya', kode: '521219' },
+  { id: 'fotocopy', nama: 'Fotocopy/ATK', kode: '521211' },
+  { id: 'dokumentasi', nama: 'Dokumentasi', kode: '521219' }
+]
+
+// Peran dalam Tim Swakelola
+export const PERAN_TIM_SWAKELOLA = [
+  { id: 'ketua', nama: 'Ketua Tim' },
+  { id: 'sekretaris', nama: 'Sekretaris' },
+  { id: 'bendahara', nama: 'Bendahara' },
+  { id: 'anggota', nama: 'Anggota' },
+  { id: 'pelaksana', nama: 'Pelaksana' }
+]
+
 // Jenis Perjadin constants
 export const JENIS_PERJADIN = {
   DALAM_KOTA: 'dalam_kota',
   LUAR_KOTA: 'luar_kota'
+}
+
+// Status Swakelola
+export const STATUS_SWAKELOLA = {
+  DRAFT: 'draft',
+  AKTIF: 'aktif',
+  PROSES: 'proses',
+  SELESAI: 'selesai'
 }
 
 // Initialize default settings
@@ -85,6 +149,8 @@ export async function initializeDefaultSettings() {
       { key: 'tahun_anggaran', value: new Date().getFullYear().toString(), updatedAt: new Date() },
       { key: 'prefix_surat_tugas', value: 'ST', updatedAt: new Date() },
       { key: 'prefix_sppd', value: 'SPPD', updatedAt: new Date() },
+      { key: 'prefix_swakelola', value: 'SWK', updatedAt: new Date() },
+      { key: 'prefix_kwitansi', value: 'KWT', updatedAt: new Date() },
       { key: 'nama_ppk', value: '', updatedAt: new Date() },
       { key: 'nip_ppk', value: '', updatedAt: new Date() },
       { key: 'nama_kpa', value: '', updatedAt: new Date() },

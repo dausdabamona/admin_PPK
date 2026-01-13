@@ -10,13 +10,17 @@ import {
   CheckSquare,
   ArrowRight,
   AlertCircle,
-  Clock
+  Clock,
+  FolderKanban,
+  Banknote,
+  Receipt
 } from 'lucide-react'
 import Layout from '../../components/layout/Layout'
 import StatsCard from '../../components/ui/StatsCard'
 import { Card, CardHeader, CardBody, CardTitle } from '../../components/ui/Card'
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell, TableEmpty } from '../../components/ui/Table'
 import { StatusBadge } from '../../components/ui/Badge'
+import Badge from '../../components/ui/Badge'
 import db, { initializeDatabase } from '../../db/database'
 import { formatTanggal, formatRupiah } from '../../utils/formatters'
 
@@ -79,6 +83,34 @@ export default function Dashboard() {
     return payments.reduce((sum, p) => sum + (p.totalLS || 0), 0)
   }) || 0
 
+  // Swakelola stats
+  const swakelolaKegiatanCount = useLiveQuery(() => db.swakelolaKegiatan.count()) || 0
+  const swakelolaUangMukaAktif = useLiveQuery(() =>
+    db.swakelolaUangMuka.where('status').equals('aktif').count()
+  ) || 0
+
+  // Total Swakelola Uang Muka aktif
+  const totalSwakelolaUangMuka = useLiveQuery(async () => {
+    const uangMuka = await db.swakelolaUangMuka.where('status').equals('aktif').toArray()
+    return uangMuka.reduce((sum, um) => sum + (um.jumlah || 0), 0)
+  }) || 0
+
+  // Recent Swakelola Kegiatan
+  const recentSwakelolaKegiatan = useLiveQuery(async () => {
+    const kegiatan = await db.swakelolaKegiatan.orderBy('createdAt').reverse().limit(5).toArray()
+    return Promise.all(kegiatan.map(async (k) => {
+      const timCount = await db.swakelolaTim.where('kegiatanId').equals(k.id).count()
+      const uangMukaTotal = await db.swakelolaUangMuka.where('kegiatanId').equals(k.id).toArray()
+      const realisasiTotal = await db.swakelolaRealisasi.where('kegiatanId').equals(k.id).toArray()
+      return {
+        ...k,
+        timCount,
+        totalUangMuka: uangMukaTotal.reduce((sum, um) => sum + (um.jumlah || 0), 0),
+        totalRealisasi: realisasiTotal.reduce((sum, r) => sum + (r.totalRealisasi || 0), 0)
+      }
+    }))
+  }) || []
+
   if (loading) {
     return (
       <Layout title="Dashboard">
@@ -101,7 +133,7 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Perjalanan Dinas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <StatsCard
           title="Total Pegawai"
@@ -133,7 +165,40 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Quick Actions */}
+      {/* Stats Cards - Swakelola */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <StatsCard
+          title="Kegiatan Swakelola"
+          value={swakelolaKegiatanCount}
+          subtitle="Total kegiatan aktif"
+          icon={FolderKanban}
+          color="primary"
+        />
+        <StatsCard
+          title="Uang Muka Aktif"
+          value={swakelolaUangMukaAktif}
+          subtitle="Belum dirampungkan"
+          icon={Banknote}
+          color="warning"
+        />
+        <StatsCard
+          title="Total Panjar Aktif"
+          value={formatRupiah(totalSwakelolaUangMuka)}
+          subtitle="Uang muka berjalan"
+          icon={Receipt}
+          color="info"
+        />
+        <StatsCard
+          title="Rampung"
+          value={rampungCount}
+          subtitle="Total SPJ selesai"
+          icon={ClipboardCheck}
+          color="success"
+        />
+      </div>
+
+      {/* Quick Actions - Perjalanan Dinas */}
+      <h3 className="text-sm font-medium text-gray-500 mb-3">Perjalanan Dinas</h3>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Link
           to="/surat-tugas"
@@ -185,6 +250,63 @@ export default function Dashboard() {
               <p className="text-xs text-gray-500">Verifikasi SPJ</p>
             </div>
             <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-purple-600 transition-colors" />
+          </div>
+        </Link>
+      </div>
+
+      {/* Quick Actions - Swakelola */}
+      <h3 className="text-sm font-medium text-gray-500 mb-3">Swakelola</h3>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <Link
+          to="/swakelola/kegiatan"
+          className="card p-4 hover:shadow-md transition-shadow group"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <FolderKanban className="w-8 h-8 text-indigo-600 mb-2" />
+              <p className="font-medium text-gray-900">Kegiatan</p>
+              <p className="text-xs text-gray-500">Kelola kegiatan</p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 transition-colors" />
+          </div>
+        </Link>
+        <Link
+          to="/swakelola/uang-muka"
+          className="card p-4 hover:shadow-md transition-shadow group"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <Banknote className="w-8 h-8 text-emerald-600 mb-2" />
+              <p className="font-medium text-gray-900">Uang Muka</p>
+              <p className="text-xs text-gray-500">Panjar swakelola</p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-emerald-600 transition-colors" />
+          </div>
+        </Link>
+        <Link
+          to="/swakelola/realisasi"
+          className="card p-4 hover:shadow-md transition-shadow group"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <Receipt className="w-8 h-8 text-amber-600 mb-2" />
+              <p className="font-medium text-gray-900">Realisasi</p>
+              <p className="text-xs text-gray-500">Input pengeluaran</p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-amber-600 transition-colors" />
+          </div>
+        </Link>
+        <Link
+          to="/swakelola/rampung"
+          className="card p-4 hover:shadow-md transition-shadow group"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <ClipboardCheck className="w-8 h-8 text-teal-600 mb-2" />
+              <p className="font-medium text-gray-900">Rampung</p>
+              <p className="text-xs text-gray-500">Selesaikan SPJ</p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 transition-colors" />
           </div>
         </Link>
       </div>
@@ -276,6 +398,59 @@ export default function Dashboard() {
                   ))
                 ) : (
                   <TableEmpty message="Semua checklist sudah lengkap" colSpan={3} />
+                )}
+              </TableBody>
+            </Table>
+          </CardBody>
+        </Card>
+      </div>
+
+      {/* Swakelola Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mt-6">
+        <Card>
+          <CardHeader className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <FolderKanban className="w-5 h-5 text-indigo-500" />
+              Kegiatan Swakelola Terbaru
+            </CardTitle>
+            <Link to="/swakelola/kegiatan" className="text-sm text-primary-600 hover:text-primary-700">
+              Lihat Semua
+            </Link>
+          </CardHeader>
+          <CardBody className="p-0">
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableHeader>Kode</TableHeader>
+                  <TableHeader>Nama Kegiatan</TableHeader>
+                  <TableHeader>Tim</TableHeader>
+                  <TableHeader>Uang Muka</TableHeader>
+                  <TableHeader>Realisasi</TableHeader>
+                  <TableHeader>Status</TableHeader>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {recentSwakelolaKegiatan.length > 0 ? (
+                  recentSwakelolaKegiatan.map((kegiatan) => (
+                    <TableRow key={kegiatan.id}>
+                      <TableCell className="font-mono text-sm">{kegiatan.kode}</TableCell>
+                      <TableCell>
+                        <div className="max-w-xs truncate">{kegiatan.nama}</div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="info">{kegiatan.timCount} orang</Badge>
+                      </TableCell>
+                      <TableCell className="text-right">{formatRupiah(kegiatan.totalUangMuka)}</TableCell>
+                      <TableCell className="text-right">{formatRupiah(kegiatan.totalRealisasi)}</TableCell>
+                      <TableCell>
+                        <Badge variant={kegiatan.status === 'aktif' ? 'success' : kegiatan.status === 'selesai' ? 'default' : 'warning'}>
+                          {kegiatan.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableEmpty message="Belum ada kegiatan swakelola" colSpan={6} />
                 )}
               </TableBody>
             </Table>

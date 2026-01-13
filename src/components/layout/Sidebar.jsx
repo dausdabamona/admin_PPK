@@ -13,7 +13,13 @@ import {
   Database,
   ChevronDown,
   ChevronRight,
-  Building2
+  Building2,
+  FolderKanban,
+  UsersRound,
+  Banknote,
+  Receipt,
+  Calculator,
+  ListChecks
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -39,13 +45,21 @@ const menuItems = [
       { name: 'Surat Tugas', path: '/surat-tugas', icon: FileText },
       { name: 'SPPD', path: '/sppd', icon: FileText },
       { name: 'Pembayaran LS', path: '/pembayaran-ls', icon: Wallet },
-      { name: 'Rampung', path: '/rampung', icon: ClipboardCheck }
+      { name: 'Rampung', path: '/rampung', icon: ClipboardCheck },
+      { name: 'Checklist SPJ', path: '/checklist', icon: CheckSquare }
     ]
   },
   {
-    name: 'Checklist SPJ',
-    path: '/checklist',
-    icon: CheckSquare
+    name: 'Swakelola',
+    icon: FolderKanban,
+    submenu: [
+      { name: 'Data Kegiatan', path: '/swakelola/kegiatan', icon: FolderKanban },
+      { name: 'Tim Swakelola', path: '/swakelola/tim', icon: UsersRound },
+      { name: 'Uang Muka', path: '/swakelola/uang-muka', icon: Banknote },
+      { name: 'Realisasi', path: '/swakelola/realisasi', icon: Receipt },
+      { name: 'Rampung', path: '/swakelola/rampung', icon: Calculator },
+      { name: 'Checklist SPJ', path: '/swakelola/checklist', icon: ListChecks }
+    ]
   },
   {
     name: 'Pengaturan',
@@ -115,7 +129,8 @@ function MenuItem({ item, isOpen, onToggle }) {
 export default function Sidebar() {
   const [openMenus, setOpenMenus] = useState({
     'Master Data': true,
-    'Perjalanan Dinas': true
+    'Perjalanan Dinas': true,
+    'Swakelola': true
   })
 
   const toggleMenu = (menuName) => {
@@ -160,7 +175,7 @@ export default function Sidebar() {
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
           <span>Offline Ready</span>
         </div>
-        <p className="text-xs text-gray-400 mt-1">v1.0.0</p>
+        <p className="text-xs text-gray-400 mt-1">v2.0.0</p>
       </div>
     </aside>
   )

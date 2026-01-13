@@ -12,6 +12,14 @@ import Rampung from './pages/rampung/Rampung'
 import ChecklistSPJ from './pages/checklist/ChecklistSPJ'
 import Settings from './pages/settings/Settings'
 
+// Swakelola Pages
+import SwakelolaKegiatan from './pages/swakelola/SwakelolaKegiatan'
+import SwakelolaTim from './pages/swakelola/SwakelolaTim'
+import SwakelolaUangMuka from './pages/swakelola/SwakelolaUangMuka'
+import SwakelolaRealisasi from './pages/swakelola/SwakelolaRealisasi'
+import SwakelolaRampung from './pages/swakelola/SwakelolaRampung'
+import SwakelolaChecklist from './pages/swakelola/SwakelolaChecklist'
+
 function App() {
   return (
     <Routes>
@@ -31,6 +39,14 @@ function App() {
 
       {/* Checklist */}
       <Route path="/checklist" element={<ChecklistSPJ />} />
+
+      {/* Swakelola */}
+      <Route path="/swakelola/kegiatan" element={<SwakelolaKegiatan />} />
+      <Route path="/swakelola/tim" element={<SwakelolaTim />} />
+      <Route path="/swakelola/uang-muka" element={<SwakelolaUangMuka />} />
+      <Route path="/swakelola/realisasi" element={<SwakelolaRealisasi />} />
+      <Route path="/swakelola/rampung" element={<SwakelolaRampung />} />
+      <Route path="/swakelola/checklist" element={<SwakelolaChecklist />} />
 
       {/* Settings */}
       <Route path="/settings" element={<Settings />} />
