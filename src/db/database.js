@@ -3,6 +3,183 @@ import Dexie from 'dexie'
 // Create database instance
 export const db = new Dexie('SIPBJ_SPJ_Database')
 
+// Database schema version 6 - Added Honorarium & Jasa Profesi tables
+db.version(6).stores({
+  // ==================== EXISTING TABLES ====================
+  // Master Data: Pegawai
+  pegawai: '++id, nip, nama, jabatan, golongan, pangkat, rekening, bank, unitKerja, createdAt, createdBy, updatedAt, revision',
+
+  // Master Data: Kota (dengan SBM tarif untuk Dalam Kota dan Luar Kota)
+  kota: '++id, namaKota, provinsi, tarifHarianDalamKota, tarifHarianLuarKota, tarifPenginapan, tarifTransportLokal, tarifTransportAntarKota, createdAt',
+
+  // Master Data: Pejabat (PPK, KPA)
+  pejabat: '++id, nip, nama, jabatan, jenisPejabat, pangkat, golongan, createdAt',
+
+  // Surat Tugas
+  suratTugas: '++id, nomor, tanggal, perihal, dasar, tujuanKegiatan, pegawaiIds, kotaAsal, kotaTujuan, tanggalMulai, tanggalSelesai, transportasi, jenisPerjadin, status, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // SPPD
+  sppd: '++id, nomor, suratTugasId, pegawaiId, tanggal, jenisPerjadin, kotaAsal, kotaTujuan, tanggalBerangkat, tanggalKembali, maksudPerjalanan, tingkatBiaya, keteranganLain, ppkId, kpaId, status, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Pembayaran LS (Awal)
+  pembayaranLS: '++id, sppdId, pegawaiId, tanggal, uangHarian, jumlahHari, totalUangHarian, transport, penginapan, jumlahMalam, totalPenginapan, totalLS, keterangan, createdAt, createdBy, updatedAt, revision',
+
+  // Rampung Perjalanan Dinas
+  rampung: '++id, sppdId, pegawaiId, jenisPerjadin, tanggal, realisasiUangHarian, jumlahHariRealisasi, totalRealisasiUangHarian, realisasiTransport, realisasiPenginapan, jumlahMalamRealisasi, totalRealisasiPenginapan, totalPengeluaranRiil, totalRealisasi, nilaiLS, selisih, statusSelisih, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Detail Pengeluaran Riil
+  pengeluaranRiil: '++id, rampungId, tanggal, uraian, jumlah, bukti, createdAt',
+
+  // Rincian Biaya (untuk dokumen)
+  rincianBiaya: '++id, rampungId, jenisBiaya, uraian, volume, satuan, hargaSatuan, jumlah, createdAt',
+
+  // Kwitansi SPPD
+  kwitansiSPPD: '++id, rampungId, sppdId, pegawaiId, nomor, tanggal, jumlah, terbilang, keterangan, ttdPegawai, ttdPPK, createdAt',
+
+  // Checklist SPJ SPPD
+  checklistSPJ: '++id, sppdId, jenisPerjadin, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt, createdBy, updatedAt, revision',
+
+  // Settings / Konfigurasi
+  settings: '++id, key, value, updatedAt',
+
+  // Nomor Urut (untuk auto numbering)
+  nomorUrut: '++id, jenis, tahun, bulan, nomorTerakhir',
+
+  // ==================== SWAKELOLA TABLES ====================
+  // Master Data: Kegiatan Swakelola
+  swakelolaKegiatan: '++id, kode, nama, tahun, sumberDana, akun, pagu, deskripsi, tanggalMulai, tanggalSelesai, status, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Tim Swakelola
+  swakelolaTim: '++id, kegiatanId, nomorSK, tanggalSK, pegawaiId, peran, honorPerBulan, jumlahBulan, totalHonor, rekening, bank, createdAt',
+
+  // Uang Muka / Panjar Swakelola
+  swakelolaUangMuka: '++id, kegiatanId, nomorKwitansi, tanggal, penerimaId, tipePenerima, jumlah, terbilang, keterangan, rekeningTujuan, bankTujuan, status, createdAt, createdBy, updatedAt, revision',
+
+  // Realisasi Biaya Swakelola
+  swakelolaRealisasi: '++id, kegiatanId, uangMukaId, tanggal, items, totalRealisasi, keterangan, createdAt, createdBy, updatedAt, revision',
+
+  // Item Realisasi Detail
+  swakelolaRealisasiItem: '++id, realisasiId, kategori, uraian, volume, satuan, hargaSatuan, jumlah, tanggal, noBukti, createdAt',
+
+  // Rampung Swakelola
+  swakelolaRampung: '++id, kegiatanId, uangMukaId, realisasiId, tanggal, totalUangMuka, totalRealisasi, selisih, statusSelisih, nomorKwitansi, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Checklist SPJ Swakelola
+  swakelolaChecklist: '++id, kegiatanId, rampungId, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt, createdBy, updatedAt, revision',
+
+  // ==================== PJLP TABLES ====================
+  // Master Data PJLP
+  pjlpMaster: '++id, nik, npwp, nama, posisi, unitKerja, rekening, bank, bpjsKesehatan, bpjsKetenagakerjaan, honorBulanan, masaKontrakMulai, masaKontrakSelesai, statusAktif, createdAt, createdBy, updatedAt, revision',
+
+  // Perencanaan PJLP
+  pjlpPerencanaan: '++id, tahun, nomorDokumen, tanggal, analisisKebutuhan, analisisBebanKerja, torKak, posisiDibutuhkan, jumlahOrang, honorBulanan, durasiKontrak, totalNilai, biayaBpjsKesehatan, biayaBpjsKetenagakerjaan, biayaThr, estimasiPph, totalHps, keterangan, status, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Kontrak PJLP
+  pjlpKontrak: '++id, pjlpId, nomorKontrak, tanggalKontrak, periodeAwal, periodeAkhir, honorBulanan, nilaiKontrak, posisi, lokasiKerja, lingkupPekerjaan, outputPekerjaan, status, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // SPK (Surat Perintah Kerja)
+  pjlpSpk: '++id, kontrakId, pjlpId, nomorSpk, tanggalSpk, periodeAwal, periodeAkhir, nilaiKontrak, keterangan, createdAt',
+
+  // SPMK (Surat Perintah Mulai Kerja)
+  pjlpSpmk: '++id, kontrakId, pjlpId, spkId, nomorSpmk, tanggalSpmk, tanggalMulaiKerja, keterangan, createdAt',
+
+  // Presensi Bulanan
+  pjlpPresensi: '++id, pjlpId, kontrakId, bulan, tahun, hariKerja, hadir, izin, sakit, alpa, terlambat, keterangan, createdAt, createdBy, updatedAt, revision',
+
+  // Laporan Bulanan
+  pjlpLaporanBulanan: '++id, pjlpId, kontrakId, bulan, tahun, uraianPekerjaan, outputDicapai, kendala, solusi, tanggalLaporan, status, createdAt',
+
+  // Pembayaran Bulanan
+  pjlpPembayaran: '++id, pjlpId, kontrakId, bulan, tahun, honorBruto, potonganPph, tarifPph, potonganBpjsKesehatan, potonganBpjsKetenagakerjaan, potonganLain, totalPotongan, honorNetto, rekening, bank, tanggalBayar, status, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Kwitansi PJLP
+  pjlpKwitansi: '++id, pembayaranId, pjlpId, nomorKwitansi, tanggal, jumlah, terbilang, keterangan, createdAt',
+
+  // Penilaian Kinerja Triwulan
+  pjlpPenilaian: '++id, pjlpId, kontrakId, tahun, triwulan, nilaiKualitas, bobotKualitas, nilaiWaktu, bobotWaktu, nilaiBiaya, bobotBiaya, nilaiLayanan, bobotLayanan, nilaiAkhir, kategori, catatanPenilai, namaPenilai, tanggalPenilaian, createdAt, createdBy, updatedAt, revision',
+
+  // Checklist SPJ PJLP
+  pjlpChecklist: '++id, pjlpId, kontrakId, bulan, tahun, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt, createdBy, updatedAt, revision',
+
+  // Arsip Digital PJLP
+  pjlpArsip: '++id, pjlpId, tahun, jenisDokumen, bulan, triwulan, namaDokumen, namaFile, ukuranFile, pathArsip, keterangan, createdAt',
+
+  // ==================== PENGADAAN LANGSUNG TABLES ====================
+  // Master Paket Pengadaan
+  procurementPackage: '++id, kodePaket, namaPaket, jenisPengadaan, unitPengusul, nilaiPagu, sumberDana, akun, tahun, metode, workflowStatus, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Link Lembar Permintaan ke Paket (many-to-many)
+  procurementRequestLink: '++id, paketId, namaFile, filePath, tanggalUpload, keterangan, createdAt',
+
+  // Perencanaan - KAK
+  procurementKak: '++id, paketId, latarBelakang, maksudTujuan, sasaran, ruangLingkup, outputPekerjaan, spesifikasiTeknis, waktuPelaksanaan, lokasi, tenagaAhli, metodePelaksanaan, laporanPenyerahan, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Perencanaan - HPS
+  procurementHps: '++id, paketId, tanggal, items, subtotal, ppn, pph, overhead, totalHps, sumberData, metodePerhitungan, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // HPS Items
+  procurementHpsItem: '++id, hpsId, uraian, volume, satuan, hargaSatuan, jumlah, keterangan, createdAt',
+
+  // Master Penyedia
+  procurementVendor: '++id, nama, npwp, alamat, telepon, email, direktur, jabatanDirektur, rekening, bank, bidangUsaha, kualifikasi, createdAt, createdBy, updatedAt, revision',
+
+  // Kontrak / SPK
+  procurementContract: '++id, paketId, vendorId, nomorKontrak, tanggalKontrak, nilaiKontrak, jangkaWaktu, tanggalMulai, tanggalSelesai, denda, jenisKontrak, lingkupPekerjaan, syaratPembayaran, jenisPembayaran, jumlahTermin, keterangan, status, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // SPMK Pengadaan
+  procurementSpmk: '++id, contractId, paketId, nomorSpmk, tanggalSpmk, tanggalMulaiKerja, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Progress Pekerjaan (untuk Konstruksi)
+  procurementProgress: '++id, contractId, paketId, tanggal, progresKumulatif, uraianPekerjaan, kendalaPekerjaan, keterangan, createdAt, createdBy, updatedAt, revision',
+
+  // BAP (Berita Acara Pemeriksaan)
+  procurementBap: '++id, contractId, paketId, nomorBap, tanggalBap, terminKe, hasilPemeriksaan, catatan, statusPemeriksaan, timPemeriksa, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // BAST (Berita Acara Serah Terima) - untuk Barang & Jasa
+  procurementBast: '++id, contractId, paketId, nomorBast, tanggalBast, terminKe, nilaiSerahTerima, kondisiBarang, catatanSerahTerima, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // PHO (Provisional Hand Over) - untuk Konstruksi
+  procurementPho: '++id, contractId, paketId, nomorPho, tanggalPho, progresAkhir, catatanPho, masaPemeliharaan, tanggalMulaiPemeliharaan, tanggalSelesaiPemeliharaan, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // FHO (Final Hand Over) - untuk Konstruksi
+  procurementFho: '++id, contractId, paketId, phoId, nomorFho, tanggalFho, kondisiAkhir, catatanFho, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Pembayaran Termin
+  procurementPayment: '++id, contractId, paketId, bastId, phoId, fhoId, terminKe, jenisPembayaran, nilaiTagihan, ppn, pph, potonganDenda, potonganLain, nilaiNetto, nomorKwitansi, tanggalKwitansi, tanggalBayar, rekening, bank, status, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Checklist SPJ Pengadaan
+  procurementChecklist: '++id, paketId, contractId, paymentId, terminKe, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt, createdBy, updatedAt, revision',
+
+  // Arsip Digital Pengadaan
+  procurementArchive: '++id, paketId, tahun, jenisDokumen, terminKe, namaDokumen, namaFile, ukuranFile, pathArsip, keterangan, createdAt',
+
+  // ==================== HONORARIUM & JASA PROFESI TABLES ====================
+  // Master Penerima Honor
+  honorRecipient: '++id, nik, npwp, nama, golongan, pangkat, jabatan, unitKerja, rekening, bank, statusPns, statusAktif, createdAt, createdBy, updatedAt, revision',
+
+  // Dasar Penugasan (SK)
+  honorAssignment: '++id, nomorSK, tanggalSK, perihal, dasarHukum, jenisHonor, kegiatanId, tahun, pagu, sumberDana, akun, tanggalMulai, tanggalSelesai, keterangan, status, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Daftar Nominatif (header)
+  honorNominatif: '++id, assignmentId, nomorNominatif, tanggal, bulan, tahun, jenisHonor, totalBruto, totalPph, totalNetto, status, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Daftar Nominatif Items
+  honorNominatifItem: '++id, nominatifId, recipientId, uraianTugas, volume, satuan, tarifHonor, jumlahBruto, tarifPph, pphDipotong, jumlahNetto, keterangan, createdAt',
+
+  // Kwitansi Honor
+  honorReceipt: '++id, nominatifId, nominatifItemId, recipientId, nomorKwitansi, tanggal, jumlahBruto, pph, jumlahNetto, terbilang, keterangan, status, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Checklist SPJ Honor
+  honorChecklist: '++id, assignmentId, nominatifId, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, documentPaths, createdAt, createdBy, updatedAt, revision',
+
+  // Arsip Digital Honorarium
+  honorArchive: '++id, assignmentId, nominatifId, tahun, bulan, jenisDokumen, namaDokumen, namaFile, ukuranFile, pathArsip, keterangan, createdAt',
+
+  // ==================== AUDIT TRAIL TABLE ====================
+  // Document History / Audit Trail
+  documentHistory: '++id, tableName, recordId, action, fieldChanges, previousData, newData, createdBy, createdAt, ipAddress, userAgent, archivePath'
+})
+
 // Database schema version 5 - Added Procurement (Pengadaan Langsung) tables
 db.version(5).stores({
   // ==================== EXISTING TABLES ====================
@@ -717,6 +894,188 @@ export function generatePathArsipPjlp(tahun, namaPjlp) {
 export function generateNamaFileArsipPjlp(tahun, jenis, bulanOrTriwulan, namaPjlp, ext = 'pdf') {
   const namaClean = namaPjlp.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()
   return `${tahun}-PJLP-${jenis.toUpperCase()}-${bulanOrTriwulan}-${namaClean}.${ext}`
+}
+
+// ==================== HONORARIUM & JASA PROFESI CONSTANTS ====================
+
+// Jenis Honorarium (sesuai SBK/SBM)
+export const JENIS_HONOR = [
+  { id: 'narasumber', nama: 'Narasumber/Pemateri', kode: '521213' },
+  { id: 'moderator', nama: 'Moderator', kode: '521213' },
+  { id: 'panitia', nama: 'Panitia Kegiatan', kode: '521213' },
+  { id: 'tim_pelaksana', nama: 'Tim Pelaksana Kegiatan', kode: '521213' },
+  { id: 'penguji', nama: 'Penguji/Penilai', kode: '521213' },
+  { id: 'pembimbing', nama: 'Pembimbing/Pendamping', kode: '521213' },
+  { id: 'juri', nama: 'Juri/Dewan Juri', kode: '521213' },
+  { id: 'petugas_teknis', nama: 'Petugas Teknis', kode: '521213' },
+  { id: 'editor', nama: 'Editor/Reviewer', kode: '521213' },
+  { id: 'penulis', nama: 'Penulis/Kontributor', kode: '521213' },
+  { id: 'peneliti', nama: 'Peneliti', kode: '521213' },
+  { id: 'jasa_profesi', nama: 'Jasa Profesi Lainnya', kode: '522151' }
+]
+
+// Status Penugasan Honor
+export const STATUS_HONOR_ASSIGNMENT = {
+  DRAFT: 'draft',
+  AKTIF: 'aktif',
+  PROSES: 'proses',
+  SELESAI: 'selesai',
+  BATAL: 'batal'
+}
+
+// Status Nominatif Honor
+export const STATUS_HONOR_NOMINATIF = {
+  DRAFT: 'draft',
+  SIAP_BAYAR: 'siap_bayar',
+  DIBAYAR: 'dibayar',
+  BATAL: 'batal'
+}
+
+// Tarif PPh 21 Honorarium (PP 58/2023 & PMK terkait)
+export const TARIF_PPH_HONOR = {
+  // PNS/ASN Golongan I-II (5%)
+  pnsGolI_II: 0.05,
+  // PNS/ASN Golongan III (5%)
+  pnsGolIII: 0.05,
+  // PNS/ASN Golongan IV (15%)
+  pnsGolIV: 0.15,
+  // Non-PNS dengan NPWP (5% tarif efektif rata-rata)
+  nonPnsWithNpwp: 0.05,
+  // Non-PNS tanpa NPWP (6% - lebih tinggi 20%)
+  nonPnsWithoutNpwp: 0.06
+}
+
+// Golongan untuk penentuan tarif PPh
+export const GOLONGAN_OPTIONS = [
+  { id: 'I/a', nama: 'I/a', grup: 'I-II' },
+  { id: 'I/b', nama: 'I/b', grup: 'I-II' },
+  { id: 'I/c', nama: 'I/c', grup: 'I-II' },
+  { id: 'I/d', nama: 'I/d', grup: 'I-II' },
+  { id: 'II/a', nama: 'II/a', grup: 'I-II' },
+  { id: 'II/b', nama: 'II/b', grup: 'I-II' },
+  { id: 'II/c', nama: 'II/c', grup: 'I-II' },
+  { id: 'II/d', nama: 'II/d', grup: 'I-II' },
+  { id: 'III/a', nama: 'III/a', grup: 'III' },
+  { id: 'III/b', nama: 'III/b', grup: 'III' },
+  { id: 'III/c', nama: 'III/c', grup: 'III' },
+  { id: 'III/d', nama: 'III/d', grup: 'III' },
+  { id: 'IV/a', nama: 'IV/a', grup: 'IV' },
+  { id: 'IV/b', nama: 'IV/b', grup: 'IV' },
+  { id: 'IV/c', nama: 'IV/c', grup: 'IV' },
+  { id: 'IV/d', nama: 'IV/d', grup: 'IV' },
+  { id: 'IV/e', nama: 'IV/e', grup: 'IV' }
+]
+
+// Satuan volume untuk honorarium
+export const SATUAN_HONOR = [
+  { id: 'ok', nama: 'Orang/Kegiatan' },
+  { id: 'oh', nama: 'Orang/Hari' },
+  { id: 'oj', nama: 'Orang/Jam' },
+  { id: 'ob', nama: 'Orang/Bulan' },
+  { id: 'paket', nama: 'Paket' },
+  { id: 'kali', nama: 'Kali' },
+  { id: 'sesi', nama: 'Sesi' },
+  { id: 'materi', nama: 'Materi' },
+  { id: 'naskah', nama: 'Naskah' },
+  { id: 'halaman', nama: 'Halaman' }
+]
+
+// Checklist SPJ Honorarium (Kepmen KP No.56 Tahun 2024)
+export const CHECKLIST_HONOR = [
+  { id: 'sk_penugasan', nama: 'SK/Surat Tugas Penugasan', wajib: true },
+  { id: 'undangan', nama: 'Surat Undangan Kegiatan', wajib: true },
+  { id: 'daftar_hadir', nama: 'Daftar Hadir Kegiatan', wajib: true },
+  { id: 'dokumentasi', nama: 'Dokumentasi Kegiatan (Foto)', wajib: true },
+  { id: 'nominatif', nama: 'Daftar Nominatif Penerima Honor', wajib: true },
+  { id: 'kwitansi', nama: 'Kwitansi Penerima Honor', wajib: true },
+  { id: 'fotocopy_ktp', nama: 'Fotocopy KTP Penerima', wajib: false },
+  { id: 'fotocopy_npwp', nama: 'Fotocopy NPWP Penerima', wajib: false },
+  { id: 'fotocopy_rekening', nama: 'Fotocopy Buku Rekening', wajib: false },
+  { id: 'ssp_pph', nama: 'SSP PPh 21', wajib: true },
+  { id: 'laporan_kegiatan', nama: 'Laporan Pelaksanaan Kegiatan', wajib: true }
+]
+
+// Jenis Dokumen Arsip Honorarium
+export const JENIS_DOKUMEN_HONOR = [
+  { id: 'sk', nama: 'SK/Surat Tugas' },
+  { id: 'undangan', nama: 'Undangan' },
+  { id: 'daftar_hadir', nama: 'Daftar Hadir' },
+  { id: 'nominatif', nama: 'Daftar Nominatif' },
+  { id: 'kwitansi', nama: 'Kwitansi' },
+  { id: 'ssp', nama: 'SSP PPh' },
+  { id: 'laporan', nama: 'Laporan Kegiatan' },
+  { id: 'dokumentasi', nama: 'Dokumentasi' },
+  { id: 'lainnya', nama: 'Dokumen Lainnya' }
+]
+
+// Helper: Calculate PPh for Honorarium
+export function calculatePphHonor(jumlahBruto, golongan = null, hasNpwp = true, isPns = false) {
+  let tarif
+
+  if (isPns && golongan) {
+    // PNS - tarif berdasarkan golongan
+    const gol = GOLONGAN_OPTIONS.find(g => g.id === golongan)
+    if (gol) {
+      if (gol.grup === 'IV') {
+        tarif = TARIF_PPH_HONOR.pnsGolIV
+      } else if (gol.grup === 'III') {
+        tarif = TARIF_PPH_HONOR.pnsGolIII
+      } else {
+        tarif = TARIF_PPH_HONOR.pnsGolI_II
+      }
+    } else {
+      tarif = TARIF_PPH_HONOR.pnsGolIII // Default
+    }
+  } else {
+    // Non-PNS
+    tarif = hasNpwp ? TARIF_PPH_HONOR.nonPnsWithNpwp : TARIF_PPH_HONOR.nonPnsWithoutNpwp
+  }
+
+  return {
+    tarif,
+    pph: Math.round(jumlahBruto * tarif)
+  }
+}
+
+// Helper: Get tarif PPh label
+export function getTarifPphLabel(tarif) {
+  return `${(tarif * 100).toFixed(0)}%`
+}
+
+// Helper: Generate path arsip Honorarium
+export function generatePathArsipHonor(tahun, nomorSK) {
+  const nomorClean = nomorSK.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()
+  return `ARSIP/${tahun}/HONORARIUM/${nomorClean}/`
+}
+
+// Helper: Generate nama file arsip Honorarium
+export function generateNamaFileArsipHonor(tahun, jenis, bulan, nomorSK, ext = 'pdf') {
+  const nomorClean = nomorSK.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()
+  const bulanStr = bulan ? `-${String(bulan).padStart(2, '0')}` : ''
+  return `${tahun}-HONOR-${jenis.toUpperCase()}${bulanStr}-${nomorClean}.${ext}`
+}
+
+// Helper: Get status label for Honor Assignment
+export function getStatusHonorLabel(status) {
+  const labels = {
+    [STATUS_HONOR_ASSIGNMENT.DRAFT]: 'Draft',
+    [STATUS_HONOR_ASSIGNMENT.AKTIF]: 'Aktif',
+    [STATUS_HONOR_ASSIGNMENT.PROSES]: 'Dalam Proses',
+    [STATUS_HONOR_ASSIGNMENT.SELESAI]: 'Selesai',
+    [STATUS_HONOR_ASSIGNMENT.BATAL]: 'Batal'
+  }
+  return labels[status] || status
+}
+
+// Helper: Get status label for Nominatif
+export function getStatusNominatifLabel(status) {
+  const labels = {
+    [STATUS_HONOR_NOMINATIF.DRAFT]: 'Draft',
+    [STATUS_HONOR_NOMINATIF.SIAP_BAYAR]: 'Siap Bayar',
+    [STATUS_HONOR_NOMINATIF.DIBAYAR]: 'Sudah Dibayar',
+    [STATUS_HONOR_NOMINATIF.BATAL]: 'Batal'
+  }
+  return labels[status] || status
 }
 
 // Initialize default settings
