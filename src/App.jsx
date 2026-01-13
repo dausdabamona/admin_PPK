@@ -33,6 +33,15 @@ import PjlpArsip from './pages/pjlp/PjlpArsip'
 // Audit
 import AuditDashboard from './pages/audit/AuditDashboard'
 
+// Pengadaan Langsung
+import PengadaanMasterPaket from './pages/pengadaan/PengadaanMasterPaket'
+import PengadaanMasterVendor from './pages/pengadaan/PengadaanMasterVendor'
+import PengadaanPerencanaan from './pages/pengadaan/PengadaanPerencanaan'
+import PengadaanKontrak from './pages/pengadaan/PengadaanKontrak'
+import PengadaanSerahTerima from './pages/pengadaan/PengadaanSerahTerima'
+import PengadaanPembayaran from './pages/pengadaan/PengadaanPembayaran'
+import PengadaanChecklist from './pages/pengadaan/PengadaanChecklist'
+
 function App() {
   return (
     <Routes>
@@ -73,6 +82,15 @@ function App() {
 
       {/* Audit */}
       <Route path="/audit" element={<AuditDashboard />} />
+
+      {/* Pengadaan Langsung */}
+      <Route path="/pengadaan/paket" element={<PengadaanMasterPaket />} />
+      <Route path="/pengadaan/penyedia" element={<PengadaanMasterVendor />} />
+      <Route path="/pengadaan/perencanaan" element={<PengadaanPerencanaan />} />
+      <Route path="/pengadaan/kontrak" element={<PengadaanKontrak />} />
+      <Route path="/pengadaan/serah-terima" element={<PengadaanSerahTerima />} />
+      <Route path="/pengadaan/pembayaran" element={<PengadaanPembayaran />} />
+      <Route path="/pengadaan/checklist" element={<PengadaanChecklist />} />
 
       {/* Settings */}
       <Route path="/settings" element={<Settings />} />

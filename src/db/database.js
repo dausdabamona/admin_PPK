@@ -3,8 +3,8 @@ import Dexie from 'dexie'
 // Create database instance
 export const db = new Dexie('SIPBJ_SPJ_Database')
 
-// Database schema version 4 - Added audit trail and document history
-db.version(4).stores({
+// Database schema version 5 - Added Procurement (Pengadaan Langsung) tables
+db.version(5).stores({
   // ==================== EXISTING TABLES ====================
   // Master Data: Pegawai
   pegawai: '++id, nip, nama, jabatan, golongan, pangkat, rekening, bank, unitKerja, createdAt, createdBy, updatedAt, revision',
@@ -104,13 +104,62 @@ db.version(4).stores({
   // Arsip Digital PJLP
   pjlpArsip: '++id, pjlpId, tahun, jenisDokumen, bulan, triwulan, namaDokumen, namaFile, ukuranFile, pathArsip, keterangan, createdAt',
 
+  // ==================== PENGADAAN LANGSUNG TABLES ====================
+  // Master Paket Pengadaan
+  procurementPackage: '++id, kodePaket, namaPaket, jenisPengadaan, unitPengusul, nilaiPagu, sumberDana, akun, tahun, metode, workflowStatus, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Link Lembar Permintaan ke Paket (many-to-many)
+  procurementRequestLink: '++id, paketId, namaFile, filePath, tanggalUpload, keterangan, createdAt',
+
+  // Perencanaan - KAK
+  procurementKak: '++id, paketId, latarBelakang, maksudTujuan, sasaran, ruangLingkup, outputPekerjaan, spesifikasiTeknis, waktuPelaksanaan, lokasi, tenagaAhli, metodePelaksanaan, laporanPenyerahan, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Perencanaan - HPS
+  procurementHps: '++id, paketId, tanggal, items, subtotal, ppn, pph, overhead, totalHps, sumberData, metodePerhitungan, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // HPS Items
+  procurementHpsItem: '++id, hpsId, uraian, volume, satuan, hargaSatuan, jumlah, keterangan, createdAt',
+
+  // Master Penyedia
+  procurementVendor: '++id, nama, npwp, alamat, telepon, email, direktur, jabatanDirektur, rekening, bank, bidangUsaha, kualifikasi, createdAt, createdBy, updatedAt, revision',
+
+  // Kontrak / SPK
+  procurementContract: '++id, paketId, vendorId, nomorKontrak, tanggalKontrak, nilaiKontrak, jangkaWaktu, tanggalMulai, tanggalSelesai, denda, jenisKontrak, lingkupPekerjaan, syaratPembayaran, jenisPembayaran, jumlahTermin, keterangan, status, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // SPMK Pengadaan
+  procurementSpmk: '++id, contractId, paketId, nomorSpmk, tanggalSpmk, tanggalMulaiKerja, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Progress Pekerjaan (untuk Konstruksi)
+  procurementProgress: '++id, contractId, paketId, tanggal, progresKumulatif, uraianPekerjaan, kendalaPekerjaan, keterangan, createdAt, createdBy, updatedAt, revision',
+
+  // BAP (Berita Acara Pemeriksaan)
+  procurementBap: '++id, contractId, paketId, nomorBap, tanggalBap, terminKe, hasilPemeriksaan, catatan, statusPemeriksaan, timPemeriksa, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // BAST (Berita Acara Serah Terima) - untuk Barang & Jasa
+  procurementBast: '++id, contractId, paketId, nomorBast, tanggalBast, terminKe, nilaiSerahTerima, kondisiBarang, catatanSerahTerima, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // PHO (Provisional Hand Over) - untuk Konstruksi
+  procurementPho: '++id, contractId, paketId, nomorPho, tanggalPho, progresAkhir, catatanPho, masaPemeliharaan, tanggalMulaiPemeliharaan, tanggalSelesaiPemeliharaan, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // FHO (Final Hand Over) - untuk Konstruksi
+  procurementFho: '++id, contractId, paketId, phoId, nomorFho, tanggalFho, kondisiAkhir, catatanFho, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Pembayaran Termin
+  procurementPayment: '++id, contractId, paketId, bastId, phoId, fhoId, terminKe, jenisPembayaran, nilaiTagihan, ppn, pph, potonganDenda, potonganLain, nilaiNetto, nomorKwitansi, tanggalKwitansi, tanggalBayar, rekening, bank, status, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+
+  // Checklist SPJ Pengadaan
+  procurementChecklist: '++id, paketId, contractId, paymentId, terminKe, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt, createdBy, updatedAt, revision',
+
+  // Arsip Digital Pengadaan
+  procurementArchive: '++id, paketId, tahun, jenisDokumen, terminKe, namaDokumen, namaFile, ukuranFile, pathArsip, keterangan, createdAt',
+
   // ==================== AUDIT TRAIL TABLE ====================
   // Document History / Audit Trail
   documentHistory: '++id, tableName, recordId, action, fieldChanges, previousData, newData, createdBy, createdAt, ipAddress, userAgent, archivePath'
 })
 
-// Database schema version 3 - Added PJLP tables (kept for migration)
-db.version(3).stores({
+// Database schema version 4 - Added audit trail and document history
+db.version(4).stores({
   // ==================== EXISTING TABLES ====================
   // Master Data: Pegawai
   pegawai: '++id, nip, nama, jabatan, golongan, pangkat, rekening, bank, unitKerja, createdAt',
@@ -373,6 +422,246 @@ export const JENIS_DOKUMEN_PJLP = [
   { id: 'bast', nama: 'BAST' },
   { id: 'lainnya', nama: 'Dokumen Lainnya' }
 ]
+
+// ==================== PENGADAAN LANGSUNG CONSTANTS ====================
+
+// Jenis Pengadaan
+export const JENIS_PENGADAAN = [
+  { id: 'barang', nama: 'Barang' },
+  { id: 'jasa_konsultansi', nama: 'Jasa Konsultansi' },
+  { id: 'jasa_lainnya', nama: 'Jasa Lainnya' },
+  { id: 'konstruksi', nama: 'Konstruksi' }
+]
+
+// Metode Pengadaan Langsung
+export const METODE_PENGADAAN = [
+  { id: 'pengadaan_langsung', nama: 'Pengadaan Langsung', batasNilai: 200000000 },
+  { id: 'penunjukan_langsung', nama: 'Penunjukan Langsung', batasNilai: null },
+  { id: 'e_purchasing', nama: 'E-Purchasing', batasNilai: null }
+]
+
+// Sumber Dana Pengadaan
+export const SUMBER_DANA_PENGADAAN = [
+  { id: 'apbn', nama: 'APBN' },
+  { id: 'pnbp', nama: 'PNBP' },
+  { id: 'blud', nama: 'BLU/BLUD' },
+  { id: 'hibah', nama: 'Hibah' }
+]
+
+// Workflow Status Paket Pengadaan
+export const WORKFLOW_STATUS_PENGADAAN = {
+  DRAFT: 'draft',
+  PERENCANAAN: 'perencanaan',
+  PEMILIHAN_PENYEDIA: 'pemilihan_penyedia',
+  KONTRAK: 'kontrak',
+  PELAKSANAAN: 'pelaksanaan',
+  SERAH_TERIMA: 'serah_terima',
+  PEMBAYARAN: 'pembayaran',
+  SELESAI: 'selesai',
+  BATAL: 'batal'
+}
+
+// Status Kontrak Pengadaan
+export const STATUS_KONTRAK_PENGADAAN = {
+  DRAFT: 'draft',
+  AKTIF: 'aktif',
+  DALAM_PELAKSANAAN: 'dalam_pelaksanaan',
+  SERAH_TERIMA: 'serah_terima',
+  SELESAI: 'selesai',
+  BATAL: 'batal'
+}
+
+// Jenis Kontrak
+export const JENIS_KONTRAK_PENGADAAN = [
+  { id: 'lumsum', nama: 'Lumsum' },
+  { id: 'harga_satuan', nama: 'Harga Satuan' },
+  { id: 'gabungan', nama: 'Gabungan Lumsum & Harga Satuan' },
+  { id: 'terima_jadi', nama: 'Terima Jadi (Turnkey)' },
+  { id: 'kontrak_payung', nama: 'Kontrak Payung' }
+]
+
+// Jenis Pembayaran
+export const JENIS_PEMBAYARAN_PENGADAAN = [
+  { id: 'sekaligus', nama: 'Pembayaran Sekaligus (100%)' },
+  { id: 'termin', nama: 'Pembayaran Termin' },
+  { id: 'bulanan', nama: 'Pembayaran Bulanan' }
+]
+
+// Status Pembayaran Pengadaan
+export const STATUS_PEMBAYARAN_PENGADAAN = {
+  DRAFT: 'draft',
+  MENUNGGU_BAP: 'menunggu_bap',
+  MENUNGGU_BAST: 'menunggu_bast',
+  SIAP_BAYAR: 'siap_bayar',
+  DIBAYAR: 'dibayar',
+  BATAL: 'batal'
+}
+
+// Status Pemeriksaan BAP
+export const STATUS_PEMERIKSAAN_BAP = {
+  SESUAI: 'sesuai',
+  SESUAI_DENGAN_CATATAN: 'sesuai_dengan_catatan',
+  TIDAK_SESUAI: 'tidak_sesuai'
+}
+
+// Kualifikasi Penyedia
+export const KUALIFIKASI_PENYEDIA = [
+  { id: 'kecil', nama: 'Usaha Kecil' },
+  { id: 'menengah', nama: 'Usaha Menengah' },
+  { id: 'besar', nama: 'Usaha Besar' },
+  { id: 'perseorangan', nama: 'Perseorangan' }
+]
+
+// Bidang Usaha Penyedia
+export const BIDANG_USAHA_PENYEDIA = [
+  { id: 'perdagangan', nama: 'Perdagangan Umum' },
+  { id: 'jasa_konsultansi', nama: 'Jasa Konsultansi' },
+  { id: 'konstruksi', nama: 'Konstruksi' },
+  { id: 'pengadaan_barang', nama: 'Pengadaan Barang' },
+  { id: 'jasa_lainnya', nama: 'Jasa Lainnya' },
+  { id: 'teknologi_informasi', nama: 'Teknologi Informasi' },
+  { id: 'percetakan', nama: 'Percetakan' },
+  { id: 'catering', nama: 'Katering/Konsumsi' },
+  { id: 'sewa_kendaraan', nama: 'Sewa Kendaraan' },
+  { id: 'alat_laboratorium', nama: 'Alat Laboratorium' },
+  { id: 'perikanan', nama: 'Perikanan & Kelautan' }
+]
+
+// Tarif PPh Pengadaan
+export const TARIF_PPH_PENGADAAN = {
+  pph21: 0.025, // 2.5% Jasa (perseorangan)
+  pph22: 0.015, // 1.5% Barang
+  pph23: 0.02,  // 2% Jasa (badan usaha)
+  pph4_2: 0.03  // 3% Konstruksi
+}
+
+// Tarif PPN
+export const TARIF_PPN = 0.11 // 11%
+
+// Checklist SPJ Pengadaan Barang
+export const CHECKLIST_PENGADAAN_BARANG = [
+  { id: 'lembar_permintaan', nama: 'Lembar Permintaan Pembelian', wajib: true },
+  { id: 'kak', nama: 'Kerangka Acuan Kerja (KAK)', wajib: true },
+  { id: 'hps', nama: 'Harga Perkiraan Sendiri (HPS)', wajib: true },
+  { id: 'undangan_penawaran', nama: 'Undangan/Permintaan Penawaran', wajib: true },
+  { id: 'surat_penawaran', nama: 'Surat Penawaran Harga', wajib: true },
+  { id: 'pakta_integritas', nama: 'Pakta Integritas Penyedia', wajib: true },
+  { id: 'ba_negosiasi', nama: 'BA Negosiasi Harga', wajib: true },
+  { id: 'sppbj', nama: 'Surat Penetapan Penyedia (SPPBJ)', wajib: true },
+  { id: 'kontrak_spk', nama: 'Kontrak/SPK', wajib: true },
+  { id: 'spmk', nama: 'Surat Perintah Mulai Kerja (SPMK)', wajib: true },
+  { id: 'bap', nama: 'Berita Acara Pemeriksaan (BAP)', wajib: true },
+  { id: 'bast', nama: 'Berita Acara Serah Terima (BAST)', wajib: true },
+  { id: 'faktur_invoice', nama: 'Faktur/Invoice', wajib: true },
+  { id: 'kwitansi', nama: 'Kwitansi', wajib: true },
+  { id: 'faktur_pajak', nama: 'Faktur Pajak', wajib: false },
+  { id: 'ssp_ppn', nama: 'SSP PPN', wajib: false },
+  { id: 'ssp_pph', nama: 'SSP PPh', wajib: true }
+]
+
+// Checklist SPJ Pengadaan Jasa
+export const CHECKLIST_PENGADAAN_JASA = [
+  { id: 'lembar_permintaan', nama: 'Lembar Permintaan', wajib: true },
+  { id: 'kak', nama: 'Kerangka Acuan Kerja (KAK)', wajib: true },
+  { id: 'hps', nama: 'Harga Perkiraan Sendiri (HPS)', wajib: true },
+  { id: 'undangan_penawaran', nama: 'Undangan/Permintaan Penawaran', wajib: true },
+  { id: 'surat_penawaran', nama: 'Surat Penawaran Harga', wajib: true },
+  { id: 'pakta_integritas', nama: 'Pakta Integritas Penyedia', wajib: true },
+  { id: 'ba_negosiasi', nama: 'BA Negosiasi Harga', wajib: true },
+  { id: 'sppbj', nama: 'Surat Penetapan Penyedia (SPPBJ)', wajib: true },
+  { id: 'kontrak_spk', nama: 'Kontrak/SPK', wajib: true },
+  { id: 'spmk', nama: 'Surat Perintah Mulai Kerja (SPMK)', wajib: true },
+  { id: 'laporan_pekerjaan', nama: 'Laporan Hasil Pekerjaan', wajib: true },
+  { id: 'bap', nama: 'Berita Acara Pemeriksaan (BAP)', wajib: true },
+  { id: 'bast', nama: 'Berita Acara Serah Terima (BAST)', wajib: true },
+  { id: 'kwitansi', nama: 'Kwitansi', wajib: true },
+  { id: 'ssp_pph', nama: 'SSP PPh 21/23', wajib: true }
+]
+
+// Checklist SPJ Pengadaan Konstruksi
+export const CHECKLIST_PENGADAAN_KONSTRUKSI = [
+  { id: 'lembar_permintaan', nama: 'Lembar Permintaan', wajib: true },
+  { id: 'kak', nama: 'Kerangka Acuan Kerja (KAK)', wajib: true },
+  { id: 'gambar_desain', nama: 'Gambar/Desain Teknis', wajib: true },
+  { id: 'rab', nama: 'Rencana Anggaran Biaya (RAB)', wajib: true },
+  { id: 'hps', nama: 'Harga Perkiraan Sendiri (HPS)', wajib: true },
+  { id: 'undangan_penawaran', nama: 'Undangan/Permintaan Penawaran', wajib: true },
+  { id: 'surat_penawaran', nama: 'Surat Penawaran Harga', wajib: true },
+  { id: 'pakta_integritas', nama: 'Pakta Integritas Penyedia', wajib: true },
+  { id: 'ba_negosiasi', nama: 'BA Negosiasi Harga', wajib: true },
+  { id: 'sppbj', nama: 'Surat Penetapan Penyedia (SPPBJ)', wajib: true },
+  { id: 'kontrak_spk', nama: 'Kontrak/SPK', wajib: true },
+  { id: 'spmk', nama: 'Surat Perintah Mulai Kerja (SPMK)', wajib: true },
+  { id: 'jaminan_pelaksanaan', nama: 'Jaminan Pelaksanaan', wajib: false },
+  { id: 'laporan_progres', nama: 'Laporan Progress Pekerjaan', wajib: true },
+  { id: 'bap', nama: 'Berita Acara Pemeriksaan (BAP)', wajib: true },
+  { id: 'pho', nama: 'PHO (Provisional Hand Over)', wajib: true },
+  { id: 'fho', nama: 'FHO (Final Hand Over)', wajib: true },
+  { id: 'kwitansi', nama: 'Kwitansi', wajib: true },
+  { id: 'faktur_pajak', nama: 'Faktur Pajak', wajib: false },
+  { id: 'ssp_pph', nama: 'SSP PPh 4(2)', wajib: true }
+]
+
+// Jenis Dokumen Arsip Pengadaan
+export const JENIS_DOKUMEN_PENGADAAN = [
+  { id: 'permintaan', nama: 'Lembar Permintaan' },
+  { id: 'kak', nama: 'KAK' },
+  { id: 'hps', nama: 'HPS' },
+  { id: 'penawaran', nama: 'Surat Penawaran' },
+  { id: 'negosiasi', nama: 'BA Negosiasi' },
+  { id: 'kontrak', nama: 'Kontrak/SPK' },
+  { id: 'spmk', nama: 'SPMK' },
+  { id: 'bap', nama: 'BAP' },
+  { id: 'bast', nama: 'BAST' },
+  { id: 'pho', nama: 'PHO' },
+  { id: 'fho', nama: 'FHO' },
+  { id: 'kwitansi', nama: 'Kwitansi' },
+  { id: 'faktur', nama: 'Faktur/Invoice' },
+  { id: 'ssp', nama: 'SSP Pajak' },
+  { id: 'lainnya', nama: 'Dokumen Lainnya' }
+]
+
+// Helper: Get checklist by jenis pengadaan
+export function getChecklistPengadaan(jenisPengadaan) {
+  if (jenisPengadaan === 'konstruksi') return CHECKLIST_PENGADAAN_KONSTRUKSI
+  if (jenisPengadaan === 'barang') return CHECKLIST_PENGADAAN_BARANG
+  return CHECKLIST_PENGADAAN_JASA
+}
+
+// Helper: Calculate PPh for Pengadaan
+export function calculatePphPengadaan(nilai, jenisPengadaan, isPKP = true) {
+  let tarif = TARIF_PPH_PENGADAAN.pph22 // Default barang
+  if (jenisPengadaan === 'konstruksi') tarif = TARIF_PPH_PENGADAAN.pph4_2
+  else if (jenisPengadaan === 'jasa_konsultansi' || jenisPengadaan === 'jasa_lainnya') tarif = TARIF_PPH_PENGADAAN.pph23
+  return Math.round(nilai * tarif)
+}
+
+// Helper: Calculate PPN
+export function calculatePpnPengadaan(nilai) {
+  return Math.round(nilai * TARIF_PPN)
+}
+
+// Helper: Generate archive path for Pengadaan
+export function generatePathArsipPengadaan(tahun, kodePaket) {
+  const kodeClean = kodePaket.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()
+  return `ARSIP/${tahun}/PENGADAAN/${kodeClean}/`
+}
+
+// Helper: Get workflow status label
+export function getWorkflowStatusLabel(status) {
+  const labels = {
+    [WORKFLOW_STATUS_PENGADAAN.DRAFT]: 'Draft',
+    [WORKFLOW_STATUS_PENGADAAN.PERENCANAAN]: 'Perencanaan',
+    [WORKFLOW_STATUS_PENGADAAN.PEMILIHAN_PENYEDIA]: 'Pemilihan Penyedia',
+    [WORKFLOW_STATUS_PENGADAAN.KONTRAK]: 'Kontrak',
+    [WORKFLOW_STATUS_PENGADAAN.PELAKSANAAN]: 'Pelaksanaan',
+    [WORKFLOW_STATUS_PENGADAAN.SERAH_TERIMA]: 'Serah Terima',
+    [WORKFLOW_STATUS_PENGADAAN.PEMBAYARAN]: 'Pembayaran',
+    [WORKFLOW_STATUS_PENGADAAN.SELESAI]: 'Selesai',
+    [WORKFLOW_STATUS_PENGADAAN.BATAL]: 'Batal'
+  }
+  return labels[status] || status
+}
 
 // Bulan Indonesia
 export const BULAN_INDONESIA = [
