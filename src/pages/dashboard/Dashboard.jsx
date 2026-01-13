@@ -199,16 +199,16 @@ export default function Dashboard() {
 
   // Pengadaan stats - with safety guards
   const pengadaanPaketCount = useLiveQuery(async () => {
-    try { return await db.pengadaanPaket.count() } catch { return 0 }
+    try { return await db.procurementPackage.count() } catch { return 0 }
   }) || 0
 
   const pengadaanPenyediaCount = useLiveQuery(async () => {
-    try { return await db.pengadaanPenyedia.count() } catch { return 0 }
+    try { return await db.procurementVendor.count() } catch { return 0 }
   }) || 0
 
   const pengadaanKontrakAktifCount = useLiveQuery(async () => {
     try {
-      return await db.pengadaanKontrak.where('status').equals('aktif').count()
+      return await db.procurementContract.where('status').equals('aktif').count()
     } catch {
       return 0
     }
@@ -217,7 +217,7 @@ export default function Dashboard() {
   // Total nilai kontrak aktif Pengadaan
   const totalPengadaanKontrak = useLiveQuery(async () => {
     try {
-      const kontrak = await db.pengadaanKontrak.where('status').equals('aktif').toArray()
+      const kontrak = await db.procurementContract.where('status').equals('aktif').toArray()
       return kontrak.reduce((sum, k) => sum + (k.nilaiKontrak || 0), 0)
     } catch {
       return 0
@@ -227,10 +227,10 @@ export default function Dashboard() {
   // Recent Pengadaan Paket - with safety guard
   const recentPengadaanPaket = useLiveQuery(async () => {
     try {
-      const paket = await db.pengadaanPaket.orderBy('createdAt').reverse().limit(5).toArray()
+      const paket = await db.procurementPackage.orderBy('createdAt').reverse().limit(5).toArray()
       return Promise.all(paket.map(async (p) => {
-        const kontrak = await db.pengadaanKontrak.where('paketId').equals(p.id).first()
-        const penyedia = kontrak ? await db.pengadaanPenyedia.get(kontrak.penyediaId) : null
+        const kontrak = await db.procurementContract.where('paketId').equals(p.id).first()
+        const penyedia = kontrak ? await db.procurementVendor.get(kontrak.vendorId) : null
         return { ...p, kontrak, penyedia }
       }))
     } catch {
