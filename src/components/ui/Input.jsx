@@ -158,8 +158,9 @@ export const CurrencyInput = forwardRef(function CurrencyInput(
   ref
 ) {
   const formatCurrency = (val) => {
-    if (!val) return ''
+    if (!val || val === '0' || val === 0) return ''
     const num = val.toString().replace(/[^0-9]/g, '')
+    if (!num || num === '0') return ''
     return new Intl.NumberFormat('id-ID').format(num)
   }
 
