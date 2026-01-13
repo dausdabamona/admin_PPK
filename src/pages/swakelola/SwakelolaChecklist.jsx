@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
-  Plus, Pencil, Trash2, Search, ListChecks, Eye, Printer, CheckCircle, XCircle
+  Plus, Pencil, Trash2, Search, ListChecks, Eye, Printer, CheckCircle, XCircle, FileText, Download
 } from 'lucide-react'
 import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardBody, CardTitle, CardDescription } from '../../components/ui/Card'
@@ -10,7 +10,8 @@ import Button from '../../components/ui/Button'
 import Modal, { ModalFooter } from '../../components/ui/Modal'
 import { Input, Select, Textarea } from '../../components/ui/Input'
 import Badge from '../../components/ui/Badge'
-import db, { CHECKLIST_SWAKELOLA } from '../../db/database'
+import { ChecklistItemUpload } from '../../components/ui/ChecklistFileUpload'
+import db, { CHECKLIST_SWAKELOLA, CHECKLIST_TYPES, getChecklistFiles, downloadChecklistFile } from '../../db/database'
 import { formatTanggal, formatDateInput } from '../../utils/formatters'
 import { generateChecklistSwakelolaSpjPDF } from '../../utils/swakelolaDocGenerator'
 
@@ -419,36 +420,52 @@ export default function SwakelolaChecklist() {
             <div className="border rounded-lg overflow-hidden">
               <div className="bg-primary-50 px-4 py-2 border-b">
                 <h4 className="font-medium text-primary-700">Dokumen SPJ Swakelola (Kepmen KP No.56/2024)</h4>
-                <p className="text-xs text-primary-600">Centang dokumen yang sudah lengkap</p>
+                <p className="text-xs text-primary-600">Centang dokumen yang sudah lengkap dan upload file pendukung</p>
               </div>
               <div className="divide-y">
-                {checklistItems.map((item) => (
-                  <div key={item.id} className={`p-3 flex items-start gap-3 ${item.ada ? 'bg-green-50' : ''}`}>
-                    <label className="flex items-center gap-2 cursor-pointer flex-1">
-                      <input
-                        type="checkbox"
-                        checked={item.ada}
-                        onChange={(e) => handleChecklistChange(item.id, 'ada', e.target.checked)}
-                        className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                      />
-                      <div className="flex-1">
-                        <span className={`font-medium ${item.ada ? 'text-green-700' : 'text-gray-700'}`}>
-                          {item.nama}
-                        </span>
-                        {item.wajib && (
-                          <span className="ml-2 text-xs text-red-500">*wajib</span>
-                        )}
+                {checklistItems.map((item) => {
+                  const kegiatan = allKegiatan.find(k => k.id === parseInt(formData.kegiatanId))
+                  const identifier = kegiatan?.kode || `SWK-${formData.kegiatanId}`
+                  return (
+                    <div key={item.id} className={`p-3 flex items-start gap-3 ${item.ada ? 'bg-green-50' : ''}`}>
+                      <label className="flex items-center gap-2 cursor-pointer flex-1">
+                        <input
+                          type="checkbox"
+                          checked={item.ada}
+                          onChange={(e) => handleChecklistChange(item.id, 'ada', e.target.checked)}
+                          className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                        />
+                        <div className="flex-1">
+                          <span className={`font-medium ${item.ada ? 'text-green-700' : 'text-gray-700'}`}>
+                            {item.nama}
+                          </span>
+                          {item.wajib && (
+                            <span className="ml-2 text-xs text-red-500">*wajib</span>
+                          )}
+                        </div>
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <ChecklistItemUpload
+                          checklistType={CHECKLIST_TYPES.SWAKELOLA}
+                          checklistId={editingId}
+                          itemId={item.id}
+                          identifier={identifier}
+                          onFileChange={(itemId, file) => {
+                            handleChecklistChange(itemId, 'fileId', file?.id || null)
+                            handleChecklistChange(itemId, 'fileName', file?.fileName || null)
+                          }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Catatan..."
+                          value={item.catatan}
+                          onChange={(e) => handleChecklistChange(item.id, 'catatan', e.target.value)}
+                          className="w-32 text-sm px-2 py-1 border rounded"
+                        />
                       </div>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Catatan..."
-                      value={item.catatan}
-                      onChange={(e) => handleChecklistChange(item.id, 'catatan', e.target.value)}
-                      className="w-40 text-sm px-2 py-1 border rounded"
-                    />
-                  </div>
-                ))}
+                    </div>
+                  )
+                })}
               </div>
             </div>
 
@@ -529,9 +546,9 @@ export default function SwakelolaChecklist() {
                 {(viewingData.items || []).map((item) => (
                   <div key={item.id} className={`p-3 flex items-center gap-3 ${item.ada ? 'bg-green-50' : 'bg-red-50'}`}>
                     {item.ada ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-red-600" />
+                      <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
                     )}
                     <div className="flex-1">
                       <span className={item.ada ? 'text-green-700' : 'text-red-700'}>
@@ -544,6 +561,14 @@ export default function SwakelolaChecklist() {
                         <p className="text-xs text-gray-500 mt-1">{item.catatan}</p>
                       )}
                     </div>
+                    {item.fileName && (
+                      <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 border border-blue-200 rounded text-xs">
+                        <FileText className="w-3 h-3 text-blue-600" />
+                        <span className="text-blue-700 max-w-[100px] truncate" title={item.fileName}>
+                          {item.fileName}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

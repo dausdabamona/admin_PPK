@@ -3,8 +3,8 @@ import Dexie from 'dexie'
 // Create database instance
 export const db = new Dexie('SIPBJ_SPJ_Database')
 
-// Database schema version 8 - Added SK KPA Penetapan Honorarium tables
-db.version(8).stores({
+// Database schema version 9 - Added Checklist File Upload
+db.version(9).stores({
   // ==================== EXISTING TABLES ====================
   // Master Data: Pegawai
   pegawai: '++id, nip, nama, jabatan, golongan, pangkat, rekening, bank, unitKerja, createdAt, createdBy, updatedAt, revision',
@@ -730,7 +730,11 @@ db.version(4).stores({
   pjlpChecklist: '++id, pjlpId, kontrakId, bulan, tahun, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt',
 
   // Arsip Digital PJLP
-  pjlpArsip: '++id, pjlpId, tahun, jenisDokumen, bulan, triwulan, namaDokumen, namaFile, ukuranFile, pathArsip, keterangan, createdAt'
+  pjlpArsip: '++id, pjlpId, tahun, jenisDokumen, bulan, triwulan, namaDokumen, namaFile, ukuranFile, pathArsip, keterangan, createdAt',
+
+  // ==================== CHECKLIST FILE UPLOADS ====================
+  // File uploads for all checklist types (swakelola, sppd, pengadaan, honor, pjlp)
+  checklistFiles: '++id, checklistType, checklistId, itemId, fileName, fileType, fileSize, fileData, folderPath, createdAt, createdBy'
 })
 
 // Checklist templates for SPPD
@@ -1220,6 +1224,7 @@ export const JENIS_HONOR = [
   { id: 'editor', nama: 'Editor/Reviewer', kode: '521213' },
   { id: 'penulis', nama: 'Penulis/Kontributor', kode: '521213' },
   { id: 'peneliti', nama: 'Peneliti', kode: '521213' },
+  { id: 'operasional_satker', nama: 'Honorarium Operasional Satuan Kerja', kode: '521115' },
   { id: 'jasa_profesi', nama: 'Jasa Profesi Lainnya', kode: '522151' }
 ]
 
@@ -1451,6 +1456,113 @@ export async function generateNomorSkKpa(tahun) {
 export function getPeranDalamTimLabel(peranId) {
   const peran = PERAN_DALAM_TIM.find(p => p.id === peranId)
   return peran?.nama || peranId
+}
+
+// ==================== CHECKLIST FILE UPLOAD HELPERS ====================
+
+// Checklist types and their folder paths
+export const CHECKLIST_TYPES = {
+  SPPD: 'sppd',
+  SWAKELOLA: 'swakelola',
+  PENGADAAN: 'pengadaan',
+  HONOR: 'honor',
+  PJLP: 'pjlp'
+}
+
+// Generate folder path for checklist files
+export function generateChecklistFolderPath(checklistType, tahun, identifier) {
+  const paths = {
+    [CHECKLIST_TYPES.SPPD]: `ARSIP/${tahun}/PERJALANAN_DINAS/CHECKLIST/${identifier}/`,
+    [CHECKLIST_TYPES.SWAKELOLA]: `ARSIP/${tahun}/SWAKELOLA/CHECKLIST/${identifier}/`,
+    [CHECKLIST_TYPES.PENGADAAN]: `ARSIP/${tahun}/PENGADAAN/CHECKLIST/${identifier}/`,
+    [CHECKLIST_TYPES.HONOR]: `ARSIP/${tahun}/HONORARIUM/CHECKLIST/${identifier}/`,
+    [CHECKLIST_TYPES.PJLP]: `ARSIP/${tahun}/PJLP/CHECKLIST/${identifier}/`
+  }
+  return paths[checklistType] || `ARSIP/${tahun}/CHECKLIST/${identifier}/`
+}
+
+// Save checklist file to database
+export async function saveChecklistFile(checklistType, checklistId, itemId, file, identifier) {
+  const tahun = new Date().getFullYear()
+  const folderPath = generateChecklistFolderPath(checklistType, tahun, identifier)
+
+  // Convert file to base64
+  const reader = new FileReader()
+  const fileData = await new Promise((resolve, reject) => {
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+
+  // Check if file already exists for this item
+  const existing = await db.checklistFiles
+    .where({ checklistType, checklistId, itemId })
+    .first()
+
+  if (existing) {
+    // Update existing file
+    await db.checklistFiles.update(existing.id, {
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+      fileData,
+      folderPath,
+      createdAt: new Date()
+    })
+    return existing.id
+  } else {
+    // Add new file
+    return await db.checklistFiles.add({
+      checklistType,
+      checklistId,
+      itemId,
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+      fileData,
+      folderPath,
+      createdAt: new Date(),
+      createdBy: 'user'
+    })
+  }
+}
+
+// Get checklist file by item
+export async function getChecklistFile(checklistType, checklistId, itemId) {
+  return await db.checklistFiles
+    .where({ checklistType, checklistId, itemId })
+    .first()
+}
+
+// Get all files for a checklist
+export async function getChecklistFiles(checklistType, checklistId) {
+  return await db.checklistFiles
+    .where({ checklistType, checklistId })
+    .toArray()
+}
+
+// Delete checklist file
+export async function deleteChecklistFile(fileId) {
+  return await db.checklistFiles.delete(fileId)
+}
+
+// Download checklist file
+export function downloadChecklistFile(fileData, fileName) {
+  const link = document.createElement('a')
+  link.href = fileData
+  link.download = fileName
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+// Format file size for display
+export function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
 // Initialize default settings
