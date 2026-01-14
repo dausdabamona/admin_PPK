@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   Users,
@@ -35,7 +35,7 @@ import {
   Award,
   BarChart3
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const menuItems = [
   {
@@ -71,8 +71,7 @@ const menuItems = [
       { name: 'Tim Swakelola', path: '/swakelola/tim', icon: UsersRound },
       { name: 'Uang Muka', path: '/swakelola/uang-muka', icon: Banknote },
       { name: 'Realisasi', path: '/swakelola/realisasi', icon: Receipt },
-      { name: 'Rampung', path: '/swakelola/rampung', icon: Calculator },
-      { name: 'Checklist SPJ', path: '/swakelola/checklist', icon: ListChecks }
+      { name: 'Rampung', path: '/swakelola/rampung', icon: Calculator }
     ]
   },
   {
@@ -110,8 +109,7 @@ const menuItems = [
       { name: 'Dasar Penugasan', path: '/honorarium/penugasan', icon: FileSignature },
       { name: 'Daftar Nominatif', path: '/honorarium/nominatif', icon: ClipboardList },
       { name: 'Kwitansi', path: '/honorarium/kwitansi', icon: Receipt },
-      { name: 'Rekap Pembayaran', path: '/honorarium/rekap', icon: BarChart3 },
-      { name: 'Checklist SPJ', path: '/honorarium/checklist', icon: ListChecks }
+      { name: 'Rekap Pembayaran', path: '/honorarium/rekap', icon: BarChart3 }
     ]
   },
   {
@@ -126,19 +124,39 @@ const menuItems = [
   }
 ]
 
-function MenuItem({ item, isOpen, onToggle }) {
+// Check if any submenu item is active
+const isSubmenuActive = (submenu, currentPath) => {
+  return submenu?.some(item => currentPath.startsWith(item.path))
+}
+
+// Find which menu should be open based on current path
+const getActiveMenuName = (currentPath) => {
+  for (const item of menuItems) {
+    if (item.submenu && isSubmenuActive(item.submenu, currentPath)) {
+      return item.name
+    }
+  }
+  return null
+}
+
+function MenuItem({ item, isOpen, onToggle, currentPath }) {
   const hasSubmenu = item.submenu && item.submenu.length > 0
   const Icon = item.icon
+  const isActive = hasSubmenu && isSubmenuActive(item.submenu, currentPath)
 
   if (hasSubmenu) {
     return (
       <div className="mb-1">
         <button
           onClick={onToggle}
-          className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors duration-200"
+          className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
+            isActive
+              ? 'text-primary-700 bg-primary-50'
+              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+          }`}
         >
           <div className="flex items-center gap-3">
-            <Icon className="w-5 h-5" />
+            <Icon className={`w-5 h-5 ${isActive ? 'text-primary-600' : ''}`} />
             <span>{item.name}</span>
           </div>
           {isOpen ? (
@@ -148,6 +166,7 @@ function MenuItem({ item, isOpen, onToggle }) {
           )}
         </button>
 
+        {/* Only show submenu if open */}
         {isOpen && (
           <div className="ml-4 mt-1 space-y-1">
             {item.submenu.map((subItem) => {
@@ -185,14 +204,37 @@ function MenuItem({ item, isOpen, onToggle }) {
 }
 
 export default function Sidebar() {
-  const [openMenus, setOpenMenus] = useState({
-    'Master Data': true,
-    'Perjalanan Dinas': true,
-    'Swakelola': true,
-    'PJLP': true,
-    'Pengadaan Langsung': true,
-    'Honorarium': true
+  const location = useLocation()
+  const currentPath = location.pathname
+
+  // Initialize with only the active menu open
+  const [openMenus, setOpenMenus] = useState(() => {
+    const activeMenu = getActiveMenuName(currentPath)
+    const initial = {}
+    menuItems.forEach(item => {
+      if (item.submenu) {
+        initial[item.name] = item.name === activeMenu
+      }
+    })
+    return initial
   })
+
+  // Update open menus when route changes
+  useEffect(() => {
+    const activeMenu = getActiveMenuName(currentPath)
+    if (activeMenu) {
+      setOpenMenus(prev => {
+        // Close all others, open only the active one
+        const newState = {}
+        menuItems.forEach(item => {
+          if (item.submenu) {
+            newState[item.name] = item.name === activeMenu
+          }
+        })
+        return newState
+      })
+    }
+  }, [currentPath])
 
   const toggleMenu = (menuName) => {
     setOpenMenus((prev) => ({
@@ -225,6 +267,7 @@ export default function Sidebar() {
               item={item}
               isOpen={openMenus[item.name]}
               onToggle={() => toggleMenu(item.name)}
+              currentPath={currentPath}
             />
           ))}
         </div>

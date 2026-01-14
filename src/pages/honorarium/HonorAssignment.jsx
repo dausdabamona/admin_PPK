@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
-  Plus, Pencil, Trash2, Search, FileText, Eye, ListChecks, Users
+  Plus, Pencil, Trash2, Search, FileText, Eye, ListChecks, Users,
+  CheckSquare, Upload, Download, X, FolderOpen, CheckCircle, AlertCircle
 } from 'lucide-react'
 import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardBody, CardTitle, CardDescription } from '../../components/ui/Card'
@@ -14,9 +15,46 @@ import db, {
   JENIS_HONOR,
   STATUS_HONOR_ASSIGNMENT,
   getStatusHonorLabel,
-  SUMBER_DANA_PENGADAAN
+  SUMBER_DANA_PENGADAAN,
+  CHECKLIST_HONOR
 } from '../../db/database'
 import { formatTanggal, formatDateInput, formatRupiah } from '../../utils/formatters'
+
+// Convert file to base64
+const fileToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = (error) => reject(error)
+  })
+}
+
+// Generate folder path for documents
+const generateFolderPath = (nomorSK, jenisHonor, tahun) => {
+  const cleanString = (str) => str?.replace(/[/\\:*?"<>|]/g, '_') || 'Unknown'
+  const jenisLabel = JENIS_HONOR.find(j => j.id === jenisHonor)?.nama || jenisHonor
+  return `SPJ_HONOR/${tahun}/${cleanString(jenisLabel)}/${cleanString(nomorSK)}`
+}
+
+// Format file size
+const formatFileSize = (bytes) => {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+// Initialize checklist items
+const initializeChecklist = () => {
+  return CHECKLIST_HONOR.map(item => ({
+    id: item.id,
+    nama: item.nama,
+    wajib: item.wajib,
+    ada: false,
+    catatan: '',
+    uploadedFiles: []
+  }))
+}
 
 const initialFormData = {
   nomorSK: '',
@@ -43,6 +81,8 @@ export default function HonorAssignment() {
   const [deletingId, setDeletingId] = useState(null)
   const [viewingData, setViewingData] = useState(null)
   const [formData, setFormData] = useState(initialFormData)
+  const [checklistItems, setChecklistItems] = useState([])
+  const [activeTab, setActiveTab] = useState('info') // 'info' or 'checklist'
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterJenis, setFilterJenis] = useState('')
@@ -51,10 +91,19 @@ export default function HonorAssignment() {
   const [loading, setLoading] = useState(false)
   const itemsPerPage = 10
 
-  // Fetch data
-  const allAssignments = useLiveQuery(() =>
-    db.honorAssignment.orderBy('createdAt').reverse().toArray()
-  ) || []
+  // Fetch data with checklist status
+  const allAssignments = useLiveQuery(async () => {
+    const assignments = await db.honorAssignment.orderBy('createdAt').reverse().toArray()
+    return Promise.all(assignments.map(async (a) => {
+      const checklist = await db.honorChecklist.where('assignmentId').equals(a.id).first()
+      return {
+        ...a,
+        checklistStatus: checklist?.statusKelengkapan || null,
+        checklistItemLengkap: checklist?.itemLengkap || 0,
+        checklistTotalItem: checklist?.totalItem || 0
+      }
+    }))
+  }) || []
 
   // Swakelola Kegiatan for linking
   const swakelolaList = useLiveQuery(() =>
@@ -113,7 +162,72 @@ export default function HonorAssignment() {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleOpenModal = (assignment = null) => {
+  const handleChecklistChange = (id, field, value) => {
+    setChecklistItems(prev => prev.map(item =>
+      item.id === id ? { ...item, [field]: value } : item
+    ))
+  }
+
+  // Handle file upload for checklist item
+  const handleFileUpload = async (itemId, files) => {
+    if (!files || files.length === 0) return
+
+    const folderPath = generateFolderPath(formData.nomorSK, formData.jenisHonor, formData.tahun)
+    const updatedItems = [...checklistItems]
+    const itemIndex = updatedItems.findIndex(i => i.id === itemId)
+
+    if (itemIndex === -1) return
+
+    const uploadedFiles = updatedItems[itemIndex].uploadedFiles || []
+
+    for (const file of files) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File "${file.name}" melebihi batas 10MB`)
+        continue
+      }
+
+      try {
+        const base64 = await fileToBase64(file)
+        uploadedFiles.push({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          data: base64,
+          folderPath,
+          uploadedAt: new Date().toISOString()
+        })
+      } catch (error) {
+        console.error('Error uploading file:', error)
+      }
+    }
+
+    updatedItems[itemIndex].uploadedFiles = uploadedFiles
+    updatedItems[itemIndex].ada = true // Auto-check when file uploaded
+    setChecklistItems(updatedItems)
+  }
+
+  // Remove file from checklist item
+  const handleRemoveFile = (itemId, fileIndex) => {
+    setChecklistItems(prev => prev.map(item => {
+      if (item.id === itemId) {
+        const updatedFiles = item.uploadedFiles.filter((_, i) => i !== fileIndex)
+        return { ...item, uploadedFiles: updatedFiles }
+      }
+      return item
+    }))
+  }
+
+  // Download file
+  const handleDownloadFile = (file) => {
+    const link = document.createElement('a')
+    link.href = file.data
+    link.download = file.name
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const handleOpenModal = async (assignment = null) => {
     if (assignment) {
       setEditingId(assignment.id)
       setFormData({
@@ -132,10 +246,20 @@ export default function HonorAssignment() {
         keterangan: assignment.keterangan || '',
         status: assignment.status || 'draft'
       })
+
+      // Load existing checklist
+      const existingChecklist = await db.honorChecklist.where('assignmentId').equals(assignment.id).first()
+      if (existingChecklist?.items) {
+        setChecklistItems(existingChecklist.items)
+      } else {
+        setChecklistItems(initializeChecklist())
+      }
     } else {
       setEditingId(null)
       setFormData(initialFormData)
+      setChecklistItems(initializeChecklist())
     }
+    setActiveTab('info')
     setIsModalOpen(true)
   }
 
@@ -143,6 +267,8 @@ export default function HonorAssignment() {
     setIsModalOpen(false)
     setEditingId(null)
     setFormData(initialFormData)
+    setChecklistItems([])
+    setActiveTab('info')
   }
 
   const handleSubmit = async (e) => {
@@ -168,11 +294,43 @@ export default function HonorAssignment() {
         updatedAt: new Date()
       }
 
+      let assignmentId
+
       if (editingId) {
         await db.honorAssignment.update(editingId, data)
+        assignmentId = editingId
       } else {
         data.createdAt = new Date()
-        await db.honorAssignment.add(data)
+        assignmentId = await db.honorAssignment.add(data)
+      }
+
+      // Save checklist
+      const itemLengkap = checklistItems.filter(item => item.ada).length
+      const totalItem = checklistItems.length
+      const wajibLengkap = checklistItems.filter(item => item.wajib && item.ada).length
+      const totalWajib = checklistItems.filter(item => item.wajib).length
+      const statusKelengkapan = wajibLengkap === totalWajib ? 'lengkap' : 'belum_lengkap'
+
+      const checklistData = {
+        assignmentId,
+        nominatifId: null,
+        items: checklistItems,
+        statusKelengkapan,
+        totalItem,
+        itemLengkap,
+        namaPemeriksa: '',
+        tanggalPemeriksaan: new Date(),
+        catatan: '',
+        updatedAt: new Date()
+      }
+
+      // Check if checklist exists
+      const existingChecklist = await db.honorChecklist.where('assignmentId').equals(assignmentId).first()
+      if (existingChecklist) {
+        await db.honorChecklist.update(existingChecklist.id, checklistData)
+      } else {
+        checklistData.createdAt = new Date()
+        await db.honorChecklist.add(checklistData)
       }
 
       handleCloseModal()
@@ -186,6 +344,8 @@ export default function HonorAssignment() {
   const handleDelete = async () => {
     setLoading(true)
     try {
+      // Delete related checklist
+      await db.honorChecklist.where('assignmentId').equals(deletingId).delete()
       await db.honorAssignment.delete(deletingId)
       setIsDeleteModalOpen(false)
       setDeletingId(null)
@@ -196,8 +356,9 @@ export default function HonorAssignment() {
     }
   }
 
-  const handleView = (assignment) => {
-    setViewingData(assignment)
+  const handleView = async (assignment) => {
+    const checklist = await db.honorChecklist.where('assignmentId').equals(assignment.id).first()
+    setViewingData({ ...assignment, checklist })
     setIsViewModalOpen(true)
   }
 
@@ -220,6 +381,30 @@ export default function HonorAssignment() {
     }
     return <Badge variant={variants[status] || 'default'}>{getStatusHonorLabel(status)}</Badge>
   }
+
+  const getChecklistBadge = (status, itemLengkap, totalItem) => {
+    if (!status) return <Badge variant="default">Belum diisi</Badge>
+    if (status === 'lengkap') {
+      return (
+        <Badge variant="success" className="flex items-center gap-1">
+          <CheckCircle className="w-3 h-3" />
+          {itemLengkap}/{totalItem}
+        </Badge>
+      )
+    }
+    return (
+      <Badge variant="warning" className="flex items-center gap-1">
+        <AlertCircle className="w-3 h-3" />
+        {itemLengkap}/{totalItem}
+      </Badge>
+    )
+  }
+
+  // Calculate progress
+  const itemLengkap = checklistItems.filter(item => item.ada).length
+  const totalItem = checklistItems.length
+  const wajibLengkap = checklistItems.filter(item => item.wajib && item.ada).length
+  const totalWajib = checklistItems.filter(item => item.wajib).length
 
   // Stats
   const totalAktif = allAssignments.filter(a => a.status === 'aktif').length
@@ -265,7 +450,7 @@ export default function HonorAssignment() {
               Daftar SK Penugasan Honor
             </CardTitle>
             <CardDescription>
-              Kelola surat keputusan penugasan honorarium
+              Kelola surat keputusan penugasan honorarium dan checklist dokumen untuk PUM
             </CardDescription>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
@@ -327,7 +512,7 @@ export default function HonorAssignment() {
                 <TableHeader>Perihal</TableHeader>
                 <TableHeader>Jenis Honor</TableHeader>
                 <TableHeader>Pagu</TableHeader>
-                <TableHeader>Periode</TableHeader>
+                <TableHeader>Checklist SPJ</TableHeader>
                 <TableHeader>Status</TableHeader>
                 <TableHeader>Aksi</TableHeader>
               </TableRow>
@@ -356,13 +541,8 @@ export default function HonorAssignment() {
                     <TableCell className="font-medium text-green-600">
                       {formatRupiah(assignment.pagu)}
                     </TableCell>
-                    <TableCell className="text-sm">
-                      {assignment.tanggalMulai && assignment.tanggalSelesai ? (
-                        <div>
-                          <p>{formatTanggal(assignment.tanggalMulai, 'short')}</p>
-                          <p className="text-gray-500">s/d {formatTanggal(assignment.tanggalSelesai, 'short')}</p>
-                        </div>
-                      ) : '-'}
+                    <TableCell>
+                      {getChecklistBadge(assignment.checklistStatus, assignment.checklistItemLengkap, assignment.checklistTotalItem)}
                     </TableCell>
                     <TableCell>
                       {getStatusBadge(assignment.status)}
@@ -415,7 +595,7 @@ export default function HonorAssignment() {
         </CardBody>
       </Card>
 
-      {/* Add/Edit Modal */}
+      {/* Add/Edit Modal with Tabs */}
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -423,140 +603,323 @@ export default function HonorAssignment() {
         size="xl"
       >
         <form onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            {/* SK Info */}
-            <div className="border-b pb-3">
-              <h4 className="font-medium text-gray-700 mb-3">Informasi SK</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <Input
-                  label="Nomor SK"
-                  name="nomorSK"
-                  value={formData.nomorSK}
-                  onChange={handleInputChange}
-                  placeholder="Nomor SK Penugasan"
-                  required
-                />
-                <Input
-                  label="Tanggal SK"
-                  name="tanggalSK"
-                  type="date"
-                  value={formData.tanggalSK}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <Input
-                label="Perihal"
-                name="perihal"
-                value={formData.perihal}
-                onChange={handleInputChange}
-                required
-                className="mt-3"
-              />
-              <Textarea
-                label="Dasar Hukum"
-                name="dasarHukum"
-                value={formData.dasarHukum}
-                onChange={handleInputChange}
-                rows={2}
-                className="mt-3"
-                placeholder="Peraturan/Undang-undang yang menjadi dasar..."
-              />
-            </div>
+          {/* Tab Navigation */}
+          <div className="flex border-b mb-4">
+            <button
+              type="button"
+              onClick={() => setActiveTab('info')}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'info'
+                  ? 'border-primary-500 text-primary-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Informasi SK
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('checklist')}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                activeTab === 'checklist'
+                  ? 'border-primary-500 text-primary-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <CheckSquare className="w-4 h-4" />
+              Checklist SPJ untuk PUM
+              {itemLengkap > 0 && (
+                <span className={`ml-1 px-1.5 py-0.5 text-xs rounded-full ${
+                  wajibLengkap === totalWajib ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                }`}>
+                  {itemLengkap}/{totalItem}
+                </span>
+              )}
+            </button>
+          </div>
 
-            {/* Honor Details */}
-            <div className="border-b pb-3">
-              <h4 className="font-medium text-gray-700 mb-3">Detail Honorarium</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <Select
-                  label="Jenis Honor"
-                  name="jenisHonor"
-                  value={formData.jenisHonor}
-                  onChange={handleInputChange}
-                  options={jenisHonorOptions}
-                  required
-                />
-                <Select
-                  label="Link Kegiatan (Opsional)"
-                  name="kegiatanId"
-                  value={formData.kegiatanId}
-                  onChange={handleInputChange}
-                  options={kegiatanOptions}
-                  placeholder="Pilih kegiatan swakelola..."
-                />
-              </div>
-              <div className="grid grid-cols-3 gap-4 mt-3">
-                <Select
-                  label="Tahun"
-                  name="tahun"
-                  value={formData.tahun}
-                  onChange={handleInputChange}
-                  options={tahunOptions}
-                  required
-                />
-                <Select
-                  label="Sumber Dana"
-                  name="sumberDana"
-                  value={formData.sumberDana}
-                  onChange={handleInputChange}
-                  options={sumberDanaOptions}
-                  required
-                />
+          {/* Tab Content: Info */}
+          {activeTab === 'info' && (
+            <div className="space-y-4">
+              {/* SK Info */}
+              <div className="border-b pb-3">
+                <h4 className="font-medium text-gray-700 mb-3">Informasi SK</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    label="Nomor SK"
+                    name="nomorSK"
+                    value={formData.nomorSK}
+                    onChange={handleInputChange}
+                    placeholder="Nomor SK Penugasan"
+                    required
+                  />
+                  <Input
+                    label="Tanggal SK"
+                    name="tanggalSK"
+                    type="date"
+                    value={formData.tanggalSK}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
                 <Input
-                  label="Akun/MAK"
-                  name="akun"
-                  value={formData.akun}
+                  label="Perihal"
+                  name="perihal"
+                  value={formData.perihal}
                   onChange={handleInputChange}
-                  placeholder="521213"
-                />
-              </div>
-              <CurrencyInput
-                label="Pagu Anggaran"
-                name="pagu"
-                value={formData.pagu}
-                onChange={handleInputChange}
-                required
-                className="mt-3"
-              />
-            </div>
-
-            {/* Period & Status */}
-            <div>
-              <h4 className="font-medium text-gray-700 mb-3">Periode & Status</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <Input
-                  label="Tanggal Mulai"
-                  name="tanggalMulai"
-                  type="date"
-                  value={formData.tanggalMulai}
-                  onChange={handleInputChange}
-                />
-                <Input
-                  label="Tanggal Selesai"
-                  name="tanggalSelesai"
-                  type="date"
-                  value={formData.tanggalSelesai}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4 mt-3">
-                <Select
-                  label="Status"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  options={statusOptions}
+                  required
+                  className="mt-3"
                 />
                 <Textarea
-                  label="Keterangan"
-                  name="keterangan"
-                  value={formData.keterangan}
+                  label="Dasar Hukum"
+                  name="dasarHukum"
+                  value={formData.dasarHukum}
                   onChange={handleInputChange}
                   rows={2}
+                  className="mt-3"
+                  placeholder="Peraturan/Undang-undang yang menjadi dasar..."
                 />
               </div>
+
+              {/* Honor Details */}
+              <div className="border-b pb-3">
+                <h4 className="font-medium text-gray-700 mb-3">Detail Honorarium</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <Select
+                    label="Jenis Honor"
+                    name="jenisHonor"
+                    value={formData.jenisHonor}
+                    onChange={handleInputChange}
+                    options={jenisHonorOptions}
+                    required
+                  />
+                  <Select
+                    label="Link Kegiatan (Opsional)"
+                    name="kegiatanId"
+                    value={formData.kegiatanId}
+                    onChange={handleInputChange}
+                    options={kegiatanOptions}
+                    placeholder="Pilih kegiatan swakelola..."
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-4 mt-3">
+                  <Select
+                    label="Tahun"
+                    name="tahun"
+                    value={formData.tahun}
+                    onChange={handleInputChange}
+                    options={tahunOptions}
+                    required
+                  />
+                  <Select
+                    label="Sumber Dana"
+                    name="sumberDana"
+                    value={formData.sumberDana}
+                    onChange={handleInputChange}
+                    options={sumberDanaOptions}
+                    required
+                  />
+                  <Input
+                    label="Akun/MAK"
+                    name="akun"
+                    value={formData.akun}
+                    onChange={handleInputChange}
+                    placeholder="521213"
+                  />
+                </div>
+                <CurrencyInput
+                  label="Pagu Anggaran"
+                  name="pagu"
+                  value={formData.pagu}
+                  onChange={handleInputChange}
+                  required
+                  className="mt-3"
+                />
+              </div>
+
+              {/* Period & Status */}
+              <div>
+                <h4 className="font-medium text-gray-700 mb-3">Periode & Status</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    label="Tanggal Mulai"
+                    name="tanggalMulai"
+                    type="date"
+                    value={formData.tanggalMulai}
+                    onChange={handleInputChange}
+                  />
+                  <Input
+                    label="Tanggal Selesai"
+                    name="tanggalSelesai"
+                    type="date"
+                    value={formData.tanggalSelesai}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4 mt-3">
+                  <Select
+                    label="Status"
+                    name="status"
+                    value={formData.status}
+                    onChange={handleInputChange}
+                    options={statusOptions}
+                  />
+                  <Textarea
+                    label="Keterangan"
+                    name="keterangan"
+                    value={formData.keterangan}
+                    onChange={handleInputChange}
+                    rows={2}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Tab Content: Checklist */}
+          {activeTab === 'checklist' && (
+            <div className="space-y-4">
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-start gap-2">
+                  <CheckSquare className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-blue-900">Checklist Dokumen SPJ Honorarium</p>
+                    <p className="text-sm text-blue-700">
+                      Upload dokumen yang diperlukan untuk diserahkan ke Pemegang Uang Muka (PUM).
+                      Berdasarkan Kepmen KP No.56 Tahun 2024.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Folder Path Display */}
+              {formData.nomorSK && formData.jenisHonor && (
+                <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded">
+                  <FolderOpen className="w-4 h-4" />
+                  <span>Folder: {generateFolderPath(formData.nomorSK, formData.jenisHonor, formData.tahun)}</span>
+                </div>
+              )}
+
+              {/* Checklist Items */}
+              <div className="border rounded-lg divide-y max-h-[400px] overflow-y-auto">
+                {checklistItems.map((item) => (
+                  <div key={item.id} className={`p-4 ${item.ada ? 'bg-green-50' : ''}`}>
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={item.ada}
+                        onChange={(e) => handleChecklistChange(item.id, 'ada', e.target.checked)}
+                        className="mt-1 w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className={`font-medium ${item.ada ? 'text-green-700' : 'text-gray-700'}`}>
+                            {item.nama}
+                          </span>
+                          {item.wajib && (
+                            <span className="text-xs text-red-500 font-medium">*wajib</span>
+                          )}
+                        </div>
+
+                        {/* Catatan */}
+                        <input
+                          type="text"
+                          placeholder="Catatan (opsional)"
+                          value={item.catatan}
+                          onChange={(e) => handleChecklistChange(item.id, 'catatan', e.target.value)}
+                          className="mt-2 w-full text-sm px-3 py-1.5 border rounded focus:ring-1 focus:ring-primary-500"
+                        />
+
+                        {/* Upload Section */}
+                        <div className="mt-2">
+                          <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors">
+                            <Upload className="w-3.5 h-3.5" />
+                            Upload Dokumen
+                            <input
+                              type="file"
+                              multiple
+                              accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                              onChange={(e) => handleFileUpload(item.id, Array.from(e.target.files))}
+                              className="hidden"
+                            />
+                          </label>
+                          {item.uploadedFiles?.length > 0 && (
+                            <span className="ml-2 text-xs text-gray-500">
+                              {item.uploadedFiles.length} file
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Uploaded Files */}
+                        {item.uploadedFiles?.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {item.uploadedFiles.map((file, fileIndex) => (
+                              <div
+                                key={fileIndex}
+                                className="flex items-center gap-2 p-2 bg-white border rounded text-xs"
+                              >
+                                <FileText className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                                <span className="flex-1 truncate font-medium">{file.name}</span>
+                                <span className="text-gray-400 flex-shrink-0">
+                                  {formatFileSize(file.size)}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDownloadFile(file)}
+                                  className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                  title="Download"
+                                >
+                                  <Download className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveFile(item.id, fileIndex)}
+                                  className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                  title="Hapus"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {item.ada ? (
+                        <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
+                      ) : (
+                        <AlertCircle className="w-5 h-5 text-gray-300 mt-1 flex-shrink-0" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Progress Summary */}
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium">Progress Kelengkapan Dokumen</span>
+                  <span className="text-sm text-gray-600">
+                    {itemLengkap} / {totalItem} dokumen
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div
+                    className={`h-3 rounded-full transition-all ${
+                      wajibLengkap === totalWajib ? 'bg-green-500' : 'bg-yellow-500'
+                    }`}
+                    style={{ width: `${totalItem > 0 ? (itemLengkap / totalItem) * 100 : 0}%` }}
+                  />
+                </div>
+                <div className="mt-2 flex justify-between text-xs">
+                  <span className="text-gray-500">
+                    Wajib: {wajibLengkap}/{totalWajib}
+                  </span>
+                  <span className={wajibLengkap === totalWajib ? 'text-green-600 font-medium' : 'text-yellow-600'}>
+                    {wajibLengkap === totalWajib ? 'Siap diserahkan ke PUM' : 'Dokumen wajib belum lengkap'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <ModalFooter>
             <Button type="button" variant="secondary" onClick={handleCloseModal}>
@@ -618,6 +981,54 @@ export default function HonorAssignment() {
               </p>
             </div>
 
+            {/* Checklist Status */}
+            {viewingData.checklist && (
+              <div className={`p-4 rounded-lg ${
+                viewingData.checklist.statusKelengkapan === 'lengkap'
+                  ? 'bg-green-50 border border-green-200'
+                  : 'bg-yellow-50 border border-yellow-200'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CheckSquare className={`w-5 h-5 ${
+                      viewingData.checklist.statusKelengkapan === 'lengkap' ? 'text-green-600' : 'text-yellow-600'
+                    }`} />
+                    <span className="font-medium">Checklist SPJ untuk PUM</span>
+                  </div>
+                  {getChecklistBadge(
+                    viewingData.checklist.statusKelengkapan,
+                    viewingData.checklist.itemLengkap,
+                    viewingData.checklist.totalItem
+                  )}
+                </div>
+                <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full ${
+                      viewingData.checklist.statusKelengkapan === 'lengkap' ? 'bg-green-500' : 'bg-yellow-500'
+                    }`}
+                    style={{
+                      width: `${(viewingData.checklist.itemLengkap / viewingData.checklist.totalItem) * 100}%`
+                    }}
+                  />
+                </div>
+
+                {/* Show uploaded documents count */}
+                {viewingData.checklist.items && (
+                  <div className="mt-3 text-sm text-gray-600">
+                    <span className="font-medium">Dokumen yang diupload:</span>
+                    <ul className="mt-1 space-y-1">
+                      {viewingData.checklist.items.filter(i => i.uploadedFiles?.length > 0).map(item => (
+                        <li key={item.id} className="flex items-center gap-2">
+                          <FileText className="w-3.5 h-3.5 text-blue-500" />
+                          {item.nama}: {item.uploadedFiles.length} file
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs text-gray-500">Tanggal Mulai</label>
@@ -651,7 +1062,7 @@ export default function HonorAssignment() {
         size="sm"
       >
         <p className="text-gray-600">
-          Apakah Anda yakin ingin menghapus SK Penugasan ini? Data nominatif dan kwitansi terkait juga akan dihapus.
+          Apakah Anda yakin ingin menghapus SK Penugasan ini? Data nominatif, kwitansi, dan checklist terkait juga akan dihapus.
         </p>
         <ModalFooter>
           <Button variant="secondary" onClick={() => setIsDeleteModalOpen(false)}>
