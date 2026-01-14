@@ -194,12 +194,13 @@ function MenuItem({ item, isOpen, onToggle, hasActiveChild }) {
 
 export default function Sidebar() {
   const location = useLocation()
+  const currentPath = location.pathname
   const [openMenus, setOpenMenus] = useState({})
 
   // Helper: Check if any submenu item matches current path
   const hasActiveSubmenu = (item) => {
     if (!item.submenu) return false
-    return item.submenu.some(sub => location.pathname === sub.path || location.pathname.startsWith(sub.path + '/'))
+    return item.submenu.some(sub => currentPath === sub.path || currentPath.startsWith(sub.path + '/'))
   }
 
   // Auto-expand menu containing active page
@@ -212,7 +213,7 @@ export default function Sidebar() {
       }
     })
     setOpenMenus(newOpenMenus)
-  }, [location.pathname])
+  }, [currentPath])
 
   const toggleMenu = (menuName) => {
     setOpenMenus((prev) => ({
