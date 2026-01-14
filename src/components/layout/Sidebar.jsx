@@ -1,3 +1,4 @@
+// Sidebar Navigation Component
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
@@ -130,7 +131,6 @@ const menuItems = [
 function MenuItem({ item, isOpen, onToggle, hasActiveChild }) {
   const hasSubmenu = item.submenu && item.submenu.length > 0
   const Icon = item.icon
-  const isActive = hasSubmenu && isSubmenuActive(item.submenu, currentPath)
 
   if (hasSubmenu) {
     // Style untuk parent menu yang memiliki child aktif
@@ -194,12 +194,13 @@ function MenuItem({ item, isOpen, onToggle, hasActiveChild }) {
 
 export default function Sidebar() {
   const location = useLocation()
+  const currentPath = location.pathname
   const [openMenus, setOpenMenus] = useState({})
 
   // Helper: Check if any submenu item matches current path
   const hasActiveSubmenu = (item) => {
     if (!item.submenu) return false
-    return item.submenu.some(sub => location.pathname === sub.path || location.pathname.startsWith(sub.path + '/'))
+    return item.submenu.some(sub => currentPath === sub.path || currentPath.startsWith(sub.path + '/'))
   }
 
   // Auto-expand menu containing active page
@@ -212,23 +213,6 @@ export default function Sidebar() {
       }
     })
     setOpenMenus(newOpenMenus)
-  }, [location.pathname])
-
-  // Update open menus when route changes
-  useEffect(() => {
-    const activeMenu = getActiveMenuName(currentPath)
-    if (activeMenu) {
-      setOpenMenus(prev => {
-        // Close all others, open only the active one
-        const newState = {}
-        menuItems.forEach(item => {
-          if (item.submenu) {
-            newState[item.name] = item.name === activeMenu
-          }
-        })
-        return newState
-      })
-    }
   }, [currentPath])
 
   const toggleMenu = (menuName) => {
