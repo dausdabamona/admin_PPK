@@ -119,6 +119,82 @@ db.version(9).stores({
   documentHistory: '++id, tableName, recordId, action, fieldChanges, previousData, newData, createdBy, createdAt, ipAddress, userAgent, archivePath'
 })
 
+// Database schema version 10 - Added Master DIPA with Versioning System
+db.version(10).stores({
+  // All existing tables from version 9
+  pegawai: '++id, nip, nama, jabatan, golongan, pangkat, rekening, bank, unitKerja, createdAt, createdBy, updatedAt, revision',
+  kota: '++id, namaKota, provinsi, tarifHarianDalamKota, tarifHarianLuarKota, tarifPenginapan, tarifTransportLokal, tarifTransportAntarKota, createdAt',
+  pejabat: '++id, nip, nama, jabatan, jenisPejabat, pangkat, golongan, createdAt',
+  suratTugas: '++id, nomor, tanggal, perihal, dasar, tujuanKegiatan, pegawaiIds, kotaAsal, kotaTujuan, tanggalMulai, tanggalSelesai, transportasi, jenisPerjadin, status, createdAt, createdBy, updatedAt, revision, archivePath',
+  sppd: '++id, nomor, suratTugasId, pegawaiId, tanggal, jenisPerjadin, kotaAsal, kotaTujuan, tanggalBerangkat, tanggalKembali, maksudPerjalanan, tingkatBiaya, keteranganLain, ppkId, kpaId, status, createdAt, createdBy, updatedAt, revision, archivePath',
+  pembayaranLS: '++id, sppdId, pegawaiId, tanggal, uangHarian, jumlahHari, totalUangHarian, transport, penginapan, jumlahMalam, totalPenginapan, totalLS, keterangan, createdAt, createdBy, updatedAt, revision',
+  rampung: '++id, sppdId, pegawaiId, jenisPerjadin, tanggal, realisasiUangHarian, jumlahHariRealisasi, totalRealisasiUangHarian, realisasiTransport, realisasiPenginapan, jumlahMalamRealisasi, totalRealisasiPenginapan, totalPengeluaranRiil, totalRealisasi, nilaiLS, selisih, statusSelisih, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+  pengeluaranRiil: '++id, rampungId, tanggal, uraian, jumlah, bukti, createdAt',
+  rincianBiaya: '++id, rampungId, jenisBiaya, uraian, volume, satuan, hargaSatuan, jumlah, createdAt',
+  kwitansiSPPD: '++id, rampungId, sppdId, pegawaiId, nomor, tanggal, jumlah, terbilang, keterangan, ttdPegawai, ttdPPK, createdAt',
+  checklistSPJ: '++id, sppdId, jenisPerjadin, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt, createdBy, updatedAt, revision',
+  settings: '++id, key, value, updatedAt',
+  nomorUrut: '++id, jenis, tahun, bulan, nomorTerakhir',
+  swakelolaKegiatan: '++id, kode, nama, tahun, sumberDana, akun, pagu, deskripsi, tanggalMulai, tanggalSelesai, status, createdAt, createdBy, updatedAt, revision, archivePath',
+  swakelolaTim: '++id, kegiatanId, nomorSK, tanggalSK, pegawaiId, peran, honorPerBulan, jumlahBulan, totalHonor, rekening, bank, createdAt',
+  swakelolaUangMuka: '++id, kegiatanId, nomorKwitansi, tanggal, penerimaId, tipePenerima, jumlah, terbilang, keterangan, rekeningTujuan, bankTujuan, status, createdAt, createdBy, updatedAt, revision',
+  swakelolaRealisasi: '++id, kegiatanId, uangMukaId, tanggal, items, totalRealisasi, keterangan, createdAt, createdBy, updatedAt, revision',
+  swakelolaRealisasiItem: '++id, realisasiId, kategori, uraian, volume, satuan, hargaSatuan, jumlah, tanggal, noBukti, createdAt',
+  swakelolaRampung: '++id, kegiatanId, uangMukaId, realisasiId, tanggal, totalUangMuka, totalRealisasi, selisih, statusSelisih, nomorKwitansi, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+  swakelolaChecklist: '++id, kegiatanId, rampungId, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt, createdBy, updatedAt, revision',
+  pjlpMaster: '++id, nik, npwp, nama, posisi, unitKerja, rekening, bank, bpjsKesehatan, bpjsKetenagakerjaan, honorBulanan, masaKontrakMulai, masaKontrakSelesai, statusAktif, createdAt, createdBy, updatedAt, revision',
+  pjlpPerencanaan: '++id, tahun, nomorDokumen, tanggal, analisisKebutuhan, analisisBebanKerja, torKak, posisiDibutuhkan, jumlahOrang, honorBulanan, durasiKontrak, totalNilai, biayaBpjsKesehatan, biayaBpjsKetenagakerjaan, biayaThr, estimasiPph, totalHps, keterangan, status, createdAt, createdBy, updatedAt, revision, archivePath',
+  pjlpKontrak: '++id, pjlpId, nomorKontrak, tanggalKontrak, periodeAwal, periodeAkhir, honorBulanan, nilaiKontrak, posisi, lokasiKerja, lingkupPekerjaan, outputPekerjaan, status, createdAt, createdBy, updatedAt, revision, archivePath',
+  pjlpSpk: '++id, kontrakId, pjlpId, nomorSpk, tanggalSpk, periodeAwal, periodeAkhir, nilaiKontrak, keterangan, createdAt',
+  pjlpSpmk: '++id, kontrakId, pjlpId, spkId, nomorSpmk, tanggalSpmk, tanggalMulaiKerja, keterangan, createdAt',
+  pjlpPresensi: '++id, pjlpId, kontrakId, bulan, tahun, hariKerja, hadir, izin, sakit, alpa, terlambat, keterangan, createdAt, createdBy, updatedAt, revision',
+  pjlpLaporanBulanan: '++id, pjlpId, kontrakId, bulan, tahun, uraianPekerjaan, outputDicapai, kendala, solusi, tanggalLaporan, status, createdAt',
+  pjlpPembayaran: '++id, pjlpId, kontrakId, bulan, tahun, honorBruto, potonganPph, tarifPph, potonganBpjsKesehatan, potonganBpjsKetenagakerjaan, potonganLain, totalPotongan, honorNetto, rekening, bank, tanggalBayar, status, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+  pjlpKwitansi: '++id, pembayaranId, pjlpId, nomorKwitansi, tanggal, jumlah, terbilang, keterangan, createdAt',
+  pjlpPenilaian: '++id, pjlpId, kontrakId, tahun, triwulan, nilaiKualitas, bobotKualitas, nilaiWaktu, bobotWaktu, nilaiBiaya, bobotBiaya, nilaiLayanan, bobotLayanan, nilaiAkhir, kategori, catatanPenilai, namaPenilai, tanggalPenilaian, createdAt, createdBy, updatedAt, revision',
+  pjlpChecklist: '++id, pjlpId, kontrakId, bulan, tahun, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt, createdBy, updatedAt, revision',
+  pjlpArsip: '++id, pjlpId, tahun, jenisDokumen, bulan, triwulan, namaDokumen, namaFile, ukuranFile, pathArsip, keterangan, createdAt',
+  procurementPackage: '++id, kodePaket, namaPaket, jenisPengadaan, unitPengusul, nilaiPagu, sumberDana, akun, tahun, metode, workflowStatus, createdAt, createdBy, updatedAt, revision, archivePath',
+  procurementRequestLink: '++id, paketId, namaFile, filePath, tanggalUpload, keterangan, createdAt',
+  procurementKak: '++id, paketId, latarBelakang, maksudTujuan, sasaran, ruangLingkup, outputPekerjaan, spesifikasiTeknis, waktuPelaksanaan, lokasi, tenagaAhli, metodePelaksanaan, laporanPenyerahan, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+  procurementHps: '++id, paketId, tanggal, items, subtotal, ppn, pph, overhead, totalHps, sumberData, metodePerhitungan, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+  procurementHpsItem: '++id, hpsId, uraian, volume, satuan, hargaSatuan, jumlah, keterangan, createdAt',
+  procurementVendor: '++id, nama, npwp, alamat, telepon, email, direktur, jabatanDirektur, rekening, bank, bidangUsaha, kualifikasi, createdAt, createdBy, updatedAt, revision',
+  procurementContract: '++id, paketId, vendorId, nomorKontrak, tanggalKontrak, nilaiKontrak, jangkaWaktu, tanggalMulai, tanggalSelesai, denda, jenisKontrak, lingkupPekerjaan, syaratPembayaran, jenisPembayaran, jumlahTermin, keterangan, status, createdAt, createdBy, updatedAt, revision, archivePath',
+  procurementSpmk: '++id, contractId, paketId, nomorSpmk, tanggalSpmk, tanggalMulaiKerja, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+  procurementProgress: '++id, contractId, paketId, tanggal, progresKumulatif, uraianPekerjaan, kendalaPekerjaan, keterangan, createdAt, createdBy, updatedAt, revision',
+  procurementBap: '++id, contractId, paketId, nomorBap, tanggalBap, terminKe, hasilPemeriksaan, catatan, statusPemeriksaan, timPemeriksa, createdAt, createdBy, updatedAt, revision, archivePath',
+  procurementBast: '++id, contractId, paketId, nomorBast, tanggalBast, terminKe, nilaiSerahTerima, kondisiBarang, catatanSerahTerima, createdAt, createdBy, updatedAt, revision, archivePath',
+  procurementBastToKpa: '++id, paketId, bastId, nomorBast, tanggalBast, jenisBarang, uraianBarang, jumlah, satuan, nilai, lokasiPenempatan, unitPengguna, namaKpa, nipKpa, namaPpk, nipPpk, namaPengurusBarang, nipPengurusBarang, statusBmn, status, createdAt, createdBy, updatedAt, revision, archivePath',
+  procurementPho: '++id, contractId, paketId, nomorPho, tanggalPho, progresAkhir, catatanPho, masaPemeliharaan, tanggalMulaiPemeliharaan, tanggalSelesaiPemeliharaan, createdAt, createdBy, updatedAt, revision, archivePath',
+  procurementFho: '++id, contractId, paketId, phoId, nomorFho, tanggalFho, kondisiAkhir, catatanFho, createdAt, createdBy, updatedAt, revision, archivePath',
+  procurementPayment: '++id, contractId, paketId, bastId, phoId, fhoId, terminKe, jenisPembayaran, nilaiTagihan, ppn, pph, potonganDenda, potonganLain, nilaiNetto, nomorKwitansi, tanggalKwitansi, tanggalBayar, rekening, bank, status, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+  procurementChecklist: '++id, paketId, contractId, paymentId, terminKe, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt, createdBy, updatedAt, revision',
+  procurementArchive: '++id, paketId, tahun, jenisDokumen, terminKe, namaDokumen, namaFile, ukuranFile, pathArsip, keterangan, createdAt',
+  honorRecipient: '++id, nik, npwp, nama, golongan, pangkat, jabatan, unitKerja, rekening, bank, statusPns, statusAktif, createdAt, createdBy, updatedAt, revision',
+  honorSkKpa: '++id, nomorSk, tanggalSk, tahunAnggaran, judulSk, dasarDipa, menimbang, mengingat, memperhatikan, diktumKesatu, diktumKedua, diktumKetiga, diktumKeempat, namaKpa, nipKpa, jabatanKpa, jenisHonor, totalPagu, status, createdAt, createdBy, updatedAt, revision, archivePath',
+  honorSkKpaLampiran: '++id, skKpaId, recipientId, jabatanKedinasan, peranDalamTim, satuan, tarif, akunBelanja, dasarSbm, keterangan, createdAt, revision',
+  honorAssignment: '++id, skKpaId, nomorSk, tanggalSk, periodeAwal, periodeAkhir, jenisHonor, dasarHukum, judulKegiatan, tujuan, createdAt, createdBy, updatedAt, revision, archivePath',
+  honorAssignmentDetail: '++id, assignmentId, recipientId, peranDalamTim, satuan, tarif, volumeAwal, keterangan, createdAt, revision',
+  honorNominatif: '++id, assignmentId, bulan, tahun, items, totalBruto, totalPotongan, totalNetto, tanggalDibuat, status, createdAt, createdBy, updatedAt, revision, archivePath',
+  honorNominatifItem: '++id, nominatifId, recipientId, volume, satuan, tarif, bruto, potonganPph, tarifPph, netto, keterangan, createdAt',
+  honorPayment: '++id, nominatifId, assignmentId, recipientId, bulan, tahun, bruto, potonganPph, tarifPph, netto, rekening, bank, tanggalBayar, status, keterangan, createdAt, createdBy, updatedAt, revision, archivePath',
+  honorKwitansi: '++id, paymentId, nominatifId, assignmentId, recipientId, nomorKwitansi, tanggal, jumlah, terbilang, keterangan, createdAt',
+  honorChecklist: '++id, assignmentId, nominatifId, bulan, tahun, items, statusKelengkapan, totalItem, itemLengkap, namaPemeriksa, tanggalPemeriksaan, catatan, createdAt, createdBy, updatedAt, revision',
+  honorArchive: '++id, skKpaId, assignmentId, nominatifId, tahun, bulan, jenisDokumen, namaDokumen, namaFile, ukuranFile, pathArsip, keterangan, createdAt',
+  documentHistory: '++id, tableName, recordId, action, fieldChanges, previousData, newData, createdBy, createdAt, ipAddress, userAgent, archivePath',
+
+  // ==================== NEW: MASTER DIPA TABLES ====================
+  // Master DIPA dengan Versioning
+  masterDipa: '++id, [tahun+status], [tahun+revisi], [tahun+revisi+kode], kode, level, revisi, status, pagu, createdAt',
+
+  // DIPA Revision Metadata
+  dipaRevisions: '++id, [tahun+status], tahun, revisi, status, tanggalRevisi',
+
+  // SPJ Packages (untuk integrasi dengan workflow)
+  spjPackages: '++id, packageCode, [processType+year], [year+status], processType, year, status, dipaRevision, createdAt, updatedAt'
+})
+
 // Database schema version 7 - Added BAST PPK to KPA table for Pengadaan
 db.version(7).stores({
   // ==================== EXISTING TABLES ====================
