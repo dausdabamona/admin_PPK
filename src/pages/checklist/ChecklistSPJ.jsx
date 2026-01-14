@@ -270,9 +270,87 @@ export default function ChecklistSPJ() {
     }
   }
 
-  const handleView = (checklist) => {
-    setViewingData(checklist)
+  const handleView = async (checklist) => {
+    // Load fresh data with pegawai info
+    const sppd = await db.sppd.get(checklist.sppdId)
+    const pegawai = sppd ? await db.pegawai.get(sppd.pegawaiId) : null
+    setViewingData({ ...checklist, sppd: { ...sppd, pegawai }, pegawai })
     setIsViewModalOpen(true)
+  }
+
+  // Upload file from View Modal
+  const handleViewUpload = async (itemIndex, files) => {
+    if (!files || files.length === 0 || !viewingData) return
+
+    const updatedItems = [...viewingData.items]
+    const uploadedFiles = updatedItems[itemIndex].uploadedFiles || []
+    const sppd = viewingData.sppd
+    const pegawai = viewingData.pegawai || sppd?.pegawai
+
+    for (const file of files) {
+      try {
+        const base64 = await fileToBase64(file)
+        const folderPath = generateFolderPath(sppd, pegawai)
+
+        uploadedFiles.push({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          data: base64,
+          folderPath,
+          uploadedAt: new Date().toISOString()
+        })
+      } catch (error) {
+        console.error('Error uploading file:', error)
+      }
+    }
+
+    updatedItems[itemIndex].uploadedFiles = uploadedFiles
+    updatedItems[itemIndex].checked = true
+
+    // Update database
+    const itemLengkap = updatedItems.filter(item => item.checked).length
+    await db.checklistSPJ.update(viewingData.id, {
+      items: updatedItems,
+      itemLengkap,
+      statusKelengkapan: itemLengkap === updatedItems.length ? 'lengkap' : 'belum_lengkap',
+      updatedAt: new Date()
+    })
+
+    setViewingData(prev => ({
+      ...prev,
+      items: updatedItems,
+      itemLengkap,
+      statusKelengkapan: itemLengkap === updatedItems.length ? 'lengkap' : 'belum_lengkap'
+    }))
+  }
+
+  // Remove file from View Modal
+  const handleViewRemoveFile = async (itemIndex, fileIndex) => {
+    if (!viewingData) return
+
+    const updatedItems = [...viewingData.items]
+    updatedItems[itemIndex].uploadedFiles.splice(fileIndex, 1)
+
+    // If no files left, uncheck the item
+    if (updatedItems[itemIndex].uploadedFiles.length === 0) {
+      updatedItems[itemIndex].checked = false
+    }
+
+    const itemLengkap = updatedItems.filter(item => item.checked).length
+    await db.checklistSPJ.update(viewingData.id, {
+      items: updatedItems,
+      itemLengkap,
+      statusKelengkapan: itemLengkap === updatedItems.length ? 'lengkap' : 'belum_lengkap',
+      updatedAt: new Date()
+    })
+
+    setViewingData(prev => ({
+      ...prev,
+      items: updatedItems,
+      itemLengkap,
+      statusKelengkapan: itemLengkap === updatedItems.length ? 'lengkap' : 'belum_lengkap'
+    }))
   }
 
   const confirmDelete = (id) => {
@@ -680,52 +758,92 @@ export default function ChecklistSPJ() {
               <p className="font-medium">{viewingData.pegawai?.nama}</p>
             </div>
 
-            {/* Checklist Items */}
+            {/* Checklist Items with Upload */}
             <div className="border rounded-lg overflow-hidden">
-              <div className="bg-gray-50 px-4 py-2 border-b">
+              <div className="bg-gray-50 px-4 py-2 border-b flex items-center justify-between">
                 <h4 className="font-medium text-gray-700">Kelengkapan Dokumen</h4>
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <FolderOpen className="w-4 h-4" />
+                  <span className="font-mono">
+                    {generateFolderPath(viewingData.sppd, viewingData.pegawai)}
+                  </span>
+                </div>
               </div>
               <div className="divide-y">
                 {viewingData.items?.map((item, index) => (
-                  <div key={index} className="p-3">
-                    <div className="flex items-center gap-3">
+                  <div key={index} className="p-4">
+                    <div className="flex items-start gap-3">
                       {item.checked ? (
-                        <Check className="w-5 h-5 text-green-500" />
+                        <Check className="w-5 h-5 text-green-500 mt-0.5" />
                       ) : (
-                        <X className="w-5 h-5 text-red-500" />
+                        <X className="w-5 h-5 text-red-500 mt-0.5" />
                       )}
                       <div className="flex-1">
-                        <span className={item.checked ? 'text-green-700' : 'text-gray-700'}>
-                          {item.nama}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`font-medium ${item.checked ? 'text-green-700' : 'text-gray-700'}`}>
+                            {item.nama}
+                          </span>
+                          {item.wajib && !item.checked && (
+                            <Badge variant="danger">Belum</Badge>
+                          )}
+                          {item.checked && (
+                            <Badge variant="success">Lengkap</Badge>
+                          )}
+                        </div>
                         {item.keterangan && (
-                          <p className="text-xs text-gray-500 mt-0.5">{item.keterangan}</p>
+                          <p className="text-xs text-gray-500 mt-1">{item.keterangan}</p>
                         )}
-                      </div>
-                      {item.wajib && !item.checked && (
-                        <Badge variant="danger">Belum</Badge>
-                      )}
-                    </div>
 
-                    {/* Uploaded Files in View */}
-                    {item.uploadedFiles?.length > 0 && (
-                      <div className="ml-8 mt-2 space-y-1">
-                        {item.uploadedFiles.map((file, fileIndex) => (
-                          <div key={fileIndex} className="flex items-center gap-2 text-xs">
-                            <FileText className="w-3.5 h-3.5 text-blue-500" />
-                            <button
-                              onClick={() => handleDownloadFile(file)}
-                              className="text-blue-600 hover:underline truncate max-w-xs"
-                            >
-                              {file.name}
-                            </button>
-                            <span className="text-gray-400">
-                              ({(file.size / 1024).toFixed(1)} KB)
-                            </span>
+                        {/* Uploaded Files */}
+                        {item.uploadedFiles?.length > 0 && (
+                          <div className="mt-3 space-y-2">
+                            {item.uploadedFiles.map((file, fileIndex) => (
+                              <div key={fileIndex} className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg text-sm">
+                                <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                <button
+                                  onClick={() => handleDownloadFile(file)}
+                                  className="text-blue-700 hover:underline truncate flex-1 text-left"
+                                >
+                                  {file.name}
+                                </button>
+                                <span className="text-gray-500 text-xs flex-shrink-0">
+                                  {(file.size / 1024).toFixed(1)} KB
+                                </span>
+                                <button
+                                  onClick={() => handleDownloadFile(file)}
+                                  className="p-1.5 text-blue-600 hover:bg-blue-100 rounded"
+                                  title="Download"
+                                >
+                                  <Download className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleViewRemoveFile(index, fileIndex)}
+                                  className="p-1.5 text-red-600 hover:bg-red-100 rounded"
+                                  title="Hapus File"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
+
+                        {/* Upload Button */}
+                        <div className="mt-3">
+                          <label className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-700 bg-primary-50 rounded-lg cursor-pointer hover:bg-primary-100 transition-colors border border-primary-200">
+                            <Upload className="w-4 h-4" />
+                            {item.uploadedFiles?.length > 0 ? 'Tambah Dokumen' : 'Upload Dokumen'}
+                            <input
+                              type="file"
+                              multiple
+                              accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                              onChange={(e) => handleViewUpload(index, e.target.files)}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 ))}
               </div>
