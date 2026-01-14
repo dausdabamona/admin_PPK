@@ -1,0 +1,285 @@
+{
+  "process": "PERJADIN",
+  "processName": "Perjalanan Dinas",
+  "description": "Proses pembayaran biaya perjalanan dinas dalam negeri/luar negeri",
+  "category": "BELANJA_PERJALANAN_DINAS",
+  "version": "1.0.0",
+  "applicableTo": ["perjalanan_dinas_dalam_negeri", "perjalanan_dinas_luar_negeri"],
+
+  "steps": [
+    {
+      "id": "step-1-master-data",
+      "order": 1,
+      "label": "Input Master Data Kegiatan",
+      "description": "Isi data dasar perjalanan dinas",
+      "required": true,
+      "documents": [],
+      "validations": [
+        "satker_complete",
+        "ppk_complete",
+        "perjalanan_complete"
+      ],
+      "dependencies": [],
+      "estimatedDuration": "15 menit",
+      "helpText": "Isi data lengkap: pelaksana, tujuan, lama perjalanan, transportasi, akomodasi."
+    },
+    {
+      "id": "step-2-surat-tugas",
+      "order": 2,
+      "label": "Surat Tugas/Surat Perintah",
+      "description": "Buat surat tugas atau surat perintah perjalanan dinas",
+      "required": true,
+      "documents": ["KONTRAK"],
+      "validations": [
+        "surat_tugas_signed",
+        "surat_tugas_before_travel"
+      ],
+      "dependencies": ["step-1-master-data"],
+      "estimatedDuration": "5 menit",
+      "helpText": "Surat tugas harus terbit sebelum pelaksanaan perjalanan dinas.",
+      "auditNotes": "Auditor akan memeriksa: (1) Surat tugas sebelum perjalanan, (2) Ditandatangani pejabat berwenang, (3) Tujuan jelas",
+      "businessRules": [
+        "Surat tugas harus diterbitkan sebelum keberangkatan",
+        "Ditandatangani oleh pejabat yang berwenang"
+      ]
+    },
+    {
+      "id": "step-3-tiket-booking",
+      "order": 3,
+      "label": "Tiket & Booking Akomodasi",
+      "description": "Siapkan bukti tiket dan booking hotel (jika ada)",
+      "required": true,
+      "documents": ["RPD"],
+      "validations": [
+        "tiket_exist",
+        "tiket_date_match"
+      ],
+      "dependencies": ["step-2-surat-tugas"],
+      "estimatedDuration": "10 menit",
+      "helpText": "Lampirkan tiket transportasi dan bukti booking hotel.",
+      "auditNotes": "Tiket harus sesuai dengan tanggal dalam surat tugas"
+    },
+    {
+      "id": "step-4-pelaksanaan",
+      "order": 4,
+      "label": "Pelaksanaan Perjalanan Dinas",
+      "description": "Kumpulkan bukti pelaksanaan: boarding pass, bukti check-in, dll",
+      "required": true,
+      "documents": ["BAP"],
+      "validations": [
+        "bukti_pelaksanaan_exist"
+      ],
+      "dependencies": ["step-3-tiket-booking"],
+      "estimatedDuration": "10 menit",
+      "helpText": "Simpan semua bukti: boarding pass, kuitansi hotel, kuitansi transport lokal.",
+      "auditNotes": "Auditor akan memeriksa bukti fisik perjalanan benar-benar dilaksanakan"
+    },
+    {
+      "id": "step-5-laporan",
+      "order": 5,
+      "label": "Laporan Perjalanan Dinas",
+      "description": "Buat laporan hasil perjalanan dinas",
+      "required": true,
+      "documents": ["BAST"],
+      "validations": [
+        "laporan_complete",
+        "laporan_signed"
+      ],
+      "dependencies": ["step-4-pelaksanaan"],
+      "estimatedDuration": "15 menit",
+      "helpText": "Laporan mencakup: kegiatan yang dilakukan, hasil, rekomendasi.",
+      "auditNotes": "Laporan menunjukkan output konkret dari perjalanan dinas"
+    },
+    {
+      "id": "step-6-riil",
+      "order": 6,
+      "label": "Rincian Biaya Riil (jika applicable)",
+      "description": "Buat rincian biaya riil jika menggunakan skema riil",
+      "required": false,
+      "documents": ["NOMINATIF"],
+      "validations": [
+        "riil_kuitansi_complete",
+        "riil_total_valid"
+      ],
+      "dependencies": ["step-5-laporan"],
+      "estimatedDuration": "15 menit",
+      "helpText": "Jika menggunakan skema riil, lampirkan semua kuitansi pengeluaran.",
+      "auditNotes": "Setiap pengeluaran harus ada kuitansi yang sah"
+    },
+    {
+      "id": "step-7-kuitansi",
+      "order": 7,
+      "label": "Kuitansi Penerimaan",
+      "description": "Kuitansi tanda terima dari pelaksana perjalanan dinas",
+      "required": true,
+      "documents": ["KUITANSI"],
+      "validations": [
+        "kuitansi_signed",
+        "kuitansi_materai"
+      ],
+      "dependencies": ["step-6-riil"],
+      "estimatedDuration": "5 menit",
+      "helpText": "Kuitansi ditandatangani pelaksana perjalanan dinas dengan materai."
+    },
+    {
+      "id": "step-8-sptjb",
+      "order": 8,
+      "label": "SPTJB PPK",
+      "description": "Surat Pernyataan Tanggung Jawab Belanja dari PPK",
+      "required": true,
+      "documents": ["SPTJB"],
+      "validations": [
+        "sptjb_ppk_complete"
+      ],
+      "dependencies": ["step-7-kuitansi"],
+      "estimatedDuration": "3 menit",
+      "helpText": "SPTJB adalah pernyataan tanggung jawab hukum PPK."
+    },
+    {
+      "id": "step-9-spr",
+      "order": 9,
+      "label": "SPR/SPM",
+      "description": "Surat Permintaan Pembayaran",
+      "required": true,
+      "documents": ["SPR"],
+      "validations": [
+        "spr_nilai_valid",
+        "spr_potongan_valid"
+      ],
+      "dependencies": ["step-8-sptjb"],
+      "estimatedDuration": "5 menit",
+      "helpText": "SPR mencakup biaya transport, akomodasi, uang harian sesuai ketentuan."
+    }
+  ],
+
+  "auditChecks": [
+    {
+      "id": "check-1",
+      "rule": "Surat tugas sebelum keberangkatan",
+      "severity": "critical",
+      "message": "Surat tugas harus diterbitkan sebelum tanggal keberangkatan"
+    },
+    {
+      "id": "check-2",
+      "rule": "Ada bukti pelaksanaan (boarding pass, dll)",
+      "severity": "critical",
+      "message": "Harus ada bukti perjalanan benar-benar dilaksanakan"
+    },
+    {
+      "id": "check-3",
+      "rule": "Biaya sesuai standar PMK",
+      "severity": "warning",
+      "message": "Biaya perjalanan dinas harus sesuai standar PMK yang berlaku"
+    },
+    {
+      "id": "check-4",
+      "rule": "Laporan lengkap dan informatif",
+      "severity": "warning",
+      "message": "Laporan harus menunjukkan hasil konkret dari perjalanan dinas"
+    },
+    {
+      "id": "check-5",
+      "rule": "Jika riil, semua kuitansi lengkap",
+      "severity": "critical",
+      "message": "Untuk skema riil, setiap pengeluaran harus ada kuitansi"
+    }
+  ],
+
+  "requiredDocuments": [
+    "KONTRAK",
+    "RPD",
+    "BAP",
+    "BAST",
+    "KUITANSI",
+    "SPTJB",
+    "SPR"
+  ],
+
+  "optionalDocuments": [
+    "NOMINATIF"
+  ],
+
+  "documentOrder": [
+    "COVER",
+    "RPD",
+    "SPR",
+    "SPTJB",
+    "BAST",
+    "BAP",
+    "NOMINATIF",
+    "KUITANSI",
+    "KONTRAK"
+  ],
+
+  "complianceLevel": {
+    "GREEN": {
+      "label": "Siap Audit",
+      "minScore": 95,
+      "icon": "✅",
+      "color": "#22c55e"
+    },
+    "YELLOW": {
+      "label": "Hampir Lengkap",
+      "minScore": 80,
+      "icon": "⚠️",
+      "color": "#eab308"
+    },
+    "RED": {
+      "label": "Perlu Perbaikan",
+      "minScore": 0,
+      "icon": "❌",
+      "color": "#ef4444"
+    }
+  },
+
+  "tips": [
+    "Terbitkan surat tugas sebelum keberangkatan",
+    "Simpan semua bukti fisik: boarding pass, kuitansi hotel, kuitansi transport",
+    "Buat laporan yang informatif dengan hasil konkret",
+    "Pastikan biaya sesuai dengan PMK tentang standar biaya perjalanan dinas",
+    "Jika riil, kumpulkan semua kuitansi pengeluaran"
+  ],
+
+  "commonMistakes": [
+    {
+      "mistake": "Surat tugas terbit setelah keberangkatan",
+      "solution": "Terbitkan surat tugas sebelum keberangkatan",
+      "impact": "Critical - akan ditolak auditor"
+    },
+    {
+      "mistake": "Tidak ada bukti pelaksanaan (boarding pass hilang)",
+      "solution": "Simpan semua bukti fisik dengan baik, scan sebagai backup",
+      "impact": "Critical - tidak bisa dibuktikan perjalanan dilaksanakan"
+    },
+    {
+      "mistake": "Biaya melebihi standar PMK",
+      "solution": "Cek standar biaya terbaru sebelum perjalanan",
+      "impact": "Warning - kelebihan tidak bisa dibayarkan"
+    },
+    {
+      "mistake": "Laporan terlalu umum",
+      "solution": "Buat laporan detail dengan hasil konkret dan terukur",
+      "impact": "Warning - kurang meyakinkan"
+    }
+  ],
+
+  "legalReferences": [
+    {
+      "title": "PMK tentang Standar Biaya Masukan Tahun Anggaran Berjalan",
+      "description": "Standar biaya perjalanan dinas dalam negeri dan luar negeri",
+      "url": "https://jdih.kemenkeu.go.id/"
+    },
+    {
+      "title": "Perpres 16/2018",
+      "description": "Pengadaan Barang/Jasa Pemerintah (jika menggunakan biro perjalanan)",
+      "url": "https://jdih.lkpp.go.id/regulation/peraturan-presiden/peraturan-presiden-nomor-16-tahun-2018"
+    }
+  ],
+
+  "meta": {
+    "createdBy": "Admin PPK Development Team",
+    "createdAt": "2025-01-14",
+    "version": "1.0.0",
+    "status": "active"
+  }
+}

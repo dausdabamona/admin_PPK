@@ -1,0 +1,141 @@
+{
+  "process": "UP",
+  "processName": "Uang Persediaan (UP)",
+  "description": "Proses permintaan Uang Persediaan untuk keperluan operasional satker",
+  "category": "BELANJA_OPERASIONAL",
+  "version": "1.0.0",
+  "applicableTo": ["operasional", "atk", "keperluan_rutin"],
+
+  "steps": [
+    {
+      "id": "step-1-master-data",
+      "order": 1,
+      "label": "Input Master Data Kegiatan",
+      "description": "Isi data dasar untuk permintaan UP",
+      "required": true,
+      "documents": [],
+      "validations": [
+        "satker_complete",
+        "ppk_complete",
+        "bendahara_complete"
+      ],
+      "dependencies": [],
+      "estimatedDuration": "10 menit",
+      "helpText": "UP adalah uang muka untuk keperluan operasional. Pastikan jumlah sesuai kebutuhan bulanan."
+    },
+    {
+      "id": "step-2-rencana",
+      "order": 2,
+      "label": "Rencana Penggunaan UP",
+      "description": "Buat rincian rencana penggunaan dana UP",
+      "required": true,
+      "documents": ["RPD"],
+      "validations": [
+        "rencana_rinci_exist",
+        "total_up_valid"
+      ],
+      "dependencies": ["step-1-master-data"],
+      "estimatedDuration": "10 menit",
+      "helpText": "Rincian harus jelas: untuk apa saja dana UP akan digunakan."
+    },
+    {
+      "id": "step-3-sptjb",
+      "order": 3,
+      "label": "SPTJB Bendahara",
+      "description": "Surat Pernyataan Tanggung Jawab Bendahara",
+      "required": true,
+      "documents": ["SPTJB"],
+      "validations": [
+        "bendahara_signed"
+      ],
+      "dependencies": ["step-2-rencana"],
+      "estimatedDuration": "3 menit",
+      "helpText": "SPTJB ditandatangani oleh Bendahara sebagai penerima UP."
+    },
+    {
+      "id": "step-4-spm",
+      "order": 4,
+      "label": "SPM UP",
+      "description": "Surat Perintah Membayar Uang Persediaan",
+      "required": true,
+      "documents": ["SPR"],
+      "validations": [
+        "spm_nilai_valid",
+        "spm_rekening_valid"
+      ],
+      "dependencies": ["step-3-sptjb"],
+      "estimatedDuration": "5 menit",
+      "helpText": "SPM UP dikirim ke KPPN untuk pencairan dana."
+    }
+  ],
+
+  "auditChecks": [
+    {
+      "id": "check-1",
+      "rule": "Nilai UP ≤ Pagu yang tersedia",
+      "severity": "critical",
+      "message": "Nilai UP tidak boleh melebihi pagu yang tersedia"
+    },
+    {
+      "id": "check-2",
+      "rule": "Rencana penggunaan terinci",
+      "severity": "warning",
+      "message": "Rencian penggunaan harus jelas dan terukur"
+    },
+    {
+      "id": "check-3",
+      "rule": "UP sebelumnya sudah dipertanggungjawabkan",
+      "severity": "critical",
+      "message": "UP sebelumnya harus sudah dipertanggungjawabkan sebelum mengajukan UP baru"
+    }
+  ],
+
+  "requiredDocuments": [
+    "RPD",
+    "SPTJB",
+    "SPR"
+  ],
+
+  "optionalDocuments": [],
+
+  "documentOrder": [
+    "COVER",
+    "RPD",
+    "SPR",
+    "SPTJB"
+  ],
+
+  "complianceLevel": {
+    "GREEN": {
+      "label": "Siap Diajukan",
+      "minScore": 95,
+      "icon": "✅",
+      "color": "#22c55e"
+    },
+    "YELLOW": {
+      "label": "Hampir Lengkap",
+      "minScore": 80,
+      "icon": "⚠️",
+      "color": "#eab308"
+    },
+    "RED": {
+      "label": "Perlu Perbaikan",
+      "minScore": 0,
+      "icon": "❌",
+      "color": "#ef4444"
+    }
+  },
+
+  "tips": [
+    "Ajukan UP di awal bulan agar operasional lancar",
+    "Rincian penggunaan harus spesifik dan terukur",
+    "Pertanggungjawabkan UP sebelumnya sebelum mengajukan yang baru"
+  ],
+
+  "meta": {
+    "createdBy": "Admin PPK Development Team",
+    "createdAt": "2025-01-14",
+    "version": "1.0.0",
+    "status": "active"
+  }
+}
