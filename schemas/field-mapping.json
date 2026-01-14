@@ -1,0 +1,586 @@
+{
+  "version": "1.0.0",
+  "description": "Pemetaan field Master Data ke Dokumen SPJ",
+  "lastUpdated": "2024-01-14",
+
+  "documents": {
+    "SPR": {
+      "name": "Surat Permintaan Pembayaran",
+      "code": "SPR",
+      "fields": [
+        "dokumen.spr.nomor",
+        "dokumen.spr.tanggal",
+        "satker.nama",
+        "satker.kode",
+        "satker.alamat.lengkap",
+        "pejabat.ppk.nama",
+        "pejabat.ppk.nip",
+        "pejabat.ppk.jabatan",
+        "pejabat.ppk.ttd",
+        "tahunAnggaran",
+        "kegiatan.program.nama",
+        "kegiatan.kegiatan.nama",
+        "kegiatan.output.nama",
+        "kegiatan.akun.kode",
+        "kegiatan.akun.nama",
+        "kegiatan.uraian",
+        "anggaran.sumberDana",
+        "anggaran.nilaiKontrak",
+        "anggaran.nilaiDibayar",
+        "anggaran.terbilang",
+        "anggaran.potongan.pph23",
+        "anggaran.potongan.ppn",
+        "anggaran.potongan.total",
+        "penyedia.nama",
+        "penyedia.alamat.lengkap",
+        "penyedia.identitas.npwp",
+        "bank.namaBank",
+        "bank.cabang",
+        "bank.nomorRekening",
+        "bank.atasNama",
+        "dokumen.kontrak.nomor",
+        "dokumen.kontrak.tanggal"
+      ]
+    },
+
+    "SPPR": {
+      "name": "Surat Pernyataan Penyelesaian Pekerjaan",
+      "code": "SPPR",
+      "fields": [
+        "dokumen.sppr.nomor",
+        "dokumen.sppr.tanggal",
+        "satker.nama",
+        "satker.kode",
+        "pejabat.ppk.nama",
+        "pejabat.ppk.nip",
+        "pejabat.ppk.jabatan",
+        "pejabat.ppk.pangkat",
+        "pejabat.ppk.ttd",
+        "tahunAnggaran",
+        "kegiatan.kegiatan.nama",
+        "kegiatan.output.nama",
+        "kegiatan.uraian",
+        "kegiatan.waktu.mulai",
+        "kegiatan.waktu.selesai",
+        "anggaran.nilaiKontrak",
+        "anggaran.terbilang",
+        "penyedia.nama",
+        "penyedia.pimpinan",
+        "penyedia.alamat.lengkap",
+        "dokumen.kontrak.nomor",
+        "dokumen.kontrak.tanggal",
+        "dokumen.bast.nomor",
+        "dokumen.bast.tanggal"
+      ]
+    },
+
+    "SPTJB": {
+      "name": "Surat Pernyataan Tanggung Jawab Belanja",
+      "code": "SPTJB",
+      "fields": [
+        "dokumen.sptjb.nomor",
+        "dokumen.sptjb.tanggal",
+        "satker.nama",
+        "satker.kode",
+        "pejabat.ppk.nama",
+        "pejabat.ppk.nip",
+        "pejabat.ppk.jabatan",
+        "pejabat.ppk.ttd",
+        "tahunAnggaran",
+        "kegiatan.program.nama",
+        "kegiatan.kegiatan.nama",
+        "kegiatan.output.nama",
+        "kegiatan.akun.kode",
+        "kegiatan.akun.nama",
+        "kegiatan.uraian",
+        "anggaran.nilaiKontrak",
+        "anggaran.terbilang",
+        "penyedia.nama",
+        "dokumen.kontrak.nomor",
+        "dokumen.kontrak.tanggal"
+      ]
+    },
+
+    "BAST": {
+      "name": "Berita Acara Serah Terima",
+      "code": "BAST",
+      "fields": [
+        "dokumen.bast.nomor",
+        "dokumen.bast.tanggal",
+        "satker.nama",
+        "satker.kode",
+        "satker.alamat.lengkap",
+        "pejabat.ppk.nama",
+        "pejabat.ppk.nip",
+        "pejabat.ppk.jabatan",
+        "pejabat.ppk.ttd",
+        "pejabat.pphp[].nama",
+        "pejabat.pphp[].nip",
+        "pejabat.pphp[].jabatan",
+        "pejabat.pphp[].role",
+        "pejabat.pphp[].ttd",
+        "tahunAnggaran",
+        "kegiatan.kegiatan.nama",
+        "kegiatan.output.nama",
+        "kegiatan.uraian",
+        "kegiatan.lokasi",
+        "kegiatan.waktu.mulai",
+        "kegiatan.waktu.selesai",
+        "anggaran.nilaiKontrak",
+        "anggaran.terbilang",
+        "penyedia.nama",
+        "penyedia.pimpinan",
+        "penyedia.jabatan",
+        "penyedia.alamat.lengkap",
+        "penyedia.identitas.npwp",
+        "dokumen.kontrak.nomor",
+        "dokumen.kontrak.tanggal"
+      ]
+    },
+
+    "BAP": {
+      "name": "Berita Acara Pemeriksaan",
+      "code": "BAP",
+      "fields": [
+        "dokumen.bap.nomor",
+        "dokumen.bap.tanggal",
+        "satker.nama",
+        "satker.kode",
+        "satker.alamat.lengkap",
+        "pejabat.ppk.nama",
+        "pejabat.ppk.nip",
+        "pejabat.ppk.jabatan",
+        "pejabat.ppk.ttd",
+        "pejabat.pphp[].nama",
+        "pejabat.pphp[].nip",
+        "pejabat.pphp[].jabatan",
+        "pejabat.pphp[].role",
+        "pejabat.pphp[].ttd",
+        "tahunAnggaran",
+        "kegiatan.kegiatan.nama",
+        "kegiatan.output.nama",
+        "kegiatan.uraian",
+        "kegiatan.lokasi",
+        "anggaran.nilaiKontrak",
+        "penyedia.nama",
+        "penyedia.pimpinan",
+        "dokumen.kontrak.nomor",
+        "dokumen.kontrak.tanggal"
+      ]
+    },
+
+    "RPD": {
+      "name": "Rincian Paket Dokumen",
+      "code": "RPD",
+      "fields": [
+        "dokumen.rpd.nomor",
+        "dokumen.rpd.tanggal",
+        "satker.kementerian",
+        "satker.unitEselon1",
+        "satker.nama",
+        "satker.kode",
+        "pejabat.kpa.nama",
+        "pejabat.kpa.nip",
+        "pejabat.ppk.nama",
+        "pejabat.ppk.nip",
+        "pejabat.ppk.ttd",
+        "tahunAnggaran",
+        "kegiatan.program.kode",
+        "kegiatan.program.nama",
+        "kegiatan.kegiatan.kode",
+        "kegiatan.kegiatan.nama",
+        "kegiatan.output.kode",
+        "kegiatan.output.nama",
+        "kegiatan.komponen.kode",
+        "kegiatan.komponen.nama",
+        "kegiatan.akun.kode",
+        "kegiatan.akun.nama",
+        "kegiatan.uraian",
+        "anggaran.sumberDana",
+        "anggaran.pagu",
+        "anggaran.nilaiKontrak",
+        "penyedia.jenis",
+        "penyedia.nama"
+      ]
+    },
+
+    "KUITANSI": {
+      "name": "Kuitansi Pembayaran",
+      "code": "KUITANSI",
+      "fields": [
+        "dokumen.kuitansi.nomor",
+        "dokumen.kuitansi.tanggal",
+        "satker.nama",
+        "pejabat.bendahara.nama",
+        "pejabat.bendahara.nip",
+        "pejabat.bendahara.ttd",
+        "penyedia.nama",
+        "penyedia.alamat.lengkap",
+        "penyedia.identitas.npwp",
+        "kegiatan.uraian",
+        "anggaran.nilaiDibayar",
+        "anggaran.terbilang",
+        "tahunAnggaran",
+        "dokumen.sp2d.nomor",
+        "dokumen.sp2d.tanggal"
+      ]
+    },
+
+    "NOMINATIF": {
+      "name": "Daftar Nominatif",
+      "code": "NOMINATIF",
+      "fields": [
+        "satker.nama",
+        "satker.kode",
+        "pejabat.ppk.nama",
+        "pejabat.ppk.nip",
+        "pejabat.ppk.ttd",
+        "tahunAnggaran",
+        "kegiatan.kegiatan.nama",
+        "kegiatan.akun.kode",
+        "kegiatan.akun.nama",
+        "anggaran.nilaiKontrak",
+        "anggaran.nilaiDibayar",
+        "anggaran.potongan.pph21",
+        "anggaran.potongan.pph23",
+        "anggaran.potongan.ppn",
+        "anggaran.potongan.total",
+        "penyedia.nama",
+        "penyedia.identitas.npwp",
+        "penyedia.identitas.nik",
+        "bank.namaBank",
+        "bank.nomorRekening",
+        "bank.atasNama"
+      ]
+    },
+
+    "COVER_SPJ": {
+      "name": "Cover Paket SPJ",
+      "code": "COVER",
+      "fields": [
+        "satker.kementerian",
+        "satker.unitEselon1",
+        "satker.nama",
+        "satker.kode",
+        "satker.alamat.lengkap",
+        "pejabat.kpa.nama",
+        "pejabat.kpa.nip",
+        "pejabat.kpa.jabatan",
+        "pejabat.ppk.nama",
+        "pejabat.ppk.nip",
+        "pejabat.ppk.jabatan",
+        "tahunAnggaran",
+        "kegiatan.kegiatan.nama",
+        "kegiatan.akun.kode",
+        "kegiatan.akun.nama",
+        "anggaran.sumberDana",
+        "anggaran.nilaiKontrak",
+        "dokumen.sp2d.nomor",
+        "dokumen.sp2d.tanggal"
+      ]
+    },
+
+    "KONTRAK": {
+      "name": "Surat Perjanjian/Kontrak",
+      "code": "KONTRAK",
+      "fields": [
+        "dokumen.kontrak.nomor",
+        "dokumen.kontrak.tanggal",
+        "satker.nama",
+        "satker.kode",
+        "satker.alamat.lengkap",
+        "pejabat.ppk.nama",
+        "pejabat.ppk.nip",
+        "pejabat.ppk.jabatan",
+        "pejabat.ppk.ttd",
+        "tahunAnggaran",
+        "kegiatan.kegiatan.nama",
+        "kegiatan.output.nama",
+        "kegiatan.uraian",
+        "kegiatan.lokasi",
+        "kegiatan.waktu.mulai",
+        "kegiatan.waktu.selesai",
+        "kegiatan.waktu.durasi",
+        "anggaran.sumberDana",
+        "anggaran.nilaiKontrak",
+        "anggaran.terbilang",
+        "penyedia.jenis",
+        "penyedia.nama",
+        "penyedia.pimpinan",
+        "penyedia.jabatan",
+        "penyedia.alamat.lengkap",
+        "penyedia.kontak.telepon",
+        "penyedia.kontak.email",
+        "penyedia.identitas.npwp",
+        "penyedia.identitas.nik",
+        "penyedia.identitas.nomorAkta",
+        "bank.namaBank",
+        "bank.cabang",
+        "bank.nomorRekening",
+        "bank.atasNama"
+      ]
+    }
+  },
+
+  "fieldUsage": {
+    "id": {
+      "description": "ID unik master data",
+      "usedIn": ["SEMUA_DOKUMEN"],
+      "required": true,
+      "autoGenerate": true
+    },
+    "tahunAnggaran": {
+      "description": "Tahun anggaran",
+      "usedIn": ["SPR", "SPPR", "SPTJB", "BAST", "BAP", "RPD", "KUITANSI", "NOMINATIF", "COVER_SPJ", "KONTRAK"],
+      "required": true
+    },
+    "satker.kementerian": {
+      "description": "Nama Kementerian/Lembaga",
+      "usedIn": ["RPD", "COVER_SPJ"],
+      "required": true
+    },
+    "satker.unitEselon1": {
+      "description": "Unit Eselon I",
+      "usedIn": ["RPD", "COVER_SPJ"],
+      "required": true
+    },
+    "satker.kode": {
+      "description": "Kode Satker",
+      "usedIn": ["SPR", "SPPR", "SPTJB", "BAST", "BAP", "RPD", "NOMINATIF", "COVER_SPJ", "KONTRAK"],
+      "required": true
+    },
+    "satker.nama": {
+      "description": "Nama Satuan Kerja",
+      "usedIn": ["SPR", "SPPR", "SPTJB", "BAST", "BAP", "RPD", "KUITANSI", "NOMINATIF", "COVER_SPJ", "KONTRAK"],
+      "required": true
+    },
+    "satker.alamat.lengkap": {
+      "description": "Alamat lengkap satker",
+      "usedIn": ["SPR", "BAST", "BAP", "COVER_SPJ", "KONTRAK"],
+      "autoGenerate": true
+    },
+    "pejabat.kpa.nama": {
+      "description": "Nama KPA",
+      "usedIn": ["RPD", "COVER_SPJ"],
+      "required": true
+    },
+    "pejabat.kpa.nip": {
+      "description": "NIP KPA",
+      "usedIn": ["RPD", "COVER_SPJ"],
+      "required": true
+    },
+    "pejabat.ppk.nama": {
+      "description": "Nama PPK",
+      "usedIn": ["SPR", "SPPR", "SPTJB", "BAST", "BAP", "RPD", "NOMINATIF", "COVER_SPJ", "KONTRAK"],
+      "required": true
+    },
+    "pejabat.ppk.nip": {
+      "description": "NIP PPK",
+      "usedIn": ["SPR", "SPPR", "SPTJB", "BAST", "BAP", "RPD", "NOMINATIF", "COVER_SPJ", "KONTRAK"],
+      "required": true
+    },
+    "pejabat.ppk.jabatan": {
+      "description": "Jabatan PPK",
+      "usedIn": ["SPR", "SPPR", "SPTJB", "BAST", "BAP", "COVER_SPJ", "KONTRAK"],
+      "required": true
+    },
+    "pejabat.ppk.ttd": {
+      "description": "Tanda tangan PPK",
+      "usedIn": ["SPR", "SPPR", "SPTJB", "BAST", "BAP", "RPD", "NOMINATIF", "KONTRAK"],
+      "required": false
+    },
+    "pejabat.bendahara.nama": {
+      "description": "Nama Bendahara",
+      "usedIn": ["KUITANSI"],
+      "required": true
+    },
+    "pejabat.pphp[].nama": {
+      "description": "Nama PPHP (array)",
+      "usedIn": ["BAST", "BAP"],
+      "required": true,
+      "isArray": true
+    },
+    "kegiatan.program.nama": {
+      "description": "Nama Program",
+      "usedIn": ["SPR", "SPTJB", "RPD"],
+      "required": true
+    },
+    "kegiatan.kegiatan.nama": {
+      "description": "Nama Kegiatan",
+      "usedIn": ["SPR", "SPPR", "SPTJB", "BAST", "BAP", "RPD", "NOMINATIF", "COVER_SPJ", "KONTRAK"],
+      "required": true
+    },
+    "kegiatan.output.nama": {
+      "description": "Nama Output",
+      "usedIn": ["SPR", "SPPR", "SPTJB", "BAST", "BAP", "RPD", "KONTRAK"],
+      "required": true
+    },
+    "kegiatan.akun.kode": {
+      "description": "Kode MAK",
+      "usedIn": ["SPR", "SPTJB", "RPD", "NOMINATIF", "COVER_SPJ"],
+      "required": true
+    },
+    "kegiatan.akun.nama": {
+      "description": "Nama Akun",
+      "usedIn": ["SPR", "SPTJB", "RPD", "NOMINATIF", "COVER_SPJ"],
+      "required": true
+    },
+    "kegiatan.uraian": {
+      "description": "Uraian detail kegiatan",
+      "usedIn": ["SPR", "SPPR", "SPTJB", "BAST", "BAP", "RPD", "KUITANSI", "KONTRAK"],
+      "required": true
+    },
+    "kegiatan.waktu.mulai": {
+      "description": "Tanggal mulai kegiatan",
+      "usedIn": ["SPPR", "BAST", "KONTRAK"],
+      "required": true
+    },
+    "kegiatan.waktu.selesai": {
+      "description": "Tanggal selesai kegiatan",
+      "usedIn": ["SPPR", "BAST", "KONTRAK"],
+      "required": true
+    },
+    "anggaran.sumberDana": {
+      "description": "Sumber dana (APBN/APBN-P/dll)",
+      "usedIn": ["SPR", "RPD", "COVER_SPJ", "KONTRAK"],
+      "required": true
+    },
+    "anggaran.pagu": {
+      "description": "Pagu anggaran tersedia",
+      "usedIn": ["RPD"],
+      "required": true
+    },
+    "anggaran.nilaiKontrak": {
+      "description": "Nilai kontrak/perjanjian",
+      "usedIn": ["SPR", "SPPR", "SPTJB", "BAST", "BAP", "RPD", "NOMINATIF", "COVER_SPJ", "KONTRAK"],
+      "required": true
+    },
+    "anggaran.nilaiDibayar": {
+      "description": "Nilai yang dibayarkan (setelah pajak)",
+      "usedIn": ["SPR", "KUITANSI", "NOMINATIF"],
+      "required": true
+    },
+    "anggaran.terbilang": {
+      "description": "Nilai dalam terbilang",
+      "usedIn": ["SPR", "SPPR", "SPTJB", "BAST", "KUITANSI", "KONTRAK"],
+      "required": true,
+      "autoGenerate": true
+    },
+    "anggaran.potongan.pph23": {
+      "description": "Potongan PPh 23",
+      "usedIn": ["SPR", "NOMINATIF"],
+      "required": false
+    },
+    "anggaran.potongan.ppn": {
+      "description": "Potongan PPN",
+      "usedIn": ["SPR", "NOMINATIF"],
+      "required": false
+    },
+    "penyedia.jenis": {
+      "description": "Jenis penyedia (badan_usaha/perorangan/pegawai)",
+      "usedIn": ["RPD", "KONTRAK"],
+      "required": true
+    },
+    "penyedia.nama": {
+      "description": "Nama penyedia/penerima",
+      "usedIn": ["SPR", "SPPR", "SPTJB", "BAST", "BAP", "RPD", "KUITANSI", "NOMINATIF", "KONTRAK"],
+      "required": true
+    },
+    "penyedia.pimpinan": {
+      "description": "Nama pimpinan/direktur",
+      "usedIn": ["SPPR", "BAST", "BAP", "KONTRAK"],
+      "required": false
+    },
+    "penyedia.alamat.lengkap": {
+      "description": "Alamat lengkap penyedia",
+      "usedIn": ["SPR", "SPPR", "BAST", "BAP", "KUITANSI", "KONTRAK"],
+      "autoGenerate": true
+    },
+    "penyedia.identitas.npwp": {
+      "description": "NPWP penyedia",
+      "usedIn": ["SPR", "BAST", "KUITANSI", "NOMINATIF", "KONTRAK"],
+      "required": true
+    },
+    "bank.namaBank": {
+      "description": "Nama bank",
+      "usedIn": ["SPR", "NOMINATIF", "KONTRAK"],
+      "required": true
+    },
+    "bank.nomorRekening": {
+      "description": "Nomor rekening",
+      "usedIn": ["SPR", "NOMINATIF", "KONTRAK"],
+      "required": true
+    },
+    "bank.atasNama": {
+      "description": "Nama pemilik rekening",
+      "usedIn": ["SPR", "NOMINATIF", "KONTRAK"],
+      "required": true
+    },
+    "dokumen.kontrak.nomor": {
+      "description": "Nomor kontrak/SPK",
+      "usedIn": ["SPR", "SPPR", "SPTJB", "BAST", "BAP", "KONTRAK"],
+      "required": true
+    },
+    "dokumen.kontrak.tanggal": {
+      "description": "Tanggal kontrak/SPK",
+      "usedIn": ["SPR", "SPPR", "SPTJB", "BAST", "BAP", "KONTRAK"],
+      "required": true
+    },
+    "dokumen.sp2d.nomor": {
+      "description": "Nomor SP2D",
+      "usedIn": ["KUITANSI", "COVER_SPJ"],
+      "required": false
+    },
+    "dokumen.sp2d.tanggal": {
+      "description": "Tanggal SP2D",
+      "usedIn": ["KUITANSI", "COVER_SPJ"],
+      "required": false
+    }
+  },
+
+  "autoGenerateFields": [
+    "id",
+    "satker.alamat.lengkap",
+    "penyedia.alamat.lengkap",
+    "anggaran.terbilang",
+    "anggaran.potongan.total",
+    "kegiatan.waktu.durasi",
+    "metadata.createdAt",
+    "metadata.updatedAt"
+  ],
+
+  "validationRules": {
+    "anggaran.nilaiDibayar": {
+      "rule": "must_equal",
+      "formula": "nilaiKontrak - (pph21 + pph22 + pph23 + ppn)",
+      "description": "Nilai dibayar harus sama dengan nilai kontrak dikurangi total potongan"
+    },
+    "anggaran.nilaiKontrak": {
+      "rule": "must_not_exceed",
+      "field": "anggaran.pagu",
+      "description": "Nilai kontrak tidak boleh melebihi pagu anggaran"
+    },
+    "kegiatan.waktu.selesai": {
+      "rule": "must_be_after",
+      "field": "kegiatan.waktu.mulai",
+      "description": "Tanggal selesai harus setelah tanggal mulai"
+    },
+    "dokumen.bast.tanggal": {
+      "rule": "must_be_after_or_equal",
+      "field": "kegiatan.waktu.selesai",
+      "description": "Tanggal BAST harus setelah atau sama dengan tanggal selesai kegiatan"
+    },
+    "dokumen.spr.tanggal": {
+      "rule": "must_be_after_or_equal",
+      "field": "dokumen.bast.tanggal",
+      "description": "Tanggal SPR harus setelah atau sama dengan tanggal BAST"
+    }
+  },
+
+  "notes": {
+    "purpose": "File ini memetakan field dari master-schema.json ke berbagai dokumen SPJ yang akan di-generate",
+    "usage": "Digunakan oleh document generator untuk mengetahui field mana yang perlu diisi untuk setiap jenis dokumen",
+    "maintenance": "Setiap penambahan field baru di master-schema.json harus diupdate di sini",
+    "validation": "autoGenerateFields akan di-generate otomatis oleh sistem, tidak perlu input manual dari user"
+  }
+}

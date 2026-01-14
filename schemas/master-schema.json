@@ -1,0 +1,743 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Master Data Kegiatan PPK",
+  "description": "Single Source of Truth untuk seluruh dokumen administrasi keuangan PPK",
+  "type": "object",
+  "required": ["id", "tahunAnggaran", "satker", "pejabat", "kegiatan"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier untuk master data ini",
+      "pattern": "^MDK-[0-9]{4}-[0-9]{6}$",
+      "example": "MDK-2024-000001"
+    },
+    "tahunAnggaran": {
+      "type": "integer",
+      "description": "Tahun anggaran",
+      "minimum": 2000,
+      "maximum": 2100,
+      "example": 2024
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "completed", "archived"],
+      "default": "draft",
+      "description": "Status master data"
+    },
+
+    "satker": {
+      "type": "object",
+      "description": "Identitas Satuan Kerja",
+      "required": ["kode", "nama", "alamat"],
+      "properties": {
+        "kementerian": {
+          "type": "string",
+          "description": "Nama Kementerian/Lembaga",
+          "example": "Kementerian Keuangan"
+        },
+        "unitEselon1": {
+          "type": "string",
+          "description": "Unit Eselon I",
+          "example": "Direktorat Jenderal Perbendaharaan"
+        },
+        "kode": {
+          "type": "string",
+          "description": "Kode Satker (6 digit)",
+          "pattern": "^[0-9]{6}$",
+          "example": "123456"
+        },
+        "nama": {
+          "type": "string",
+          "description": "Nama Satuan Kerja",
+          "example": "Kantor Pelayanan Perbendaharaan Negara Jakarta I"
+        },
+        "alamat": {
+          "type": "object",
+          "properties": {
+            "jalan": {
+              "type": "string",
+              "example": "Jl. Ir. H. Juanda No. 1"
+            },
+            "kelurahan": {
+              "type": "string",
+              "example": "Pasar Baru"
+            },
+            "kecamatan": {
+              "type": "string",
+              "example": "Sawah Besar"
+            },
+            "kota": {
+              "type": "string",
+              "example": "Jakarta Pusat"
+            },
+            "provinsi": {
+              "type": "string",
+              "example": "DKI Jakarta"
+            },
+            "kodePos": {
+              "type": "string",
+              "pattern": "^[0-9]{5}$",
+              "example": "10710"
+            },
+            "lengkap": {
+              "type": "string",
+              "description": "Alamat lengkap (auto-generated dari field lain)",
+              "example": "Jl. Ir. H. Juanda No. 1, Pasar Baru, Sawah Besar, Jakarta Pusat, DKI Jakarta 10710"
+            }
+          }
+        },
+        "telepon": {
+          "type": "string",
+          "example": "021-3841234"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "example": "kppn.jakarta1@kemenkeu.go.id"
+        }
+      }
+    },
+
+    "pejabat": {
+      "type": "object",
+      "description": "Data Pejabat Pengelola Keuangan",
+      "properties": {
+        "kpa": {
+          "type": "object",
+          "description": "Kuasa Pengguna Anggaran",
+          "required": ["nama", "nip", "jabatan"],
+          "properties": {
+            "nama": {
+              "type": "string",
+              "example": "Dr. Ahmad Budiman, S.E., M.M."
+            },
+            "nip": {
+              "type": "string",
+              "pattern": "^[0-9]{18}$",
+              "example": "196501011990031001"
+            },
+            "jabatan": {
+              "type": "string",
+              "example": "Kepala Kantor Pelayanan Perbendaharaan Negara Jakarta I"
+            },
+            "pangkat": {
+              "type": "string",
+              "example": "Pembina Utama Muda (IV/c)"
+            },
+            "ttd": {
+              "type": "string",
+              "description": "Path atau base64 tanda tangan digital",
+              "example": "/uploads/ttd/kpa-123456.png"
+            }
+          }
+        },
+        "ppk": {
+          "type": "object",
+          "description": "Pejabat Pembuat Komitmen",
+          "required": ["nama", "nip", "jabatan"],
+          "properties": {
+            "nama": {
+              "type": "string",
+              "example": "Budi Santoso, S.Kom., M.T."
+            },
+            "nip": {
+              "type": "string",
+              "pattern": "^[0-9]{18}$",
+              "example": "197203151995031002"
+            },
+            "jabatan": {
+              "type": "string",
+              "example": "Kepala Seksi Verifikasi dan Akuntansi"
+            },
+            "pangkat": {
+              "type": "string",
+              "example": "Penata Tingkat I (III/d)"
+            },
+            "ttd": {
+              "type": "string",
+              "example": "/uploads/ttd/ppk-123456.png"
+            }
+          }
+        },
+        "bendahara": {
+          "type": "object",
+          "description": "Bendahara Pengeluaran",
+          "required": ["nama", "nip"],
+          "properties": {
+            "nama": {
+              "type": "string",
+              "example": "Siti Nurhaliza, S.E."
+            },
+            "nip": {
+              "type": "string",
+              "pattern": "^[0-9]{18}$",
+              "example": "198005102005012001"
+            },
+            "ttd": {
+              "type": "string",
+              "example": "/uploads/ttd/bendahara-123456.png"
+            }
+          }
+        },
+        "pphp": {
+          "type": "array",
+          "description": "Tim Pejabat Penerima Hasil Pekerjaan (bisa lebih dari 1)",
+          "items": {
+            "type": "object",
+            "required": ["nama", "nip"],
+            "properties": {
+              "nama": {
+                "type": "string",
+                "example": "Agus Wijaya, S.T."
+              },
+              "nip": {
+                "type": "string",
+                "pattern": "^[0-9]{18}$",
+                "example": "198506202010121001"
+              },
+              "jabatan": {
+                "type": "string",
+                "example": "Pelaksana Seksi Monitoring dan Evaluasi"
+              },
+              "role": {
+                "type": "string",
+                "enum": ["ketua", "anggota"],
+                "default": "anggota"
+              },
+              "ttd": {
+                "type": "string",
+                "example": "/uploads/ttd/pphp-123456.png"
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "kegiatan": {
+      "type": "object",
+      "description": "Data Kegiatan dan Anggaran",
+      "required": ["kode", "nama", "output"],
+      "properties": {
+        "program": {
+          "type": "object",
+          "properties": {
+            "kode": {
+              "type": "string",
+              "example": "01"
+            },
+            "nama": {
+              "type": "string",
+              "example": "Program Dukungan Manajemen dan Pelaksanaan Tugas Teknis Lainnya"
+            }
+          }
+        },
+        "kegiatan": {
+          "type": "object",
+          "required": ["kode", "nama"],
+          "properties": {
+            "kode": {
+              "type": "string",
+              "example": "01.01"
+            },
+            "nama": {
+              "type": "string",
+              "example": "Pengelolaan Layanan Perbendaharaan"
+            }
+          }
+        },
+        "output": {
+          "type": "object",
+          "required": ["kode", "nama"],
+          "properties": {
+            "kode": {
+              "type": "string",
+              "example": "01.01.001"
+            },
+            "nama": {
+              "type": "string",
+              "example": "Layanan Manajemen dan Dukungan Teknis Lainnya"
+            },
+            "volume": {
+              "type": "string",
+              "example": "12 bulan"
+            },
+            "satuan": {
+              "type": "string",
+              "example": "bulan"
+            }
+          }
+        },
+        "komponen": {
+          "type": "object",
+          "properties": {
+            "kode": {
+              "type": "string",
+              "example": "001"
+            },
+            "nama": {
+              "type": "string",
+              "example": "Layanan Perkantoran"
+            }
+          }
+        },
+        "akun": {
+          "type": "object",
+          "required": ["kode", "nama"],
+          "properties": {
+            "kode": {
+              "type": "string",
+              "description": "Kode MAK (Mata Anggaran Keluaran)",
+              "example": "521211"
+            },
+            "nama": {
+              "type": "string",
+              "example": "Belanja Barang Operasional Lainnya"
+            }
+          }
+        },
+        "uraian": {
+          "type": "string",
+          "description": "Uraian detail kegiatan",
+          "example": "Pengadaan Alat Tulis Kantor untuk keperluan operasional triwulan I tahun 2024"
+        },
+        "lokasi": {
+          "type": "string",
+          "example": "Jakarta Pusat"
+        },
+        "waktu": {
+          "type": "object",
+          "properties": {
+            "mulai": {
+              "type": "string",
+              "format": "date",
+              "example": "2024-01-15"
+            },
+            "selesai": {
+              "type": "string",
+              "format": "date",
+              "example": "2024-03-30"
+            },
+            "durasi": {
+              "type": "integer",
+              "description": "Durasi dalam hari (auto-calculated)",
+              "example": 75
+            }
+          }
+        }
+      }
+    },
+
+    "anggaran": {
+      "type": "object",
+      "description": "Data Anggaran dan Realisasi",
+      "required": ["sumberDana", "pagu"],
+      "properties": {
+        "sumberDana": {
+          "type": "string",
+          "enum": ["APBN", "APBN-P", "PNBP", "PHLN", "BLU"],
+          "example": "APBN"
+        },
+        "dipaRevisi": {
+          "type": "integer",
+          "description": "Revisi DIPA yang digunakan (0 = DIPA Awal)",
+          "default": 0,
+          "example": 0
+        },
+        "pagu": {
+          "type": "number",
+          "description": "Nilai pagu anggaran yang tersedia",
+          "minimum": 0,
+          "example": 50000000
+        },
+        "nilaiKontrak": {
+          "type": "number",
+          "description": "Nilai kontrak/perjanjian",
+          "minimum": 0,
+          "example": 45000000
+        },
+        "nilaiDibayar": {
+          "type": "number",
+          "description": "Nilai yang dibayarkan (setelah pajak)",
+          "minimum": 0,
+          "example": 44550000
+        },
+        "potongan": {
+          "type": "object",
+          "description": "Rincian potongan pajak",
+          "properties": {
+            "pph21": {
+              "type": "number",
+              "default": 0,
+              "example": 0
+            },
+            "pph22": {
+              "type": "number",
+              "default": 0,
+              "example": 0
+            },
+            "pph23": {
+              "type": "number",
+              "default": 0,
+              "example": 450000
+            },
+            "ppn": {
+              "type": "number",
+              "default": 0,
+              "example": 0
+            },
+            "total": {
+              "type": "number",
+              "description": "Total potongan (auto-calculated)",
+              "example": 450000
+            }
+          }
+        },
+        "terbilang": {
+          "type": "string",
+          "description": "Nilai dalam terbilang (auto-generated)",
+          "example": "Empat Puluh Empat Juta Lima Ratus Lima Puluh Ribu Rupiah"
+        }
+      }
+    },
+
+    "penyedia": {
+      "type": "object",
+      "description": "Data Penyedia Barang/Jasa atau Penerima",
+      "required": ["jenis", "nama"],
+      "properties": {
+        "jenis": {
+          "type": "string",
+          "enum": ["badan_usaha", "perorangan", "pegawai"],
+          "description": "Jenis penyedia/penerima"
+        },
+        "nama": {
+          "type": "string",
+          "example": "PT Maju Jaya Sentosa"
+        },
+        "pimpinan": {
+          "type": "string",
+          "description": "Nama pimpinan/direktur (untuk badan usaha)",
+          "example": "Ir. Bambang Setiawan"
+        },
+        "jabatan": {
+          "type": "string",
+          "example": "Direktur Utama"
+        },
+        "alamat": {
+          "type": "object",
+          "properties": {
+            "jalan": {
+              "type": "string",
+              "example": "Jl. Sudirman No. 45"
+            },
+            "kelurahan": {
+              "type": "string",
+              "example": "Karet Tengsin"
+            },
+            "kecamatan": {
+              "type": "string",
+              "example": "Tanah Abang"
+            },
+            "kota": {
+              "type": "string",
+              "example": "Jakarta Pusat"
+            },
+            "provinsi": {
+              "type": "string",
+              "example": "DKI Jakarta"
+            },
+            "kodePos": {
+              "type": "string",
+              "example": "10220"
+            },
+            "lengkap": {
+              "type": "string",
+              "example": "Jl. Sudirman No. 45, Karet Tengsin, Tanah Abang, Jakarta Pusat, DKI Jakarta 10220"
+            }
+          }
+        },
+        "kontak": {
+          "type": "object",
+          "properties": {
+            "telepon": {
+              "type": "string",
+              "example": "021-5701234"
+            },
+            "email": {
+              "type": "string",
+              "format": "email",
+              "example": "info@majujaya.co.id"
+            }
+          }
+        },
+        "identitas": {
+          "type": "object",
+          "properties": {
+            "npwp": {
+              "type": "string",
+              "pattern": "^[0-9]{15}$",
+              "example": "123456789012345"
+            },
+            "nik": {
+              "type": "string",
+              "pattern": "^[0-9]{16}$",
+              "example": "3175012345678901"
+            },
+            "nomorAkta": {
+              "type": "string",
+              "description": "Nomor Akta Pendirian (untuk badan usaha)",
+              "example": "AHU-0012345.AH.01.01.Tahun 2020"
+            }
+          }
+        }
+      }
+    },
+
+    "bank": {
+      "type": "object",
+      "description": "Data Rekening Bank Penerima",
+      "required": ["namaBank", "nomorRekening", "atasNama"],
+      "properties": {
+        "namaBank": {
+          "type": "string",
+          "example": "Bank Mandiri"
+        },
+        "cabang": {
+          "type": "string",
+          "example": "KCP Jakarta Sudirman"
+        },
+        "nomorRekening": {
+          "type": "string",
+          "pattern": "^[0-9]{10,16}$",
+          "example": "1370012345678"
+        },
+        "atasNama": {
+          "type": "string",
+          "example": "PT Maju Jaya Sentosa"
+        }
+      }
+    },
+
+    "dokumen": {
+      "type": "object",
+      "description": "Metadata Nomor dan Tanggal Dokumen",
+      "properties": {
+        "kontrak": {
+          "type": "object",
+          "properties": {
+            "nomor": {
+              "type": "string",
+              "example": "SPK-001/KPPN.016/2024"
+            },
+            "tanggal": {
+              "type": "string",
+              "format": "date",
+              "example": "2024-01-15"
+            }
+          }
+        },
+        "spr": {
+          "type": "object",
+          "description": "Surat Permintaan Pembayaran",
+          "properties": {
+            "nomor": {
+              "type": "string",
+              "example": "SPR-001/KPPN.016/2024"
+            },
+            "tanggal": {
+              "type": "string",
+              "format": "date",
+              "example": "2024-03-31"
+            }
+          }
+        },
+        "sppr": {
+          "type": "object",
+          "description": "Surat Pernyataan Penyelesaian Pekerjaan",
+          "properties": {
+            "nomor": {
+              "type": "string",
+              "example": "SPPR-001/KPPN.016/2024"
+            },
+            "tanggal": {
+              "type": "string",
+              "format": "date",
+              "example": "2024-03-30"
+            }
+          }
+        },
+        "bast": {
+          "type": "object",
+          "description": "Berita Acara Serah Terima",
+          "properties": {
+            "nomor": {
+              "type": "string",
+              "example": "BAST-001/KPPN.016/2024"
+            },
+            "tanggal": {
+              "type": "string",
+              "format": "date",
+              "example": "2024-03-30"
+            }
+          }
+        },
+        "bap": {
+          "type": "object",
+          "description": "Berita Acara Pemeriksaan",
+          "properties": {
+            "nomor": {
+              "type": "string",
+              "example": "BAP-001/KPPN.016/2024"
+            },
+            "tanggal": {
+              "type": "string",
+              "format": "date",
+              "example": "2024-03-29"
+            }
+          }
+        },
+        "sptjb": {
+          "type": "object",
+          "description": "Surat Pernyataan Tanggung Jawab Belanja",
+          "properties": {
+            "nomor": {
+              "type": "string",
+              "example": "SPTJB-001/KPPN.016/2024"
+            },
+            "tanggal": {
+              "type": "string",
+              "format": "date",
+              "example": "2024-03-31"
+            }
+          }
+        },
+        "rpd": {
+          "type": "object",
+          "description": "Rincian Paket Dokumen",
+          "properties": {
+            "nomor": {
+              "type": "string",
+              "example": "RPD-001/KPPN.016/2024"
+            },
+            "tanggal": {
+              "type": "string",
+              "format": "date",
+              "example": "2024-03-31"
+            }
+          }
+        },
+        "sp2d": {
+          "type": "object",
+          "description": "Surat Perintah Pencairan Dana",
+          "properties": {
+            "nomor": {
+              "type": "string",
+              "example": "SP2D-12345678/2024"
+            },
+            "tanggal": {
+              "type": "string",
+              "format": "date",
+              "example": "2024-04-01"
+            }
+          }
+        },
+        "kuitansi": {
+          "type": "object",
+          "properties": {
+            "nomor": {
+              "type": "string",
+              "example": "KWT-001/KPPN.016/2024"
+            },
+            "tanggal": {
+              "type": "string",
+              "format": "date",
+              "example": "2024-03-31"
+            }
+          }
+        }
+      }
+    },
+
+    "lampiran": {
+      "type": "array",
+      "description": "Dokumen lampiran yang diupload",
+      "items": {
+        "type": "object",
+        "properties": {
+          "jenis": {
+            "type": "string",
+            "enum": ["kontrak", "bast", "bap", "faktur", "foto", "lainnya"],
+            "example": "kontrak"
+          },
+          "nama": {
+            "type": "string",
+            "example": "Surat Perjanjian Kerja"
+          },
+          "file": {
+            "type": "string",
+            "description": "Path atau URL file",
+            "example": "/uploads/documents/spk-001-2024.pdf"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:00Z"
+          }
+        }
+      }
+    },
+
+    "metadata": {
+      "type": "object",
+      "description": "Metadata sistem",
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2024-01-15T08:00:00Z"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2024-03-31T16:00:00Z"
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "User ID pembuat",
+          "example": "user-123"
+        },
+        "version": {
+          "type": "integer",
+          "description": "Versi data (untuk audit trail)",
+          "default": 1,
+          "example": 1
+        },
+        "history": {
+          "type": "array",
+          "description": "Riwayat perubahan",
+          "items": {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "user": {
+                "type": "string"
+              },
+              "action": {
+                "type": "string",
+                "enum": ["created", "updated", "completed", "archived"]
+              },
+              "changes": {
+                "type": "object",
+                "description": "Field yang berubah"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
