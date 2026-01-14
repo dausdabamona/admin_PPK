@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
   Plus, Pencil, Trash2, Search, FolderKanban, Eye, Calendar, Banknote,
-  CheckSquare, Upload, FileText, Download, X, FolderOpen, CheckCircle, AlertCircle
+  CheckSquare, Upload, FileText, Download, X, FolderOpen, CheckCircle, AlertCircle, FileCheck, ClipboardList
 } from 'lucide-react'
 import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardBody, CardTitle, CardDescription } from '../../components/ui/Card'
@@ -94,7 +94,10 @@ const initialFormData = {
   deskripsi: '',
   tanggalMulai: '',
   tanggalSelesai: '',
-  status: STATUS_SWAKELOLA.DRAFT
+  status: STATUS_SWAKELOLA.DRAFT,
+  // TOR and RAB files
+  torFiles: [],
+  rabFiles: []
 }
 
 // Initialize checklist items from template
@@ -222,6 +225,84 @@ export default function SwakelolaKegiatan() {
     document.body.removeChild(link)
   }
 
+  // Handle TOR file upload
+  const handleTORUpload = async (files) => {
+    if (!files || files.length === 0) return
+
+    const folderPath = generateFolderPath(formData.kode, formData.nama)
+    const uploadedFiles = [...(formData.torFiles || [])]
+
+    for (const file of files) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File "${file.name}" melebihi batas 10MB`)
+        continue
+      }
+
+      try {
+        const base64 = await fileToBase64(file)
+        uploadedFiles.push({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          data: base64,
+          folderPath: `${folderPath}/TOR`,
+          uploadedAt: new Date().toISOString()
+        })
+      } catch (error) {
+        console.error('Error uploading TOR file:', error)
+      }
+    }
+
+    setFormData(prev => ({ ...prev, torFiles: uploadedFiles }))
+  }
+
+  // Handle RAB file upload
+  const handleRABUpload = async (files) => {
+    if (!files || files.length === 0) return
+
+    const folderPath = generateFolderPath(formData.kode, formData.nama)
+    const uploadedFiles = [...(formData.rabFiles || [])]
+
+    for (const file of files) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File "${file.name}" melebihi batas 10MB`)
+        continue
+      }
+
+      try {
+        const base64 = await fileToBase64(file)
+        uploadedFiles.push({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          data: base64,
+          folderPath: `${folderPath}/RAB`,
+          uploadedAt: new Date().toISOString()
+        })
+      } catch (error) {
+        console.error('Error uploading RAB file:', error)
+      }
+    }
+
+    setFormData(prev => ({ ...prev, rabFiles: uploadedFiles }))
+  }
+
+  // Remove TOR file
+  const handleRemoveTORFile = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      torFiles: prev.torFiles.filter((_, i) => i !== index)
+    }))
+  }
+
+  // Remove RAB file
+  const handleRemoveRABFile = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      rabFiles: prev.rabFiles.filter((_, i) => i !== index)
+    }))
+  }
+
   const handleOpenModal = async (kegiatan = null) => {
     if (kegiatan) {
       setEditingId(kegiatan.id)
@@ -235,7 +316,9 @@ export default function SwakelolaKegiatan() {
         deskripsi: kegiatan.deskripsi || '',
         tanggalMulai: formatDateInput(kegiatan.tanggalMulai),
         tanggalSelesai: formatDateInput(kegiatan.tanggalSelesai),
-        status: kegiatan.status || STATUS_SWAKELOLA.DRAFT
+        status: kegiatan.status || STATUS_SWAKELOLA.DRAFT,
+        torFiles: kegiatan.torFiles || [],
+        rabFiles: kegiatan.rabFiles || []
       })
 
       // Load existing checklist
@@ -283,6 +366,8 @@ export default function SwakelolaKegiatan() {
         tanggalMulai: formData.tanggalMulai ? new Date(formData.tanggalMulai) : null,
         tanggalSelesai: formData.tanggalSelesai ? new Date(formData.tanggalSelesai) : null,
         status: formData.status,
+        torFiles: formData.torFiles || [],
+        rabFiles: formData.rabFiles || [],
         updatedAt: new Date()
       }
 
@@ -577,7 +662,112 @@ export default function SwakelolaKegiatan() {
 
           {/* Tab Content: Info */}
           {activeTab === 'info' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-6">
+              {/* TOR & RAB Upload Section */}
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <FileCheck className="w-5 h-5 text-blue-600" />
+                  <span className="font-medium text-blue-900">Dokumen Awal Kegiatan</span>
+                </div>
+                <p className="text-sm text-blue-700 mb-4">
+                  Upload TOR (Terms of Reference) dan RAB (Rencana Anggaran Biaya) di awal kegiatan setelah surat tugas diterima.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* TOR Upload */}
+                  <div className="bg-white p-3 rounded-lg border">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-700">TOR (Kerangka Acuan)</span>
+                      <label className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-700 bg-blue-50 rounded cursor-pointer hover:bg-blue-100">
+                        <Upload className="w-3.5 h-3.5" />
+                        Upload
+                        <input
+                          type="file"
+                          multiple
+                          accept=".pdf,.doc,.docx"
+                          onChange={(e) => handleTORUpload(Array.from(e.target.files))}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                    {formData.torFiles?.length > 0 ? (
+                      <div className="space-y-1">
+                        {formData.torFiles.map((file, idx) => (
+                          <div key={idx} className="flex items-center gap-2 p-2 bg-gray-50 rounded text-xs">
+                            <FileText className="w-4 h-4 text-blue-500" />
+                            <span className="flex-1 truncate">{file.name}</span>
+                            <span className="text-gray-400">{formatFileSize(file.size)}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadFile(file)}
+                              className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                            >
+                              <Download className="w-3 h-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveTORFile(idx)}
+                              className="p-1 text-red-600 hover:bg-red-50 rounded"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-400">Belum ada dokumen TOR</p>
+                    )}
+                  </div>
+
+                  {/* RAB Upload */}
+                  <div className="bg-white p-3 rounded-lg border">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-700">RAB (Rencana Anggaran)</span>
+                      <label className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-green-700 bg-green-50 rounded cursor-pointer hover:bg-green-100">
+                        <Upload className="w-3.5 h-3.5" />
+                        Upload
+                        <input
+                          type="file"
+                          multiple
+                          accept=".pdf,.doc,.docx,.xls,.xlsx"
+                          onChange={(e) => handleRABUpload(Array.from(e.target.files))}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                    {formData.rabFiles?.length > 0 ? (
+                      <div className="space-y-1">
+                        {formData.rabFiles.map((file, idx) => (
+                          <div key={idx} className="flex items-center gap-2 p-2 bg-gray-50 rounded text-xs">
+                            <FileText className="w-4 h-4 text-green-500" />
+                            <span className="flex-1 truncate">{file.name}</span>
+                            <span className="text-gray-400">{formatFileSize(file.size)}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadFile(file)}
+                              className="p-1 text-green-600 hover:bg-green-50 rounded"
+                            >
+                              <Download className="w-3 h-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveRABFile(idx)}
+                              className="p-1 text-red-600 hover:bg-red-50 rounded"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-400">Belum ada dokumen RAB</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Form Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label="Kode Kegiatan"
                 name="kode"
@@ -660,6 +850,7 @@ export default function SwakelolaKegiatan() {
                   rows={3}
                   placeholder="Deskripsi singkat kegiatan..."
                 />
+              </div>
               </div>
             </div>
           )}
@@ -871,6 +1062,58 @@ export default function SwakelolaKegiatan() {
                 {formatRupiah(viewingData.pagu)}
               </p>
             </div>
+
+            {/* TOR & RAB Files Display */}
+            {(viewingData.torFiles?.length > 0 || viewingData.rabFiles?.length > 0) && (
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <FileCheck className="w-5 h-5 text-blue-600" />
+                  <span className="font-medium text-blue-900">Dokumen Awal Kegiatan</span>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* TOR Files */}
+                  <div>
+                    <p className="text-xs font-medium text-gray-600 mb-1">TOR (Kerangka Acuan)</p>
+                    {viewingData.torFiles?.length > 0 ? (
+                      <div className="space-y-1">
+                        {viewingData.torFiles.map((file, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleDownloadFile(file)}
+                            className="flex items-center gap-2 text-xs text-blue-600 hover:text-blue-800"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            <span className="truncate">{file.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-400">Belum diupload</p>
+                    )}
+                  </div>
+                  {/* RAB Files */}
+                  <div>
+                    <p className="text-xs font-medium text-gray-600 mb-1">RAB (Rencana Anggaran)</p>
+                    {viewingData.rabFiles?.length > 0 ? (
+                      <div className="space-y-1">
+                        {viewingData.rabFiles.map((file, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleDownloadFile(file)}
+                            className="flex items-center gap-2 text-xs text-green-600 hover:text-green-800"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            <span className="truncate">{file.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-400">Belum diupload</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Checklist Status */}
             {viewingData.checklist && (

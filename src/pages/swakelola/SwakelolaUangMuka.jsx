@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
-  Plus, Pencil, Trash2, Search, Banknote, Eye, Printer, CheckCircle
+  Plus, Pencil, Trash2, Search, Banknote, Eye, Printer, CheckCircle, CreditCard, Building2, ChevronDown
 } from 'lucide-react'
 import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardBody, CardTitle, CardDescription } from '../../components/ui/Card'
@@ -12,7 +12,7 @@ import { Input, Select, CurrencyInput, Textarea } from '../../components/ui/Inpu
 import Badge from '../../components/ui/Badge'
 import db from '../../db/database'
 import { formatTanggal, formatDateInput, formatRupiah, angkaTerbilang } from '../../utils/formatters'
-import { generateKwitansiUangMukaPDF } from '../../utils/swakelolaDocGenerator'
+import { generateKwitansiUangMukaPDF, generateSPRPDF, generateSPPRPDF } from '../../utils/swakelolaDocGenerator'
 
 const initialFormData = {
   kegiatanId: '',
@@ -256,6 +256,40 @@ export default function SwakelolaUangMuka() {
     }
   }
 
+  // Print SPR (Surat Pendebitan Rekening) - untuk penarikan tunai via teller
+  const handlePrintSPR = async (uangMuka) => {
+    try {
+      // Get PPK and Bendahara
+      const ppk = await db.pejabat.where('jenisPejabat').equals('PPK').first()
+      const bendahara = await db.pejabat.where('jenisPejabat').equals('BENDAHARA').first()
+
+      await generateSPRPDF({
+        ...uangMuka,
+        ppk,
+        bendahara
+      })
+    } catch (error) {
+      alert('Gagal mencetak SPR: ' + error.message)
+    }
+  }
+
+  // Print SPPR (Surat Perintah Pendebitan Rekening) - untuk penarikan via kartu debit
+  const handlePrintSPPR = async (uangMuka) => {
+    try {
+      // Get PPK and Bendahara
+      const ppk = await db.pejabat.where('jenisPejabat').equals('PPK').first()
+      const bendahara = await db.pejabat.where('jenisPejabat').equals('BENDAHARA').first()
+
+      await generateSPPRPDF({
+        ...uangMuka,
+        ppk,
+        bendahara
+      })
+    } catch (error) {
+      alert('Gagal mencetak SPPR: ' + error.message)
+    }
+  }
+
   const getStatusBadge = (status) => {
     const variants = {
       aktif: 'warning',
@@ -367,13 +401,39 @@ export default function SwakelolaUangMuka() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => handlePrint(um)}
-                          className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg"
-                          title="Cetak Kwitansi"
-                        >
-                          <Printer className="w-4 h-4" />
-                        </button>
+                        {/* Dropdown for document printing */}
+                        <div className="relative group">
+                          <button
+                            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg flex items-center gap-0.5"
+                            title="Cetak Dokumen"
+                          >
+                            <Printer className="w-4 h-4" />
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+                          <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 hidden group-hover:block">
+                            <button
+                              onClick={() => handlePrint(um)}
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <Printer className="w-4 h-4 text-green-600" />
+                              Kwitansi Uang Muka
+                            </button>
+                            <button
+                              onClick={() => handlePrintSPR(um)}
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <Building2 className="w-4 h-4 text-blue-600" />
+                              SPR (Tunai Teller)
+                            </button>
+                            <button
+                              onClick={() => handlePrintSPPR(um)}
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <CreditCard className="w-4 h-4 text-purple-600" />
+                              SPPR (Kartu Debit)
+                            </button>
+                          </div>
+                        </div>
                         <button
                           onClick={() => handleOpenModal(um)}
                           className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"
@@ -582,14 +642,36 @@ export default function SwakelolaUangMuka() {
               <p>{getStatusBadge(viewingData.status)}</p>
             </div>
 
-            <div className="pt-4 border-t">
+            <div className="pt-4 border-t space-y-2">
+              <p className="text-xs font-medium text-gray-500 mb-2">Cetak Dokumen:</p>
               <Button
                 onClick={() => handlePrint(viewingData)}
                 icon={Printer}
                 className="w-full"
               >
-                Cetak Kwitansi
+                Kwitansi Uang Muka
               </Button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  onClick={() => handlePrintSPR(viewingData)}
+                  variant="secondary"
+                  icon={Building2}
+                  className="text-sm"
+                >
+                  SPR (Tunai)
+                </Button>
+                <Button
+                  onClick={() => handlePrintSPPR(viewingData)}
+                  variant="secondary"
+                  icon={CreditCard}
+                  className="text-sm"
+                >
+                  SPPR (Debit)
+                </Button>
+              </div>
+              <p className="text-xs text-gray-400 mt-2">
+                SPR: Penarikan tunai via teller | SPPR: Penarikan via kartu debit
+              </p>
             </div>
           </div>
         )}

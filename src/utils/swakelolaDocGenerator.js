@@ -414,6 +414,258 @@ export async function generateKwitansiRampungSwakelolaPDF(rampung) {
   doc.save(`Kwitansi_Rampung_${rampung.nomorKwitansi?.replace(/\//g, '_') || 'SWK'}.pdf`)
 }
 
+// ==================== SURAT PENDEBITAN REKENING (SPR) ====================
+// SPR - Surat untuk penarikan tunai melalui teller bank
+export async function generateSPRPDF(data) {
+  const settings = await getSettings()
+  const doc = new jsPDF()
+  const pageWidth = doc.internal.pageSize.getWidth()
+
+  // Header Kementerian
+  doc.setFontSize(11)
+  doc.setFont('helvetica', 'bold')
+  doc.text('KEMENTERIAN KELAUTAN DAN PERIKANAN', pageWidth / 2, 15, { align: 'center' })
+
+  doc.setFontSize(10)
+  doc.text(settings.nama_instansi || 'POLITEKNIK KELAUTAN DAN PERIKANAN SORONG', pageWidth / 2, 21, { align: 'center' })
+
+  // Line separator
+  doc.setLineWidth(0.5)
+  doc.line(20, 25, pageWidth - 20, 25)
+  doc.setLineWidth(0.2)
+  doc.line(20, 26, pageWidth - 20, 26)
+
+  // Title
+  doc.setFontSize(12)
+  doc.setFont('helvetica', 'bold')
+  doc.text('SURAT PENDEBITAN REKENING', pageWidth / 2, 35, { align: 'center' })
+  doc.setFontSize(10)
+  doc.setFont('helvetica', 'normal')
+  doc.text('(Penarikan Tunai Melalui Teller Bank)', pageWidth / 2, 41, { align: 'center' })
+
+  // Nomor dan Tanggal
+  let y = 52
+  doc.setFont('helvetica', 'normal')
+  doc.text(`Nomor: ${data.nomor || data.nomorKwitansi || '-'}`, 20, y)
+  doc.text(`Tanggal: ${formatTanggal(data.tanggal)}`, pageWidth - 70, y)
+
+  y += 15
+
+  // Kepada
+  doc.text('Kepada Yth.', 20, y)
+  y += 5
+  doc.setFont('helvetica', 'bold')
+  doc.text('Bendahara Pengeluaran/BPP', 20, y)
+  y += 5
+  doc.setFont('helvetica', 'normal')
+  doc.text(settings.nama_instansi || 'Politeknik Kelautan dan Perikanan Sorong', 20, y)
+  y += 5
+  doc.text('di Tempat', 20, y)
+
+  y += 12
+
+  // Isi surat
+  doc.text('Dengan ini diminta untuk melakukan penarikan tunai dari rekening Bendahara:', 20, y)
+  y += 10
+
+  // Table-like content
+  const labelX = 25
+  const colonX = 85
+  const valueX = 90
+
+  doc.text('1. Nama Kementerian', labelX, y)
+  doc.text(':', colonX, y)
+  doc.text('Kementerian Kelautan dan Perikanan', valueX, y)
+  y += 7
+
+  doc.text('2. Nama Satker', labelX, y)
+  doc.text(':', colonX, y)
+  doc.text(settings.nama_instansi || 'PKP Sorong', valueX, y)
+  y += 7
+
+  doc.text('3. Sejumlah', labelX, y)
+  doc.text(':', colonX, y)
+  doc.setFont('helvetica', 'bold')
+  doc.text(formatRupiah(data.jumlah), valueX, y)
+  doc.setFont('helvetica', 'normal')
+  y += 7
+
+  doc.text('4. Terbilang', labelX, y)
+  doc.text(':', colonX, y)
+  const terbilangText = data.terbilang || terbilangRupiah(data.jumlah)
+  const terbilangLines = doc.splitTextToSize(terbilangText, pageWidth - valueX - 20)
+  doc.text(terbilangLines, valueX, y)
+  y += (terbilangLines.length * 5) + 2
+
+  doc.text('5. Nomor SPBy', labelX, y)
+  doc.text(':', colonX, y)
+  doc.text(data.nomorSPBy || data.nomorKwitansi || '-', valueX, y)
+  y += 7
+
+  doc.text('6. Untuk Pembayaran', labelX, y)
+  doc.text(':', colonX, y)
+  const keteranganText = data.keterangan || `Uang Muka Kegiatan: ${data.kegiatan?.nama || '-'}`
+  const keteranganLines = doc.splitTextToSize(keteranganText, pageWidth - valueX - 20)
+  doc.text(keteranganLines, valueX, y)
+  y += (keteranganLines.length * 5) + 5
+
+  y += 10
+
+  doc.text('Demikian untuk dilaksanakan sebagaimana mestinya.', 20, y)
+
+  // Signatures
+  y += 15
+  const leftX = 25
+  const rightX = pageWidth - 75
+
+  // Bendahara (Left)
+  doc.text('Bendahara Pengeluaran/BPP,', leftX, y)
+  y += 30
+  doc.setFont('helvetica', 'bold')
+  doc.text(data.bendahara?.nama || settings.nama_bendahara || '............................', leftX, y)
+  y += 5
+  doc.setFont('helvetica', 'normal')
+  doc.text(`NIP. ${data.bendahara?.nip || settings.nip_bendahara || '............................'}`, leftX, y)
+
+  // PPK (Right) - reset y
+  y -= 35
+  doc.text('Kuasa Pengguna Anggaran/PPK,', rightX, y)
+  y += 30
+  doc.setFont('helvetica', 'bold')
+  doc.text(data.ppk?.nama || settings.nama_ppk || '............................', rightX, y)
+  y += 5
+  doc.setFont('helvetica', 'normal')
+  doc.text(`NIP. ${data.ppk?.nip || settings.nip_ppk || '............................'}`, rightX, y)
+
+  doc.save(`SPR_${(data.nomorKwitansi || 'dokumen').replace(/\//g, '_')}.pdf`)
+}
+
+// ==================== SURAT PERINTAH PENDEBITAN REKENING (SPPR) ====================
+// SPPR - Surat untuk penarikan melalui kartu debit
+export async function generateSPPRPDF(data) {
+  const settings = await getSettings()
+  const doc = new jsPDF()
+  const pageWidth = doc.internal.pageSize.getWidth()
+
+  // Header Kementerian
+  doc.setFontSize(11)
+  doc.setFont('helvetica', 'bold')
+  doc.text('KEMENTERIAN KELAUTAN DAN PERIKANAN', pageWidth / 2, 15, { align: 'center' })
+
+  doc.setFontSize(10)
+  doc.text(settings.nama_instansi || 'POLITEKNIK KELAUTAN DAN PERIKANAN SORONG', pageWidth / 2, 21, { align: 'center' })
+
+  // Line separator
+  doc.setLineWidth(0.5)
+  doc.line(20, 25, pageWidth - 20, 25)
+  doc.setLineWidth(0.2)
+  doc.line(20, 26, pageWidth - 20, 26)
+
+  // Title
+  doc.setFontSize(12)
+  doc.setFont('helvetica', 'bold')
+  doc.text('SURAT PERINTAH PENDEBITAN REKENING', pageWidth / 2, 35, { align: 'center' })
+  doc.setFontSize(10)
+  doc.setFont('helvetica', 'normal')
+  doc.text('(Penarikan Melalui Kartu Debit)', pageWidth / 2, 41, { align: 'center' })
+
+  // Nomor dan Tanggal
+  let y = 52
+  doc.setFont('helvetica', 'normal')
+  doc.text(`Nomor: ${data.nomor || data.nomorKwitansi || '-'}`, 20, y)
+  doc.text(`Tanggal: ${formatTanggal(data.tanggal)}`, pageWidth - 70, y)
+
+  y += 15
+
+  // Kepada
+  doc.text('Kepada Yth.', 20, y)
+  y += 5
+  doc.setFont('helvetica', 'bold')
+  doc.text('Bendahara Pengeluaran/BPP', 20, y)
+  y += 5
+  doc.setFont('helvetica', 'normal')
+  doc.text(settings.nama_instansi || 'Politeknik Kelautan dan Perikanan Sorong', 20, y)
+  y += 5
+  doc.text('di Tempat', 20, y)
+
+  y += 12
+
+  // Isi surat
+  doc.text('Dengan ini diperintahkan untuk melakukan pendebitan rekening melalui kartu debit:', 20, y)
+  y += 10
+
+  // Table-like content
+  const labelX = 25
+  const colonX = 85
+  const valueX = 90
+
+  doc.text('1. Nama Kementerian', labelX, y)
+  doc.text(':', colonX, y)
+  doc.text('Kementerian Kelautan dan Perikanan', valueX, y)
+  y += 7
+
+  doc.text('2. Nama Satker', labelX, y)
+  doc.text(':', colonX, y)
+  doc.text(settings.nama_instansi || 'PKP Sorong', valueX, y)
+  y += 7
+
+  doc.text('3. Sejumlah', labelX, y)
+  doc.text(':', colonX, y)
+  doc.setFont('helvetica', 'bold')
+  doc.text(formatRupiah(data.jumlah), valueX, y)
+  doc.setFont('helvetica', 'normal')
+  y += 7
+
+  doc.text('4. Terbilang', labelX, y)
+  doc.text(':', colonX, y)
+  const terbilangText = data.terbilang || terbilangRupiah(data.jumlah)
+  const terbilangLines = doc.splitTextToSize(terbilangText, pageWidth - valueX - 20)
+  doc.text(terbilangLines, valueX, y)
+  y += (terbilangLines.length * 5) + 2
+
+  doc.text('5. Nomor SPBy', labelX, y)
+  doc.text(':', colonX, y)
+  doc.text(data.nomorSPBy || data.nomorKwitansi || '-', valueX, y)
+  y += 7
+
+  doc.text('6. Untuk Pembayaran', labelX, y)
+  doc.text(':', colonX, y)
+  const keteranganText = data.keterangan || `Uang Muka Kegiatan: ${data.kegiatan?.nama || '-'}`
+  const keteranganLines = doc.splitTextToSize(keteranganText, pageWidth - valueX - 20)
+  doc.text(keteranganLines, valueX, y)
+  y += (keteranganLines.length * 5) + 5
+
+  y += 10
+
+  doc.text('Demikian untuk dilaksanakan sebagaimana mestinya.', 20, y)
+
+  // Signatures
+  y += 15
+  const leftX = 25
+  const rightX = pageWidth - 75
+
+  // Bendahara (Left)
+  doc.text('Bendahara Pengeluaran/BPP,', leftX, y)
+  y += 30
+  doc.setFont('helvetica', 'bold')
+  doc.text(data.bendahara?.nama || settings.nama_bendahara || '............................', leftX, y)
+  y += 5
+  doc.setFont('helvetica', 'normal')
+  doc.text(`NIP. ${data.bendahara?.nip || settings.nip_bendahara || '............................'}`, leftX, y)
+
+  // PPK (Right) - reset y
+  y -= 35
+  doc.text('Kuasa Pengguna Anggaran/PPK,', rightX, y)
+  y += 30
+  doc.setFont('helvetica', 'bold')
+  doc.text(data.ppk?.nama || settings.nama_ppk || '............................', rightX, y)
+  y += 5
+  doc.setFont('helvetica', 'normal')
+  doc.text(`NIP. ${data.ppk?.nip || settings.nip_ppk || '............................'}`, rightX, y)
+
+  doc.save(`SPPR_${(data.nomorKwitansi || 'dokumen').replace(/\//g, '_')}.pdf`)
+}
+
 // Generate Checklist SPJ Swakelola PDF
 export async function generateChecklistSwakelolaSpjPDF(checklist, kegiatan) {
   const settings = await getSettings()
