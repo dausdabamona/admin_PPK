@@ -1573,6 +1573,7 @@ export async function initializeDefaultSettings() {
     await db.settings.bulkAdd([
       { key: 'nama_instansi', value: 'Politeknik Kelautan dan Perikanan Sorong', updatedAt: new Date() },
       { key: 'alamat_instansi', value: 'Jl. Kapitan Pattimura, Sorong, Papua Barat Daya', updatedAt: new Date() },
+      { key: 'kota_instansi', value: 'Sorong', updatedAt: new Date() },
       { key: 'kode_satker', value: '032.11.423.585', updatedAt: new Date() },
       { key: 'tahun_anggaran', value: new Date().getFullYear().toString(), updatedAt: new Date() },
       { key: 'prefix_surat_tugas', value: 'ST', updatedAt: new Date() },

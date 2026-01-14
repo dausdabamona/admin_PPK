@@ -30,6 +30,7 @@ export default function Settings() {
   const [formData, setFormData] = useState({
     nama_instansi: '',
     alamat_instansi: '',
+    kota_instansi: '',
     kode_satker: '',
     tahun_anggaran: '',
     prefix_surat_tugas: '',
@@ -42,6 +43,7 @@ export default function Settings() {
       setFormData({
         nama_instansi: settings.nama_instansi || '',
         alamat_instansi: settings.alamat_instansi || '',
+        kota_instansi: settings.kota_instansi || 'Sorong',
         kode_satker: settings.kode_satker || '',
         tahun_anggaran: settings.tahun_anggaran || '',
         prefix_surat_tugas: settings.prefix_surat_tugas || '',
@@ -153,6 +155,13 @@ export default function Settings() {
               value={formData.alamat_instansi}
               onChange={handleInputChange}
               placeholder="Jl. Kapitan Pattimura, Sorong"
+            />
+            <Input
+              label="Kota Instansi"
+              name="kota_instansi"
+              value={formData.kota_instansi}
+              onChange={handleInputChange}
+              placeholder="Sorong"
             />
             <Input
               label="Kode Satker"
