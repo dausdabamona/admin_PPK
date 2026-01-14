@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
-  Plus, Pencil, Trash2, Search, Banknote, Eye, Printer, CheckCircle
+  Plus, Pencil, Trash2, Search, Banknote, Eye, Printer, CheckCircle, ClipboardList
 } from 'lucide-react'
 import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardBody, CardTitle, CardDescription } from '../../components/ui/Card'
@@ -10,9 +10,9 @@ import Button from '../../components/ui/Button'
 import Modal, { ModalFooter } from '../../components/ui/Modal'
 import { Input, Select, CurrencyInput, Textarea } from '../../components/ui/Input'
 import Badge from '../../components/ui/Badge'
-import db from '../../db/database'
+import db, { CHECKLIST_SWAKELOLA } from '../../db/database'
 import { formatTanggal, formatDateInput, formatRupiah, angkaTerbilang } from '../../utils/formatters'
-import { generateKwitansiUangMukaPDF } from '../../utils/swakelolaDocGenerator'
+import { generateKwitansiUangMukaPDF, generateKartuKendaliPUMSwakeolaPDF } from '../../utils/swakelolaDocGenerator'
 
 const initialFormData = {
   kegiatanId: '',
@@ -256,6 +256,14 @@ export default function SwakelolaUangMuka() {
     }
   }
 
+  const handlePrintKartuKendali = async (uangMuka) => {
+    try {
+      await generateKartuKendaliPUMSwakeolaPDF(uangMuka, CHECKLIST_SWAKELOLA)
+    } catch (error) {
+      alert('Gagal mencetak kartu kendali: ' + error.message)
+    }
+  }
+
   const getStatusBadge = (status) => {
     const variants = {
       aktif: 'warning',
@@ -373,6 +381,13 @@ export default function SwakelolaUangMuka() {
                           title="Cetak Kwitansi"
                         >
                           <Printer className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handlePrintKartuKendali(um)}
+                          className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg"
+                          title="Cetak Kartu Kendali SPJ"
+                        >
+                          <ClipboardList className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleOpenModal(um)}
@@ -582,13 +597,21 @@ export default function SwakelolaUangMuka() {
               <p>{getStatusBadge(viewingData.status)}</p>
             </div>
 
-            <div className="pt-4 border-t">
+            <div className="pt-4 border-t space-y-2">
               <Button
                 onClick={() => handlePrint(viewingData)}
                 icon={Printer}
                 className="w-full"
               >
                 Cetak Kwitansi
+              </Button>
+              <Button
+                onClick={() => handlePrintKartuKendali(viewingData)}
+                icon={ClipboardList}
+                variant="secondary"
+                className="w-full"
+              >
+                Cetak Kartu Kendali SPJ
               </Button>
             </div>
           </div>

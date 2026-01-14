@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
-  Plus, Pencil, Trash2, Search, Wallet, Eye, Calculator
+  Plus, Pencil, Trash2, Search, Wallet, Eye, Calculator, ClipboardList
 } from 'lucide-react'
 import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardBody, CardTitle, CardDescription } from '../../components/ui/Card'
@@ -10,8 +10,9 @@ import Button from '../../components/ui/Button'
 import Modal, { ModalFooter } from '../../components/ui/Modal'
 import { Input, Select, CurrencyInput } from '../../components/ui/Input'
 import Badge from '../../components/ui/Badge'
-import db, { JENIS_PERJADIN } from '../../db/database'
+import db, { JENIS_PERJADIN, CHECKLIST_DALAM_KOTA, CHECKLIST_LUAR_KOTA } from '../../db/database'
 import { formatTanggal, formatDateInput, formatRupiah, hitungHari } from '../../utils/formatters'
+import { generateKartuKendaliPerjadinPDF } from '../../utils/perjadinDocGenerator'
 
 const initialFormData = {
   sppdId: '',
@@ -230,6 +231,18 @@ export default function PembayaranLS() {
     setIsViewModalOpen(true)
   }
 
+  const handlePrintKartuKendali = async (pembayaran) => {
+    try {
+      // Select checklist based on jenis perjadin
+      const checklistItems = pembayaran.sppd?.jenisPerjadin === JENIS_PERJADIN.DALAM_KOTA
+        ? CHECKLIST_DALAM_KOTA
+        : CHECKLIST_LUAR_KOTA
+      await generateKartuKendaliPerjadinPDF(pembayaran, checklistItems)
+    } catch (error) {
+      alert('Gagal mencetak kartu kendali: ' + error.message)
+    }
+  }
+
   const confirmDelete = (id) => {
     setDeletingId(id)
     setIsDeleteModalOpen(true)
@@ -316,6 +329,13 @@ export default function PembayaranLS() {
                           title="Lihat"
                         >
                           <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handlePrintKartuKendali(p)}
+                          className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg"
+                          title="Cetak Kartu Kendali SPJ"
+                        >
+                          <ClipboardList className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleOpenModal(p)}
@@ -597,6 +617,16 @@ export default function PembayaranLS() {
               <label className="text-xs text-gray-500">Transfer ke Rekening</label>
               <p className="font-mono">{viewingData.pegawai?.rekening}</p>
               <p className="text-sm text-gray-500">{viewingData.pegawai?.bank} a.n. {viewingData.pegawai?.nama}</p>
+            </div>
+
+            <div className="pt-4 border-t">
+              <Button
+                onClick={() => handlePrintKartuKendali(viewingData)}
+                icon={ClipboardList}
+                className="w-full"
+              >
+                Cetak Kartu Kendali SPJ
+              </Button>
             </div>
           </div>
         )}
