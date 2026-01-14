@@ -118,7 +118,7 @@ export async function generateSKTimSwakelolaPDF({ kegiatan, tim }) {
   y += 15
 
   // Signature
-  doc.text(`${settings.alamat_instansi?.split(',')[0] || 'Sorong'}, ${formatTanggal(new Date())}`, pageWidth - 70, y)
+  doc.text(`${settings.kota_instansi || 'Sorong'}, ${formatTanggal(new Date())}`, pageWidth - 70, y)
   y += 5
   doc.text('Pejabat Pembuat Komitmen,', pageWidth - 70, y)
   y += 25
@@ -209,7 +209,7 @@ export async function generateKwitansiUangMukaPDF(uangMuka) {
   // Right signature (PPK)
   const rightX = pageWidth - 60
   doc.setFont('helvetica', 'normal')
-  doc.text(`${settings.alamat_instansi?.split(',')[0] || 'Sorong'}, ${formatTanggal(uangMuka.tanggal)}`, rightX, y - 25, { align: 'center' })
+  doc.text(`${settings.kota_instansi || 'Sorong'}, ${formatTanggal(uangMuka.tanggal)}`, rightX, y - 25, { align: 'center' })
   doc.text('Pejabat Pembuat Komitmen,', rightX, y - 20, { align: 'center' })
   doc.setFont('helvetica', 'bold')
   doc.text(settings.nama_ppk || '............................', rightX, y, { align: 'center' })
@@ -284,7 +284,7 @@ export async function generateRealisasiBiayaPDF(realisasi, items) {
   y += 15
 
   // Signature
-  doc.text(`${settings.alamat_instansi?.split(',')[0] || 'Sorong'}, ${formatTanggal(new Date())}`, pageWidth - 70, y)
+  doc.text(`${settings.kota_instansi || 'Sorong'}, ${formatTanggal(new Date())}`, pageWidth - 70, y)
   y += 5
   doc.text('Mengetahui,', pageWidth - 70, y)
   y += 5
@@ -401,7 +401,7 @@ export async function generateKwitansiRampungSwakelolaPDF(rampung) {
   // Right signature (PPK)
   const rightX = pageWidth - 60
   doc.setFont('helvetica', 'normal')
-  doc.text(`${settings.alamat_instansi?.split(',')[0] || 'Sorong'}, ${formatTanggal(rampung.tanggal)}`, rightX, y - 25, { align: 'center' })
+  doc.text(`${settings.kota_instansi || 'Sorong'}, ${formatTanggal(rampung.tanggal)}`, rightX, y - 25, { align: 'center' })
   doc.text('Pejabat Pembuat Komitmen,', rightX, y - 20, { align: 'center' })
   doc.setFont('helvetica', 'bold')
   doc.text(settings.nama_ppk || '............................', rightX, y, { align: 'center' })
@@ -734,7 +734,7 @@ export async function generateChecklistSwakelolaSpjPDF(checklist, kegiatan) {
 
   // Signature
   y += 5
-  doc.text(`${settings.alamat_instansi?.split(',')[0] || 'Sorong'}, ${formatTanggal(checklist.tanggalPemeriksaan)}`, pageWidth - 70, y)
+  doc.text(`${settings.kota_instansi || 'Sorong'}, ${formatTanggal(checklist.tanggalPemeriksaan)}`, pageWidth - 70, y)
   y += 5
   doc.text('Pemeriksa,', pageWidth - 70, y)
   y += 25
@@ -900,7 +900,7 @@ export async function generateKartuKendaliPUMSwakeolaPDF(uangMuka, checklistItem
   const colWidth = (pageWidth - 40) / 2
 
   // Left - Penerima UM
-  doc.text(`${settings.alamat_instansi?.split(',')[0] || 'Sorong'}, ${formatTanggal(uangMuka.tanggal)}`, leftMargin + colWidth / 2, y, { align: 'center' })
+  doc.text(`${settings.kota_instansi || 'Sorong'}, ${formatTanggal(uangMuka.tanggal)}`, leftMargin + colWidth / 2, y, { align: 'center' })
   y += 5
   doc.text('Pemegang Uang Muka,', leftMargin + colWidth / 2, y, { align: 'center' })
   y += 25
