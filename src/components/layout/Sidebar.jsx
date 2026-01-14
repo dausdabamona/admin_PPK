@@ -73,7 +73,8 @@ const menuItems = [
       { name: 'Tim Swakelola', path: '/swakelola/tim', icon: UsersRound },
       { name: 'Uang Muka', path: '/swakelola/uang-muka', icon: Banknote },
       { name: 'Realisasi', path: '/swakelola/realisasi', icon: Receipt },
-      { name: 'Rampung', path: '/swakelola/rampung', icon: Calculator }
+      { name: 'Rampung', path: '/swakelola/rampung', icon: Calculator },
+      { name: 'Checklist SPJ', path: '/swakelola/checklist', icon: ListChecks }
     ]
   },
   {

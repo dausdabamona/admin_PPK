@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
-  Plus, Pencil, Trash2, Search, ListChecks, Eye, Printer, CheckCircle, XCircle, FileText, Download
+  Plus, Pencil, Trash2, Search, ListChecks, Eye, Printer, CheckCircle, XCircle, FileText, Download, Upload, FolderOpen
 } from 'lucide-react'
 import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardBody, CardTitle, CardDescription } from '../../components/ui/Card'
@@ -21,6 +21,24 @@ const initialFormData = {
   namaPemeriksa: '',
   tanggalPemeriksaan: '',
   catatan: ''
+}
+
+// Helper function to generate folder path for swakelola
+const generateFolderPath = (kegiatan) => {
+  if (!kegiatan) return ''
+  const tahun = new Date().getFullYear()
+  const kodeClean = kegiatan.kode?.replace(/[/\\:*?"<>|]/g, '-') || 'NoKode'
+  return `SPJ_SWAKELOLA/${tahun}/${kodeClean}`
+}
+
+// Convert file to base64
+const fileToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = (error) => reject(error)
+  })
 }
 
 export default function SwakelolaChecklist() {
@@ -187,9 +205,101 @@ export default function SwakelolaChecklist() {
     }
   }
 
-  const handleView = (checklist) => {
-    setViewingData(checklist)
+  const handleView = async (checklist) => {
+    // Load fresh data with kegiatan info
+    const kegiatan = await db.swakelolaKegiatan.get(checklist.kegiatanId)
+    setViewingData({ ...checklist, kegiatan })
     setIsViewModalOpen(true)
+  }
+
+  // Upload file from View Modal
+  const handleViewUpload = async (itemId, files) => {
+    if (!files || files.length === 0 || !viewingData) return
+
+    const updatedItems = [...viewingData.items]
+    const itemIndex = updatedItems.findIndex(item => item.id === itemId)
+    if (itemIndex === -1) return
+
+    const uploadedFiles = updatedItems[itemIndex].uploadedFiles || []
+    const kegiatan = viewingData.kegiatan
+
+    for (const file of files) {
+      try {
+        const base64 = await fileToBase64(file)
+        const folderPath = generateFolderPath(kegiatan)
+
+        uploadedFiles.push({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          data: base64,
+          folderPath,
+          uploadedAt: new Date().toISOString()
+        })
+      } catch (error) {
+        console.error('Error uploading file:', error)
+      }
+    }
+
+    updatedItems[itemIndex].uploadedFiles = uploadedFiles
+    updatedItems[itemIndex].ada = true
+
+    // Update database
+    const itemLengkap = updatedItems.filter(item => item.ada).length
+    await db.swakelolaChecklist.update(viewingData.id, {
+      items: updatedItems,
+      itemLengkap,
+      statusKelengkapan: itemLengkap === updatedItems.length ? 'lengkap' : 'belum_lengkap',
+      updatedAt: new Date()
+    })
+
+    setViewingData(prev => ({
+      ...prev,
+      items: updatedItems,
+      itemLengkap,
+      statusKelengkapan: itemLengkap === updatedItems.length ? 'lengkap' : 'belum_lengkap'
+    }))
+  }
+
+  // Remove file from View Modal
+  const handleViewRemoveFile = async (itemId, fileIndex) => {
+    if (!viewingData) return
+
+    const updatedItems = [...viewingData.items]
+    const itemIndex = updatedItems.findIndex(item => item.id === itemId)
+    if (itemIndex === -1) return
+
+    updatedItems[itemIndex].uploadedFiles.splice(fileIndex, 1)
+
+    // If no files left, uncheck the item
+    if (updatedItems[itemIndex].uploadedFiles.length === 0) {
+      updatedItems[itemIndex].ada = false
+    }
+
+    const itemLengkap = updatedItems.filter(item => item.ada).length
+    await db.swakelolaChecklist.update(viewingData.id, {
+      items: updatedItems,
+      itemLengkap,
+      statusKelengkapan: itemLengkap === updatedItems.length ? 'lengkap' : 'belum_lengkap',
+      updatedAt: new Date()
+    })
+
+    setViewingData(prev => ({
+      ...prev,
+      items: updatedItems,
+      itemLengkap,
+      statusKelengkapan: itemLengkap === updatedItems.length ? 'lengkap' : 'belum_lengkap'
+    }))
+  }
+
+  // Download file
+  const handleDownloadFile = (file) => {
+    const link = document.createElement('a')
+    link.href = file.data
+    link.download = file.name
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   const confirmDelete = (id) => {
@@ -540,35 +650,92 @@ export default function SwakelolaChecklist() {
               <p className="font-medium">{viewingData.kegiatan?.nama}</p>
             </div>
 
-            <div>
-              <label className="text-xs text-gray-500 block mb-2">Checklist Dokumen</label>
-              <div className="border rounded-lg divide-y">
+            {/* Checklist Items with Upload */}
+            <div className="border rounded-lg overflow-hidden">
+              <div className="bg-gray-50 px-4 py-2 border-b flex items-center justify-between">
+                <h4 className="font-medium text-gray-700">Kelengkapan Dokumen</h4>
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <FolderOpen className="w-4 h-4" />
+                  <span className="font-mono">
+                    {generateFolderPath(viewingData.kegiatan)}
+                  </span>
+                </div>
+              </div>
+              <div className="divide-y">
                 {(viewingData.items || []).map((item) => (
-                  <div key={item.id} className={`p-3 flex items-center gap-3 ${item.ada ? 'bg-green-50' : 'bg-red-50'}`}>
-                    {item.ada ? (
-                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                    ) : (
-                      <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                    )}
-                    <div className="flex-1">
-                      <span className={item.ada ? 'text-green-700' : 'text-red-700'}>
-                        {item.nama}
-                      </span>
-                      {item.wajib && !item.ada && (
-                        <span className="ml-2 text-xs text-red-500 font-medium">WAJIB</span>
+                  <div key={item.id} className="p-4">
+                    <div className="flex items-start gap-3">
+                      {item.ada ? (
+                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-red-500 mt-0.5" />
                       )}
-                      {item.catatan && (
-                        <p className="text-xs text-gray-500 mt-1">{item.catatan}</p>
-                      )}
-                    </div>
-                    {item.fileName && (
-                      <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 border border-blue-200 rounded text-xs">
-                        <FileText className="w-3 h-3 text-blue-600" />
-                        <span className="text-blue-700 max-w-[100px] truncate" title={item.fileName}>
-                          {item.fileName}
-                        </span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className={`font-medium ${item.ada ? 'text-green-700' : 'text-gray-700'}`}>
+                            {item.nama}
+                          </span>
+                          {item.wajib && !item.ada && (
+                            <Badge variant="danger">Wajib</Badge>
+                          )}
+                          {item.ada && (
+                            <Badge variant="success">Lengkap</Badge>
+                          )}
+                        </div>
+                        {item.catatan && (
+                          <p className="text-xs text-gray-500 mt-1">{item.catatan}</p>
+                        )}
+
+                        {/* Uploaded Files */}
+                        {item.uploadedFiles?.length > 0 && (
+                          <div className="mt-3 space-y-2">
+                            {item.uploadedFiles.map((file, fileIndex) => (
+                              <div key={fileIndex} className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg text-sm">
+                                <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                <button
+                                  onClick={() => handleDownloadFile(file)}
+                                  className="text-blue-700 hover:underline truncate flex-1 text-left"
+                                >
+                                  {file.name}
+                                </button>
+                                <span className="text-gray-500 text-xs flex-shrink-0">
+                                  {(file.size / 1024).toFixed(1)} KB
+                                </span>
+                                <button
+                                  onClick={() => handleDownloadFile(file)}
+                                  className="p-1.5 text-blue-600 hover:bg-blue-100 rounded"
+                                  title="Download"
+                                >
+                                  <Download className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleViewRemoveFile(item.id, fileIndex)}
+                                  className="p-1.5 text-red-600 hover:bg-red-100 rounded"
+                                  title="Hapus File"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Upload Button */}
+                        <div className="mt-3">
+                          <label className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-700 bg-primary-50 rounded-lg cursor-pointer hover:bg-primary-100 transition-colors border border-primary-200">
+                            <Upload className="w-4 h-4" />
+                            {item.uploadedFiles?.length > 0 ? 'Tambah Dokumen' : 'Upload Dokumen'}
+                            <input
+                              type="file"
+                              multiple
+                              accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                              onChange={(e) => handleViewUpload(item.id, e.target.files)}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 ))}
               </div>
