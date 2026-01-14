@@ -17,12 +17,15 @@ import db, {
   BULAN_INDONESIA,
   getStatusNominatifLabel,
   calculatePphHonor,
-  getTarifPphLabel
+  getTarifPphLabel,
+  STATUS_SK_KPA,
+  getPeranDalamTimLabel
 } from '../../db/database'
 import { formatTanggal, formatDateInput, formatRupiah } from '../../utils/formatters'
 
 const initialFormData = {
   assignmentId: '',
+  skKpaId: '',
   nomorNominatif: '',
   tanggal: '',
   bulan: '',
@@ -72,6 +75,22 @@ export default function HonorNominatif() {
     db.honorRecipient.where('statusAktif').equals('aktif').toArray()
   ) || []
 
+  // SK KPA yang sudah ditetapkan (untuk referensi nominatif)
+  const allSkKpa = useLiveQuery(() =>
+    db.honorSkKpa
+      .where('status')
+      .anyOf([STATUS_SK_KPA.DITETAPKAN, STATUS_SK_KPA.DIGUNAKAN])
+      .toArray()
+  ) || []
+
+  // SK KPA Lampiran (untuk import recipients)
+  const selectedSkKpaLampiran = useLiveQuery(
+    () => formData.skKpaId
+      ? db.honorSkKpaLampiran.where('skKpaId').equals(parseInt(formData.skKpaId)).toArray()
+      : [],
+    [formData.skKpaId]
+  ) || []
+
   // Fetch items for selected nominatif
   const nominatifItems = useLiveQuery(
     () => selectedNominatif
@@ -100,6 +119,11 @@ export default function HonorNominatif() {
   const assignmentOptions = allAssignments.map(a => ({
     value: a.id.toString(),
     label: `${a.nomorSK} - ${a.perihal}`
+  }))
+
+  const skKpaOptions = allSkKpa.map(sk => ({
+    value: sk.id.toString(),
+    label: `${sk.nomorSk} - ${sk.judulSk}`
   }))
 
   const recipientOptions = allRecipients.map(r => ({
@@ -162,6 +186,7 @@ export default function HonorNominatif() {
       setEditingId(nominatif.id)
       setFormData({
         assignmentId: nominatif.assignmentId?.toString() || '',
+        skKpaId: nominatif.skKpaId?.toString() || '',
         nomorNominatif: nominatif.nomorNominatif || '',
         tanggal: nominatif.tanggal ? formatDateInput(nominatif.tanggal) : '',
         bulan: nominatif.bulan?.toString() || '',
@@ -189,6 +214,7 @@ export default function HonorNominatif() {
     try {
       const data = {
         assignmentId: formData.assignmentId ? parseInt(formData.assignmentId) : null,
+        skKpaId: formData.skKpaId ? parseInt(formData.skKpaId) : null,
         nomorNominatif: formData.nomorNominatif,
         tanggal: formData.tanggal ? new Date(formData.tanggal) : null,
         bulan: formData.bulan ? parseInt(formData.bulan) : null,
@@ -206,6 +232,17 @@ export default function HonorNominatif() {
       } else {
         data.createdAt = new Date()
         await db.honorNominatif.add(data)
+      }
+
+      // Update SK KPA status to 'digunakan' if linked
+      if (formData.skKpaId) {
+        const skKpa = await db.honorSkKpa.get(parseInt(formData.skKpaId))
+        if (skKpa && skKpa.status === STATUS_SK_KPA.DITETAPKAN) {
+          await db.honorSkKpa.update(parseInt(formData.skKpaId), {
+            status: STATUS_SK_KPA.DIGUNAKAN,
+            updatedAt: new Date()
+          })
+        }
       }
 
       handleCloseModal()
@@ -328,6 +365,79 @@ export default function HonorNominatif() {
       await updateNominatifTotals(selectedNominatif.id)
     } catch (error) {
       alert('Gagal menghapus item: ' + error.message)
+    }
+  }
+
+  // Import recipients from SK KPA lampiran
+  const handleImportFromSkKpa = async () => {
+    if (!selectedNominatif?.skKpaId) {
+      alert('Nominatif ini tidak terhubung dengan SK KPA. Silakan edit dan pilih SK KPA terlebih dahulu.')
+      return
+    }
+
+    try {
+      setLoading(true)
+      const lampiran = await db.honorSkKpaLampiran
+        .where('skKpaId')
+        .equals(selectedNominatif.skKpaId)
+        .toArray()
+
+      if (lampiran.length === 0) {
+        alert('Tidak ada data penerima di lampiran SK KPA.')
+        return
+      }
+
+      // Check existing items to avoid duplicates
+      const existingItems = await db.honorNominatifItem
+        .where('nominatifId')
+        .equals(selectedNominatif.id)
+        .toArray()
+      const existingRecipientIds = existingItems.map(item => item.recipientId)
+
+      let addedCount = 0
+      for (const lamp of lampiran) {
+        // Skip if already exists
+        if (existingRecipientIds.includes(lamp.recipientId)) continue
+
+        const recipient = await db.honorRecipient.get(lamp.recipientId)
+        if (!recipient) continue
+
+        const volume = 1
+        const tarifHonor = lamp.tarif || 0
+        const jumlahBruto = volume * tarifHonor
+
+        // Calculate PPh
+        const pphResult = calculatePphHonor(
+          jumlahBruto,
+          recipient.golongan,
+          !!recipient.npwp,
+          recipient.statusPns === 'pns'
+        )
+
+        await db.honorNominatifItem.add({
+          nominatifId: selectedNominatif.id,
+          skKpaLampiranId: lamp.id,
+          recipientId: lamp.recipientId,
+          uraianTugas: `${getPeranDalamTimLabel(lamp.peranDalamTim)} - ${lamp.keterangan || ''}`,
+          volume,
+          satuan: lamp.satuan || 'ok',
+          tarifHonor,
+          jumlahBruto,
+          tarifPph: pphResult.tarif,
+          pphDipotong: pphResult.pph,
+          jumlahNetto: jumlahBruto - pphResult.pph,
+          akunBelanja: lamp.akunBelanja,
+          createdAt: new Date()
+        })
+        addedCount++
+      }
+
+      await updateNominatifTotals(selectedNominatif.id)
+      alert(`Berhasil mengimpor ${addedCount} penerima dari SK KPA.`)
+    } catch (error) {
+      alert('Gagal mengimpor data: ' + error.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -572,6 +682,22 @@ export default function HonorNominatif() {
               options={assignmentOptions}
               required
             />
+            <Select
+              label="SK KPA Penetapan (Opsional)"
+              name="skKpaId"
+              value={formData.skKpaId}
+              onChange={handleInputChange}
+              options={skKpaOptions}
+              placeholder="Pilih SK KPA jika ada..."
+            />
+            {formData.skKpaId && selectedSkKpaLampiran.length > 0 && (
+              <div className="p-3 bg-blue-50 rounded-lg text-sm">
+                <p className="text-blue-700">
+                  SK KPA ini memiliki <strong>{selectedSkKpaLampiran.length}</strong> penerima.
+                  Anda dapat mengimpor data penerima setelah nominatif disimpan.
+                </p>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <Input
                 label="Nomor Nominatif"
@@ -667,6 +793,16 @@ export default function HonorNominatif() {
               </div>
             </div>
 
+            {/* SK KPA Info if linked */}
+            {viewingData.skKpaId && (
+              <div className="p-3 bg-indigo-50 rounded-lg">
+                <p className="text-sm text-indigo-700">
+                  <strong>SK KPA Penetapan:</strong>{' '}
+                  {allSkKpa.find(sk => sk.id === viewingData.skKpaId)?.nomorSk || '-'}
+                </p>
+              </div>
+            )}
+
             {/* Totals */}
             <div className="grid grid-cols-3 gap-4">
               <div className="p-4 bg-green-50 rounded-lg text-center">
@@ -687,9 +823,22 @@ export default function HonorNominatif() {
             <div>
               <div className="flex justify-between items-center mb-3">
                 <h4 className="font-medium">Daftar Penerima Honor</h4>
-                <Button size="sm" icon={UserPlus} onClick={() => handleOpenItemModal()}>
-                  Tambah Penerima
-                </Button>
+                <div className="flex gap-2">
+                  {viewingData?.skKpaId && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      icon={Download}
+                      onClick={handleImportFromSkKpa}
+                      loading={loading}
+                    >
+                      Import dari SK KPA
+                    </Button>
+                  )}
+                  <Button size="sm" icon={UserPlus} onClick={() => handleOpenItemModal()}>
+                    Tambah Penerima
+                  </Button>
+                </div>
               </div>
               <Table>
                 <TableHead>

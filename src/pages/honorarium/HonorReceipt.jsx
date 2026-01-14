@@ -94,6 +94,12 @@ export default function HonorReceipt() {
       const nominatif = await db.honorNominatif.get(nominatifId)
       const items = await db.honorNominatifItem.where('nominatifId').equals(nominatifId).toArray()
 
+      // Get SK KPA data if linked
+      let skKpa = null
+      if (nominatif.skKpaId) {
+        skKpa = await db.honorSkKpa.get(nominatif.skKpaId)
+      }
+
       // Check if receipts already exist
       const existingReceipts = await db.honorReceipt.where('nominatifId').equals(nominatifId).count()
       if (existingReceipts > 0) {
@@ -110,6 +116,10 @@ export default function HonorReceipt() {
         nominatifId,
         nominatifItemId: item.id,
         recipientId: item.recipientId,
+        skKpaId: nominatif.skKpaId || null,
+        skKpaLampiranId: item.skKpaLampiranId || null,
+        nomorSkKpa: skKpa?.nomorSk || null,
+        akunBelanja: item.akunBelanja || null,
         nomorKwitansi: `KWT-${nominatif.nomorNominatif}-${String(index + 1).padStart(3, '0')}`,
         tanggal: new Date(),
         jumlahBruto: item.jumlahBruto,
@@ -379,6 +389,20 @@ export default function HonorReceipt() {
                   <span className="text-gray-600">Untuk pembayaran:</span>
                   <span>Honorarium</span>
                 </div>
+
+                {viewingData.nomorSkKpa && (
+                  <div className="flex justify-between border-b pb-2">
+                    <span className="text-gray-600">Dasar SK KPA:</span>
+                    <span className="font-medium">{viewingData.nomorSkKpa}</span>
+                  </div>
+                )}
+
+                {viewingData.akunBelanja && (
+                  <div className="flex justify-between border-b pb-2">
+                    <span className="text-gray-600">Akun Belanja:</span>
+                    <span>{viewingData.akunBelanja}</span>
+                  </div>
+                )}
 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Tanggal:</span>

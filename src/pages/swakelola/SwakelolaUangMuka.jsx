@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
-  Plus, Pencil, Trash2, Search, Banknote, Eye, Printer, CheckCircle, CreditCard, Building2, ChevronDown
+  Plus, Pencil, Trash2, Search, Banknote, Eye, Printer, CheckCircle, ClipboardList
 } from 'lucide-react'
 import Layout from '../../components/layout/Layout'
 import { Card, CardHeader, CardBody, CardTitle, CardDescription } from '../../components/ui/Card'
@@ -10,9 +10,9 @@ import Button from '../../components/ui/Button'
 import Modal, { ModalFooter } from '../../components/ui/Modal'
 import { Input, Select, CurrencyInput, Textarea } from '../../components/ui/Input'
 import Badge from '../../components/ui/Badge'
-import db from '../../db/database'
+import db, { CHECKLIST_SWAKELOLA } from '../../db/database'
 import { formatTanggal, formatDateInput, formatRupiah, angkaTerbilang } from '../../utils/formatters'
-import { generateKwitansiUangMukaPDF, generateSPRPDF, generateSPPRPDF } from '../../utils/swakelolaDocGenerator'
+import { generateKwitansiUangMukaPDF, generateKartuKendaliPUMSwakeolaPDF } from '../../utils/swakelolaDocGenerator'
 
 const initialFormData = {
   kegiatanId: '',
@@ -256,37 +256,11 @@ export default function SwakelolaUangMuka() {
     }
   }
 
-  // Print SPR (Surat Pendebitan Rekening) - untuk penarikan tunai via teller
-  const handlePrintSPR = async (uangMuka) => {
+  const handlePrintKartuKendali = async (uangMuka) => {
     try {
-      // Get PPK and Bendahara
-      const ppk = await db.pejabat.where('jenisPejabat').equals('PPK').first()
-      const bendahara = await db.pejabat.where('jenisPejabat').equals('BENDAHARA').first()
-
-      await generateSPRPDF({
-        ...uangMuka,
-        ppk,
-        bendahara
-      })
+      await generateKartuKendaliPUMSwakeolaPDF(uangMuka, CHECKLIST_SWAKELOLA)
     } catch (error) {
-      alert('Gagal mencetak SPR: ' + error.message)
-    }
-  }
-
-  // Print SPPR (Surat Perintah Pendebitan Rekening) - untuk penarikan via kartu debit
-  const handlePrintSPPR = async (uangMuka) => {
-    try {
-      // Get PPK and Bendahara
-      const ppk = await db.pejabat.where('jenisPejabat').equals('PPK').first()
-      const bendahara = await db.pejabat.where('jenisPejabat').equals('BENDAHARA').first()
-
-      await generateSPPRPDF({
-        ...uangMuka,
-        ppk,
-        bendahara
-      })
-    } catch (error) {
-      alert('Gagal mencetak SPPR: ' + error.message)
+      alert('Gagal mencetak kartu kendali: ' + error.message)
     }
   }
 
@@ -434,6 +408,13 @@ export default function SwakelolaUangMuka() {
                             </button>
                           </div>
                         </div>
+                        <button
+                          onClick={() => handlePrintKartuKendali(um)}
+                          className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg"
+                          title="Cetak Kartu Kendali SPJ"
+                        >
+                          <ClipboardList className="w-4 h-4" />
+                        </button>
                         <button
                           onClick={() => handleOpenModal(um)}
                           className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"
@@ -643,7 +624,6 @@ export default function SwakelolaUangMuka() {
             </div>
 
             <div className="pt-4 border-t space-y-2">
-              <p className="text-xs font-medium text-gray-500 mb-2">Cetak Dokumen:</p>
               <Button
                 onClick={() => handlePrint(viewingData)}
                 icon={Printer}
@@ -651,27 +631,14 @@ export default function SwakelolaUangMuka() {
               >
                 Kwitansi Uang Muka
               </Button>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  onClick={() => handlePrintSPR(viewingData)}
-                  variant="secondary"
-                  icon={Building2}
-                  className="text-sm"
-                >
-                  SPR (Tunai)
-                </Button>
-                <Button
-                  onClick={() => handlePrintSPPR(viewingData)}
-                  variant="secondary"
-                  icon={CreditCard}
-                  className="text-sm"
-                >
-                  SPPR (Debit)
-                </Button>
-              </div>
-              <p className="text-xs text-gray-400 mt-2">
-                SPR: Penarikan tunai via teller | SPPR: Penarikan via kartu debit
-              </p>
+              <Button
+                onClick={() => handlePrintKartuKendali(viewingData)}
+                icon={ClipboardList}
+                variant="secondary"
+                className="w-full"
+              >
+                Cetak Kartu Kendali SPJ
+              </Button>
             </div>
           </div>
         )}
