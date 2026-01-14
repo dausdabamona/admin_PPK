@@ -85,6 +85,7 @@ export default function HonorMaster() {
     { value: 'BNI', label: 'BNI' },
     { value: 'Mandiri', label: 'Mandiri' },
     { value: 'BTN', label: 'BTN' },
+    { value: 'BSI', label: 'BSI' },
     { value: 'Bank Papua', label: 'Bank Papua' },
     { value: 'Lainnya', label: 'Lainnya' }
   ]

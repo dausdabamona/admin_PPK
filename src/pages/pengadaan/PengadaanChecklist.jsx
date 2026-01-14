@@ -12,6 +12,7 @@ import { Input, Select, Textarea } from '../../components/ui/Input'
 import Badge from '../../components/ui/Badge'
 import db, {
   WORKFLOW_STATUS_PENGADAAN,
+  STATUS_BMN,
   getWorkflowStatusLabel,
   getChecklistPengadaan,
   withAuditCreate,
@@ -60,6 +61,41 @@ export default function PengadaanChecklist() {
     () => selectedPaket ? db.procurementChecklist.where('paketId').equals(selectedPaket.id).first() : null,
     [selectedPaket]
   )
+
+  // Fetch BAST from penyedia for selected paket (for Barang workflow lock)
+  const existingBast = useLiveQuery(
+    () => selectedPaket ? db.procurementBast.where('paketId').equals(selectedPaket.id).first() : null,
+    [selectedPaket]
+  )
+
+  // Fetch BAST KPA for selected paket (for Barang workflow lock)
+  const existingBastKpa = useLiveQuery(
+    () => selectedPaket ? db.procurementBastToKpa.where('paketId').equals(selectedPaket.id).first() : null,
+    [selectedPaket]
+  )
+
+  // Check if it's a Barang package (needs BAST workflow)
+  const isBarangPackage = selectedPaket?.jenisPengadaan === 'barang'
+
+  // Check BAST workflow requirements for Barang packages
+  const bastWorkflowStatus = useMemo(() => {
+    if (!isBarangPackage) return { complete: true, missing: [] }
+
+    const missing = []
+    if (!existingBast) missing.push('BAST Penyedia → PPK')
+    if (!existingBastKpa) missing.push('BAST PPK → KPA')
+    if (existingBastKpa && existingBastKpa.statusBmn !== STATUS_BMN.SIAP_DICATAT && existingBastKpa.statusBmn !== STATUS_BMN.SUDAH_DICATAT) {
+      missing.push('Status BMN belum valid')
+    }
+
+    return {
+      complete: missing.length === 0,
+      missing,
+      hasBast: !!existingBast,
+      hasBastKpa: !!existingBastKpa,
+      bmnReady: existingBastKpa?.statusBmn === STATUS_BMN.SIAP_DICATAT || existingBastKpa?.statusBmn === STATUS_BMN.SUDAH_DICATAT
+    }
+  }, [isBarangPackage, existingBast, existingBastKpa])
 
   // Filter paket
   const filteredPaket = allPaket.filter(p => {
@@ -138,8 +174,22 @@ export default function PengadaanChecklist() {
     try {
       const itemLengkap = checklistItems.filter(item => item.checked).length
       const totalItem = checklistItems.length
-      const statusKelengkapan = itemLengkap === totalItem ? 'lengkap' :
-        itemLengkap >= totalItem * 0.8 ? 'hampir_lengkap' : 'belum_lengkap'
+
+      // Check BAST workflow for Barang packages before allowing "lengkap" status
+      let statusKelengkapan
+      if (itemLengkap === totalItem) {
+        // For Barang packages, verify BAST workflow is complete
+        if (isBarangPackage && !bastWorkflowStatus.complete) {
+          alert(`Tidak dapat menyelesaikan checklist untuk paket Barang.\n\nDokumen yang masih kurang:\n- ${bastWorkflowStatus.missing.join('\n- ')}\n\nSilakan lengkapi BAST di menu Serah Terima terlebih dahulu.`)
+          setLoading(false)
+          return
+        }
+        statusKelengkapan = 'lengkap'
+      } else if (itemLengkap >= totalItem * 0.8) {
+        statusKelengkapan = 'hampir_lengkap'
+      } else {
+        statusKelengkapan = 'belum_lengkap'
+      }
 
       const data = {
         paketId: selectedPaket.id,
@@ -416,6 +466,63 @@ export default function PengadaanChecklist() {
                   )}
                 </CardBody>
               </Card>
+
+              {/* BAST Workflow Status for Barang packages */}
+              {isBarangPackage && (
+                <Card className={bastWorkflowStatus.complete ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'}>
+                  <CardBody className="p-4">
+                    <div className="flex items-start gap-3">
+                      {bastWorkflowStatus.complete ? (
+                        <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                      ) : (
+                        <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
+                      )}
+                      <div className="flex-1">
+                        <p className={`font-medium ${bastWorkflowStatus.complete ? 'text-green-800' : 'text-amber-800'}`}>
+                          Workflow BAST Pengadaan Barang
+                        </p>
+                        <div className="mt-2 space-y-1.5">
+                          <div className="flex items-center gap-2 text-sm">
+                            {bastWorkflowStatus.hasBast ? (
+                              <CheckCircle className="w-4 h-4 text-green-500" />
+                            ) : (
+                              <XCircle className="w-4 h-4 text-red-500" />
+                            )}
+                            <span className={bastWorkflowStatus.hasBast ? 'text-green-700' : 'text-red-700'}>
+                              BAST Penyedia → PPK
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            {bastWorkflowStatus.hasBastKpa ? (
+                              <CheckCircle className="w-4 h-4 text-green-500" />
+                            ) : (
+                              <XCircle className="w-4 h-4 text-red-500" />
+                            )}
+                            <span className={bastWorkflowStatus.hasBastKpa ? 'text-green-700' : 'text-red-700'}>
+                              BAST PPK → KPA/Unit Pengguna
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            {bastWorkflowStatus.bmnReady ? (
+                              <CheckCircle className="w-4 h-4 text-green-500" />
+                            ) : (
+                              <XCircle className="w-4 h-4 text-red-500" />
+                            )}
+                            <span className={bastWorkflowStatus.bmnReady ? 'text-green-700' : 'text-red-700'}>
+                              BMN Siap Dicatat ke SIMAK
+                            </span>
+                          </div>
+                        </div>
+                        {!bastWorkflowStatus.complete && (
+                          <p className="text-xs text-amber-600 mt-2">
+                            Lengkapi semua BAST di menu Serah Terima sebelum checklist dapat diselesaikan
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+              )}
 
               {/* Payment Lock Warning */}
               {isPaymentLocked && (

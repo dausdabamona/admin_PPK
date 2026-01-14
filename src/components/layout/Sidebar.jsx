@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   Users,
@@ -33,9 +33,10 @@ import {
   HeartHandshake,
   Truck,
   Award,
-  BarChart3
+  BarChart3,
+  Stamp
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const menuItems = [
   {
@@ -97,7 +98,8 @@ const menuItems = [
       { name: 'Master Penyedia', path: '/pengadaan/penyedia', icon: Store },
       { name: 'Perencanaan', path: '/pengadaan/perencanaan', icon: FileSearch },
       { name: 'Kontrak & SPMK', path: '/pengadaan/kontrak', icon: HeartHandshake },
-      { name: 'Serah Terima', path: '/pengadaan/serah-terima', icon: Truck },
+      { name: 'BAST Penyedia', path: '/pengadaan/serah-terima', icon: Truck },
+      { name: 'BAST ke KPA', path: '/pengadaan/bast-kpa', icon: Building2 },
       { name: 'Pembayaran', path: '/pengadaan/pembayaran', icon: Wallet },
       { name: 'Checklist SPJ', path: '/pengadaan/checklist', icon: ListChecks }
     ]
@@ -108,6 +110,7 @@ const menuItems = [
     submenu: [
       { name: 'Master Penerima', path: '/honorarium/master', icon: Users },
       { name: 'Dasar Penugasan', path: '/honorarium/penugasan', icon: FileSignature },
+      { name: 'SK KPA Penetapan', path: '/honorarium/sk-kpa', icon: Stamp },
       { name: 'Daftar Nominatif', path: '/honorarium/nominatif', icon: ClipboardList },
       { name: 'Kwitansi', path: '/honorarium/kwitansi', icon: Receipt },
       { name: 'Rekap Pembayaran', path: '/honorarium/rekap', icon: BarChart3 },
@@ -126,19 +129,24 @@ const menuItems = [
   }
 ]
 
-function MenuItem({ item, isOpen, onToggle }) {
+function MenuItem({ item, isOpen, onToggle, hasActiveChild }) {
   const hasSubmenu = item.submenu && item.submenu.length > 0
   const Icon = item.icon
 
   if (hasSubmenu) {
+    // Style untuk parent menu yang memiliki child aktif
+    const parentClass = hasActiveChild
+      ? 'w-full flex items-center justify-between px-4 py-3 text-sm font-medium bg-primary-50 text-primary-700 border-l-4 border-primary-600 rounded-r-lg transition-colors duration-200'
+      : 'w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors duration-200'
+
     return (
       <div className="mb-1">
         <button
           onClick={onToggle}
-          className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors duration-200"
+          className={parentClass}
         >
           <div className="flex items-center gap-3">
-            <Icon className="w-5 h-5" />
+            <Icon className={`w-5 h-5 ${hasActiveChild ? 'text-primary-600' : ''}`} />
             <span>{item.name}</span>
           </div>
           {isOpen ? (
@@ -185,14 +193,26 @@ function MenuItem({ item, isOpen, onToggle }) {
 }
 
 export default function Sidebar() {
-  const [openMenus, setOpenMenus] = useState({
-    'Master Data': true,
-    'Perjalanan Dinas': true,
-    'Swakelola': true,
-    'PJLP': true,
-    'Pengadaan Langsung': true,
-    'Honorarium': true
-  })
+  const location = useLocation()
+  const [openMenus, setOpenMenus] = useState({})
+
+  // Helper: Check if any submenu item matches current path
+  const hasActiveSubmenu = (item) => {
+    if (!item.submenu) return false
+    return item.submenu.some(sub => location.pathname === sub.path || location.pathname.startsWith(sub.path + '/'))
+  }
+
+  // Auto-expand menu containing active page
+  useEffect(() => {
+    const newOpenMenus = {}
+    menuItems.forEach(item => {
+      if (item.submenu) {
+        // Only open menu that has active child
+        newOpenMenus[item.name] = hasActiveSubmenu(item)
+      }
+    })
+    setOpenMenus(newOpenMenus)
+  }, [location.pathname])
 
   const toggleMenu = (menuName) => {
     setOpenMenus((prev) => ({
@@ -225,6 +245,7 @@ export default function Sidebar() {
               item={item}
               isOpen={openMenus[item.name]}
               onToggle={() => toggleMenu(item.name)}
+              hasActiveChild={hasActiveSubmenu(item)}
             />
           ))}
         </div>
@@ -236,7 +257,7 @@ export default function Sidebar() {
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
           <span>Offline Ready</span>
         </div>
-        <p className="text-xs text-gray-400 mt-1">v5.0.0</p>
+        <p className="text-xs text-gray-400 mt-1">v5.1.0</p>
       </div>
     </aside>
   )
