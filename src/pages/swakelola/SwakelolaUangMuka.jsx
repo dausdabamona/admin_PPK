@@ -375,13 +375,39 @@ export default function SwakelolaUangMuka() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => handlePrint(um)}
-                          className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg"
-                          title="Cetak Kwitansi"
-                        >
-                          <Printer className="w-4 h-4" />
-                        </button>
+                        {/* Dropdown for document printing */}
+                        <div className="relative group">
+                          <button
+                            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg flex items-center gap-0.5"
+                            title="Cetak Dokumen"
+                          >
+                            <Printer className="w-4 h-4" />
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+                          <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 hidden group-hover:block">
+                            <button
+                              onClick={() => handlePrint(um)}
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <Printer className="w-4 h-4 text-green-600" />
+                              Kwitansi Uang Muka
+                            </button>
+                            <button
+                              onClick={() => handlePrintSPR(um)}
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <Building2 className="w-4 h-4 text-blue-600" />
+                              SPR (Tunai Teller)
+                            </button>
+                            <button
+                              onClick={() => handlePrintSPPR(um)}
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <CreditCard className="w-4 h-4 text-purple-600" />
+                              SPPR (Kartu Debit)
+                            </button>
+                          </div>
+                        </div>
                         <button
                           onClick={() => handlePrintKartuKendali(um)}
                           className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg"
@@ -603,7 +629,7 @@ export default function SwakelolaUangMuka() {
                 icon={Printer}
                 className="w-full"
               >
-                Cetak Kwitansi
+                Kwitansi Uang Muka
               </Button>
               <Button
                 onClick={() => handlePrintKartuKendali(viewingData)}

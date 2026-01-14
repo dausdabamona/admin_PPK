@@ -72,8 +72,7 @@ const menuItems = [
       { name: 'Tim Swakelola', path: '/swakelola/tim', icon: UsersRound },
       { name: 'Uang Muka', path: '/swakelola/uang-muka', icon: Banknote },
       { name: 'Realisasi', path: '/swakelola/realisasi', icon: Receipt },
-      { name: 'Rampung', path: '/swakelola/rampung', icon: Calculator },
-      { name: 'Checklist SPJ', path: '/swakelola/checklist', icon: ListChecks }
+      { name: 'Rampung', path: '/swakelola/rampung', icon: Calculator }
     ]
   },
   {
@@ -113,8 +112,7 @@ const menuItems = [
       { name: 'SK KPA Penetapan', path: '/honorarium/sk-kpa', icon: Stamp },
       { name: 'Daftar Nominatif', path: '/honorarium/nominatif', icon: ClipboardList },
       { name: 'Kwitansi', path: '/honorarium/kwitansi', icon: Receipt },
-      { name: 'Rekap Pembayaran', path: '/honorarium/rekap', icon: BarChart3 },
-      { name: 'Checklist SPJ', path: '/honorarium/checklist', icon: ListChecks }
+      { name: 'Rekap Pembayaran', path: '/honorarium/rekap', icon: BarChart3 }
     ]
   },
   {
@@ -132,6 +130,7 @@ const menuItems = [
 function MenuItem({ item, isOpen, onToggle, hasActiveChild }) {
   const hasSubmenu = item.submenu && item.submenu.length > 0
   const Icon = item.icon
+  const isActive = hasSubmenu && isSubmenuActive(item.submenu, currentPath)
 
   if (hasSubmenu) {
     // Style untuk parent menu yang memiliki child aktif
@@ -156,6 +155,7 @@ function MenuItem({ item, isOpen, onToggle, hasActiveChild }) {
           )}
         </button>
 
+        {/* Only show submenu if open */}
         {isOpen && (
           <div className="ml-4 mt-1 space-y-1">
             {item.submenu.map((subItem) => {
@@ -213,6 +213,23 @@ export default function Sidebar() {
     })
     setOpenMenus(newOpenMenus)
   }, [location.pathname])
+
+  // Update open menus when route changes
+  useEffect(() => {
+    const activeMenu = getActiveMenuName(currentPath)
+    if (activeMenu) {
+      setOpenMenus(prev => {
+        // Close all others, open only the active one
+        const newState = {}
+        menuItems.forEach(item => {
+          if (item.submenu) {
+            newState[item.name] = item.name === activeMenu
+          }
+        })
+        return newState
+      })
+    }
+  }, [currentPath])
 
   const toggleMenu = (menuName) => {
     setOpenMenus((prev) => ({

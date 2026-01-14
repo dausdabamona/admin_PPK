@@ -546,17 +546,28 @@ export async function generateKwitansiPDF(data) {
   pdf.text(`Sorong, ${formatTanggal(data.tanggal)}`, pageWidth / 2, y, { align: 'center' })
 
   y += 10
-  // Left signature (PPK)
-  pdf.text('Pejabat Pembuat Komitmen,', 30, y)
-  pdf.text('____________________', 30, y + 30)
-  pdf.text(`${data.ppk?.nama || ''}`, 30, y + 37)
-  pdf.text(`NIP. ${data.ppk?.nip || ''}`, 30, y + 42)
+  // Three column signatures: Bendahara Pengeluaran, PPK, Yang Menerima
+  const col1X = 15
+  const col2X = pageWidth / 2 - 25
+  const col3X = pageWidth - 65
 
-  // Right signature (Penerima)
-  pdf.text('Yang Menerima,', pageWidth - 70, y)
-  pdf.text('____________________', pageWidth - 70, y + 30)
-  pdf.text(`${data.pegawai?.nama || ''}`, pageWidth - 70, y + 37)
-  pdf.text(`NIP. ${data.pegawai?.nip || ''}`, pageWidth - 70, y + 42)
+  // Column 1 - Bendahara Pengeluaran
+  pdf.text('Bendahara Pengeluaran,', col1X, y)
+  pdf.text('____________________', col1X, y + 30)
+  pdf.text(`${data.bendahara?.nama || ''}`, col1X, y + 37)
+  pdf.text(`NIP. ${data.bendahara?.nip || ''}`, col1X, y + 42)
+
+  // Column 2 - PPK
+  pdf.text('Pejabat Pembuat Komitmen,', col2X, y)
+  pdf.text('____________________', col2X, y + 30)
+  pdf.text(`${data.ppk?.nama || ''}`, col2X, y + 37)
+  pdf.text(`NIP. ${data.ppk?.nip || ''}`, col2X, y + 42)
+
+  // Column 3 - Yang Menerima (Penerima)
+  pdf.text('Yang Menerima,', col3X, y)
+  pdf.text('____________________', col3X, y + 30)
+  pdf.text(`${data.pegawai?.nama || ''}`, col3X, y + 37)
+  pdf.text(`NIP. ${data.pegawai?.nip || ''}`, col3X, y + 42)
 
   pdf.save(`Kwitansi_${data.nomor?.replace(/\//g, '-') || 'SPPD'}.pdf`)
 }

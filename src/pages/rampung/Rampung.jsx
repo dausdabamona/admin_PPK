@@ -352,12 +352,14 @@ export default function Rampung() {
     const pegawai = await db.pegawai.get(rampung.pegawaiId)
     const sppd = await db.sppd.get(rampung.sppdId)
     const ppk = await db.pejabat.where('jenisPejabat').equals('PPK').first()
+    const bendahara = await db.pejabat.where('jenisPejabat').equals('BENDAHARA').first()
 
     await generateKwitansiPDF({
       ...rampung,
       pegawai,
       sppd,
       ppk,
+      bendahara,
       nomor: sppd?.nomor,
       jumlah: rampung.totalRealisasi,
       tanggal: rampung.tanggal
