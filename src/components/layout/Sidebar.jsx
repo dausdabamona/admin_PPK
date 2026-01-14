@@ -131,7 +131,6 @@ const menuItems = [
 function MenuItem({ item, isOpen, onToggle, hasActiveChild }) {
   const hasSubmenu = item.submenu && item.submenu.length > 0
   const Icon = item.icon
-  const isActive = hasSubmenu && isSubmenuActive(item.submenu, currentPath)
 
   if (hasSubmenu) {
     // Style untuk parent menu yang memiliki child aktif
@@ -214,23 +213,6 @@ export default function Sidebar() {
     })
     setOpenMenus(newOpenMenus)
   }, [location.pathname])
-
-  // Update open menus when route changes
-  useEffect(() => {
-    const activeMenu = getActiveMenuName(currentPath)
-    if (activeMenu) {
-      setOpenMenus(prev => {
-        // Close all others, open only the active one
-        const newState = {}
-        menuItems.forEach(item => {
-          if (item.submenu) {
-            newState[item.name] = item.name === activeMenu
-          }
-        })
-        return newState
-      })
-    }
-  }, [currentPath])
 
   const toggleMenu = (menuName) => {
     setOpenMenus((prev) => ({
