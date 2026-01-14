@@ -8,10 +8,12 @@ import {
   User,
   AlertCircle,
   CheckCircle,
-  Info
+  Info,
+  Database
 } from 'lucide-react'
 import { db } from '../../db/database'
 import { formatRupiah, parseRupiah, formatDateInput } from '../../utils/formatters'
+import DipaRevisionSelector, { DipaItemSelector } from '../ui/DipaRevisionSelector'
 
 /**
  * MasterActivityForm - Universal Activity Form
@@ -35,6 +37,8 @@ const MasterActivityForm = ({ data = {}, onUpdate, mode = 'normal' }) => {
       pagu: 0,
       tahun: new Date().getFullYear(),
       output: '',
+      dipaRevision: null,
+      dipaItem: null,
       ...data.kegiatan
     },
     pejabat: {
@@ -166,6 +170,32 @@ const MasterActivityForm = ({ data = {}, onUpdate, mode = 'normal' }) => {
     }
   }
 
+  // DIPA handlers
+  const handleDipaRevisionChange = (revision) => {
+    setFormData(prev => ({
+      ...prev,
+      kegiatan: {
+        ...prev.kegiatan,
+        dipaRevision: revision,
+        dipaItem: null // Reset item when revision changes
+      }
+    }))
+  }
+
+  const handleDipaItemChange = (item) => {
+    setFormData(prev => ({
+      ...prev,
+      kegiatan: {
+        ...prev.kegiatan,
+        dipaItem: item,
+        // Auto-populate from DIPA item
+        kode: item?.kode || prev.kegiatan.kode,
+        nama: item?.uraian || prev.kegiatan.nama,
+        pagu: item?.pagu || prev.kegiatan.pagu
+      }
+    }))
+  }
+
   const isReadOnly = mode === 'readonly'
 
   return (
@@ -232,6 +262,60 @@ const MasterActivityForm = ({ data = {}, onUpdate, mode = 'normal' }) => {
             </p>
           </div>
 
+          {/* Tahun Anggaran */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tahun Anggaran <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              value={formData.kegiatan.tahun}
+              onChange={(e) => handleKegiatanChange('tahun', parseInt(e.target.value))}
+              disabled={isReadOnly}
+              min="2020"
+              max="2030"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+            />
+          </div>
+
+          {/* DIPA Integration */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-3 mb-4">
+              <Database className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <h4 className="font-medium text-blue-900">Integrasi DIPA</h4>
+                <p className="text-sm text-blue-700 mt-1">
+                  Pilih revisi DIPA dan MAK untuk auto-populate data kegiatan dan validasi pagu
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {/* DIPA Revision Selector */}
+              <DipaRevisionSelector
+                year={formData.kegiatan.tahun}
+                value={formData.kegiatan.dipaRevision}
+                onChange={handleDipaRevisionChange}
+                label="Revisi DIPA"
+                disabled={isReadOnly}
+                helper="Pilih revisi DIPA yang akan digunakan untuk kegiatan ini"
+              />
+
+              {/* DIPA Item (MAK) Selector */}
+              <DipaItemSelector
+                year={formData.kegiatan.tahun}
+                revision={formData.kegiatan.dipaRevision}
+                value={formData.kegiatan.dipaItem}
+                onChange={handleDipaItemChange}
+                label="MAK (Mata Anggaran Kegiatan)"
+                levelFilter="akun"
+                showPaguInfo={true}
+                disabled={isReadOnly}
+                helper="Pilih MAK dari DIPA. Data kode, nama, dan pagu akan auto-populate"
+              />
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Kode MAK/Output */}
             <div>
@@ -242,57 +326,15 @@ const MasterActivityForm = ({ data = {}, onUpdate, mode = 'normal' }) => {
                 type="text"
                 value={formData.kegiatan.kode}
                 onChange={(e) => handleKegiatanChange('kode', e.target.value)}
-                disabled={isReadOnly}
+                disabled={isReadOnly || !!formData.kegiatan.dipaItem}
                 placeholder="Contoh: 524111"
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
               />
               <p className="text-xs text-gray-500 mt-1">
-                6 digit kode MAK
+                {formData.kegiatan.dipaItem
+                  ? 'Auto-populated dari DIPA'
+                  : '6 digit kode MAK atau input manual'}
               </p>
-            </div>
-
-            {/* Tahun Anggaran */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tahun Anggaran <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                value={formData.kegiatan.tahun}
-                onChange={(e) => handleKegiatanChange('tahun', parseInt(e.target.value))}
-                disabled={isReadOnly}
-                min="2020"
-                max="2030"
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Pagu */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Pagu Kegiatan <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute left-3 top-2.5 text-gray-500">Rp</div>
-                <input
-                  type="text"
-                  value={formData.kegiatan.pagu > 0 ? formatRupiah(formData.kegiatan.pagu).replace('Rp', '').trim() : ''}
-                  onChange={(e) => {
-                    const value = parseRupiah(e.target.value)
-                    handleKegiatanChange('pagu', value)
-                  }}
-                  disabled={isReadOnly}
-                  placeholder="0"
-                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
-                />
-              </div>
-              {formData.kegiatan.pagu > 0 && (
-                <p className="text-xs text-gray-500 mt-1">
-                  {formatRupiah(formData.kegiatan.pagu)}
-                </p>
-              )}
             </div>
 
             {/* Output */}
@@ -309,6 +351,65 @@ const MasterActivityForm = ({ data = {}, onUpdate, mode = 'normal' }) => {
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
               />
             </div>
+          </div>
+
+          {/* Pagu */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Pagu Kegiatan <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <div className="absolute left-3 top-2.5 text-gray-500">Rp</div>
+              <input
+                type="text"
+                value={formData.kegiatan.pagu > 0 ? formatRupiah(formData.kegiatan.pagu).replace('Rp', '').trim() : ''}
+                onChange={(e) => {
+                  const value = parseRupiah(e.target.value)
+                  handleKegiatanChange('pagu', value)
+                }}
+                disabled={isReadOnly || !!formData.kegiatan.dipaItem}
+                placeholder="0"
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+              />
+            </div>
+            {formData.kegiatan.pagu > 0 && (
+              <p className="text-xs text-gray-500 mt-1">
+                {formatRupiah(formData.kegiatan.pagu)}
+              </p>
+            )}
+            {formData.kegiatan.dipaItem && (
+              <p className="text-xs text-blue-600 mt-1">
+                ✓ Auto-populated dari DIPA
+              </p>
+            )}
+
+            {/* DIPA Validation Warning */}
+            {formData.kegiatan.dipaItem && formData.kegiatan.pagu > formData.kegiatan.dipaItem.sisa && (
+              <div className="mt-2 flex items-start gap-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                <AlertCircle className="w-3.5 h-3.5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                <div className="text-yellow-800">
+                  <p className="font-medium">Perhatian: Pagu melebihi sisa DIPA</p>
+                  <p className="mt-1">
+                    Sisa pagu DIPA: <span className="font-mono">{formatRupiah(formData.kegiatan.dipaItem.sisa)}</span>
+                  </p>
+                  <p className="mt-0.5">
+                    Kekurangan: <span className="font-mono text-red-600">{formatRupiah(formData.kegiatan.pagu - formData.kegiatan.dipaItem.sisa)}</span>
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {formData.kegiatan.dipaItem && formData.kegiatan.pagu <= formData.kegiatan.dipaItem.sisa && (
+              <div className="mt-2 flex items-start gap-2 p-2 bg-green-50 border border-green-200 rounded text-xs">
+                <CheckCircle className="w-3.5 h-3.5 text-green-600 mt-0.5 flex-shrink-0" />
+                <div className="text-green-800">
+                  <p className="font-medium">✓ Pagu sesuai dengan sisa DIPA</p>
+                  <p className="mt-1">
+                    Sisa setelah kegiatan ini: <span className="font-mono">{formatRupiah(formData.kegiatan.dipaItem.sisa - formData.kegiatan.pagu)}</span>
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

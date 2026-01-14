@@ -3,6 +3,7 @@ import { enrichPackageData, validatePackageData, extractSummary } from '../utils
 import { generateAuditTrail } from '../utils/audit/auditTrail'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
+import DipaRevisionService from './DipaRevisionService'
 
 /**
  * SPJPackageService - Service Layer untuk SPJ Package Management
@@ -25,6 +26,9 @@ class SPJPackageService {
       // Generate package code
       const packageCode = await this.generatePackageCode(processType, year)
 
+      // Track DIPA revision if provided
+      const dipaRevision = initialData.kegiatan?.dipaRevision?.revisi
+
       const packageData = {
         packageCode,
         processType,
@@ -33,6 +37,7 @@ class SPJPackageService {
         currentStep: 0,
         title: initialData.kegiatan?.nama || 'Paket SPJ Baru',
         data: initialData,
+        dipaRevision, // Track DIPA revision for validation
         checklist: {
           items: [],
           completionRate: 0,
@@ -536,6 +541,278 @@ ${new Date().toLocaleString('id-ID')}
     })
 
     return report
+  }
+
+  // ==================== DIPA VALIDATION METHODS ====================
+
+  /**
+   * Check DIPA status for a package
+   * Returns warnings if:
+   * - Package was created with old DIPA revision
+   * - DIPA has been revised since package creation
+   * - No DIPA linked
+   */
+  async checkDipaStatus(packageId) {
+    try {
+      const pkg = await db.spjPackages?.get(packageId)
+      if (!pkg) {
+        throw new Error('Package not found')
+      }
+
+      const warnings = []
+      const info = {}
+
+      // Get year from package
+      const year = pkg.year
+
+      // Get current active DIPA revision
+      const activeRevision = await DipaRevisionService.getActiveRevision(year)
+
+      if (!activeRevision) {
+        warnings.push({
+          type: 'NO_DIPA',
+          severity: 'warning',
+          message: `Tidak ada DIPA aktif untuk tahun ${year}`,
+          description: 'Validasi pagu tidak dapat dilakukan tanpa DIPA'
+        })
+
+        return {
+          success: true,
+          status: 'no_dipa',
+          warnings,
+          info
+        }
+      }
+
+      info.activeRevision = activeRevision.revisi
+      info.activeRevisionNumber = activeRevision.nomorRevisi
+
+      // Check if package has DIPA revision tracked
+      if (pkg.dipaRevision === null || pkg.dipaRevision === undefined) {
+        warnings.push({
+          type: 'NO_DIPA_TRACKED',
+          severity: 'info',
+          message: 'Paket ini tidak terhubung dengan DIPA',
+          description: 'Paket dibuat sebelum fitur integrasi DIPA diaktifkan'
+        })
+
+        return {
+          success: true,
+          status: 'no_tracking',
+          warnings,
+          info
+        }
+      }
+
+      info.packageRevision = pkg.dipaRevision
+
+      // Check if package DIPA is outdated
+      if (pkg.dipaRevision < activeRevision.revisi) {
+        warnings.push({
+          type: 'OUTDATED_DIPA',
+          severity: 'warning',
+          message: 'Paket menggunakan DIPA yang sudah superseded',
+          description: `Paket menggunakan ${pkg.dipaRevision === 0 ? 'DIPA Awal' : `Revisi ${pkg.dipaRevision}`}, saat ini aktif: Revisi ${activeRevision.revisi}`,
+          recommendation: 'Periksa apakah ada perubahan pagu yang mempengaruhi kegiatan ini'
+        })
+
+        return {
+          success: true,
+          status: 'outdated',
+          warnings,
+          info
+        }
+      }
+
+      // Package is up-to-date
+      return {
+        success: true,
+        status: 'up_to_date',
+        warnings: [],
+        info,
+        message: 'Paket menggunakan DIPA revisi terbaru'
+      }
+    } catch (error) {
+      console.error('Failed to check DIPA status:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  /**
+   * Validate pagu against DIPA
+   * Checks if the package pagu exceeds available DIPA sisa
+   */
+  async validatePaguDipa(packageId) {
+    try {
+      const pkg = await db.spjPackages?.get(packageId)
+      if (!pkg) {
+        throw new Error('Package not found')
+      }
+
+      const kegiatanData = pkg.data?.kegiatan
+      if (!kegiatanData) {
+        return {
+          success: true,
+          valid: true,
+          message: 'Tidak ada data kegiatan untuk divalidasi'
+        }
+      }
+
+      const { tahun, kode, pagu, dipaItem } = kegiatanData
+
+      // If no DIPA item linked, skip validation
+      if (!dipaItem) {
+        return {
+          success: true,
+          valid: true,
+          skipped: true,
+          message: 'Paket tidak terhubung dengan DIPA item'
+        }
+      }
+
+      // Get fresh DIPA item data (in case realisasi has changed)
+      const freshDipaItem = await db.masterDipa
+        .where('[tahun+status]').equals([tahun, 'active'])
+        .and(item => item.kode === kode)
+        .first()
+
+      if (!freshDipaItem) {
+        return {
+          success: true,
+          valid: false,
+          message: `MAK ${kode} tidak ditemukan di DIPA aktif`,
+          severity: 'error'
+        }
+      }
+
+      // Check if pagu exceeds sisa
+      if (pagu > freshDipaItem.sisa) {
+        return {
+          success: true,
+          valid: false,
+          message: 'Pagu kegiatan melebihi sisa DIPA',
+          details: {
+            pagu: pagu,
+            dipaPagu: freshDipaItem.pagu,
+            dipaRealisasi: freshDipaItem.realisasi,
+            dipaSisa: freshDipaItem.sisa,
+            kekurangan: pagu - freshDipaItem.sisa
+          },
+          severity: 'warning',
+          recommendation: 'Kurangi pagu kegiatan atau tunggu revisi DIPA'
+        }
+      }
+
+      // Validation passed
+      return {
+        success: true,
+        valid: true,
+        message: 'Pagu kegiatan sesuai dengan sisa DIPA',
+        details: {
+          pagu: pagu,
+          dipaPagu: freshDipaItem.pagu,
+          dipaRealisasi: freshDipaItem.realisasi,
+          dipaSisa: freshDipaItem.sisa,
+          sisaSetelah: freshDipaItem.sisa - pagu
+        }
+      }
+    } catch (error) {
+      console.error('Failed to validate pagu DIPA:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  /**
+   * Get comprehensive DIPA validation report for package
+   * Combines checkDipaStatus and validatePaguDipa
+   */
+  async getDipaValidationReport(packageId) {
+    try {
+      const [statusResult, paguResult] = await Promise.all([
+        this.checkDipaStatus(packageId),
+        this.validatePaguDipa(packageId)
+      ])
+
+      const allWarnings = [
+        ...(statusResult.warnings || []),
+        ...(paguResult.valid === false ? [{
+          type: 'PAGU_EXCEEDED',
+          severity: paguResult.severity,
+          message: paguResult.message,
+          details: paguResult.details,
+          recommendation: paguResult.recommendation
+        }] : [])
+      ]
+
+      return {
+        success: true,
+        report: {
+          dipaStatus: statusResult.status,
+          paguValid: paguResult.valid,
+          warnings: allWarnings,
+          hasWarnings: allWarnings.length > 0,
+          info: {
+            ...statusResult.info,
+            paguDetails: paguResult.details
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to get DIPA validation report:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  /**
+   * Update package realisasi in DIPA
+   * Call this when package is completed/archived to update DIPA realisasi
+   */
+  async updateDipaRealisasi(packageId) {
+    try {
+      const pkg = await db.spjPackages?.get(packageId)
+      if (!pkg) {
+        throw new Error('Package not found')
+      }
+
+      const kegiatanData = pkg.data?.kegiatan
+      if (!kegiatanData || !kegiatanData.kode || !kegiatanData.pagu) {
+        return {
+          success: false,
+          message: 'Data kegiatan tidak lengkap'
+        }
+      }
+
+      const { tahun, kode, pagu } = kegiatanData
+
+      // Update realisasi in DIPA
+      const result = await DipaRevisionService.updateRealisasi(
+        tahun,
+        kode,
+        pagu
+      )
+
+      if (result.success) {
+        // Log in audit trail
+        await this.updatePackage(packageId, {}, 'UPDATE_DIPA_REALISASI')
+      }
+
+      return result
+    } catch (error) {
+      console.error('Failed to update DIPA realisasi:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
   }
 }
 
