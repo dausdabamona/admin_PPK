@@ -21,6 +21,7 @@
 
 import workflowEngine from './WorkflowEngine.js'
 import { validateForDocument, validateMasterData } from '../../utils/masterDataValidator.js'
+import fiscalYearContext from '../fiscal/FiscalYearContext.js'
 
 /**
  * Compliance levels
@@ -100,6 +101,13 @@ export class ComplianceEngine {
     // Generate recommendations
     const recommendations = this._generateRecommendations(issues, workflow)
 
+    // FASE 4.5: Add fiscal year context
+    const fiscalYearInfo = {
+      tahunAnggaran: workflowInstance.tahunAnggaran || fiscalYearContext.getActiveYear(),
+      fiscalYearMode: workflowInstance.fiscalYearMode || fiscalYearContext.getMode(),
+      isReconstruction: workflowInstance.isReconstruction || false
+    }
+
     return {
       score: Math.round(score),
       complianceLevel,
@@ -115,7 +123,9 @@ export class ComplianceEngine {
         warningsScore: Math.round(warningScore)
       },
       summary: this._generateSummary(score, issues, complianceLevel),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      // FASE 4.5: Fiscal Year Context
+      ...fiscalYearInfo
     }
   }
 
@@ -540,6 +550,66 @@ export class ComplianceEngine {
       color: '#ef4444',
       message: 'Ada beberapa hal yang perlu dilengkapi'
     }
+  }
+
+  /**
+   * FASE 4.5: Get compliance reports for specific fiscal year
+   * @param {number} tahunAnggaran - Fiscal year
+   * @returns {Promise<Array>} Compliance reports for that year
+   */
+  async getReportsByFiscalYear(tahunAnggaran) {
+    // TODO: Integrate with database query
+    // return await ComplianceReportModel.find({ tahunAnggaran })
+    console.log(`[ComplianceEngine] Query reports for TA ${tahunAnggaran}`)
+    return []
+  }
+
+  /**
+   * FASE 4.5: Calculate cross-year compliance summary
+   * @returns {Promise<Array>} Summary per fiscal year
+   */
+  async getCrossYearSummary() {
+    // TODO: Integrate with database aggregation
+    // return await ComplianceReportModel.aggregate([
+    //   { $group: { _id: '$tahunAnggaran', avgScore: { $avg: '$score' } } }
+    // ])
+    console.log('[ComplianceEngine] Query cross-year summary')
+    return []
+  }
+
+  /**
+   * FASE 4.5: Add reconstruction watermark to compliance report
+   * @param {Object} report - Compliance report
+   * @returns {Object} Report with watermark
+   */
+  addReconstructionWatermark(report) {
+    if (!report.isReconstruction) {
+      return report
+    }
+
+    return {
+      ...report,
+      watermark: {
+        text: `REKONSTRUKSI ADMINISTRASI TAHUN ANGGARAN ${report.tahunAnggaran}`,
+        timestamp: new Date().toISOString(),
+        originalCalculation: true,
+        note: 'Dokumen ini hasil dari rekonstruksi administrasi dan bukan dari proses asli tahun berjalan'
+      },
+      summary: {
+        ...report.summary,
+        message: `[REKONSTRUKSI] ${report.summary.message}`,
+        detail: `Data ini hasil rekonstruksi. ${report.summary.detail}`
+      }
+    }
+  }
+
+  /**
+   * FASE 4.5: Create compliance filter with fiscal year context
+   * @param {Object} additionalFilters - Additional filters
+   * @returns {Object} Filter object with fiscal year
+   */
+  createFiscalYearFilter(additionalFilters = {}) {
+    return fiscalYearContext.createFilter(additionalFilters)
   }
 }
 

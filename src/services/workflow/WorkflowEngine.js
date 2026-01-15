@@ -19,6 +19,7 @@
 
 import * as path from 'path'
 import { fileURLToPath } from 'url'
+import fiscalYearContext from '../fiscal/FiscalYearContext.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -122,10 +123,16 @@ export class WorkflowEngine {
    * Initialize workflow instance for master data
    * @param {string} workflowType - Workflow type
    * @param {Object} masterData - Master data object
+   * @param {Object} options - Additional options { tahunAnggaran, isReconstruction }
    * @returns {Promise<Object>} Workflow instance
    */
-  async initializeWorkflow(workflowType, masterData = {}) {
+  async initializeWorkflow(workflowType, masterData = {}, options = {}) {
     const workflow = await this.getWorkflow(workflowType)
+
+    // Get fiscal year context
+    const tahunAnggaran = options.tahunAnggaran || fiscalYearContext.getActiveYear()
+    const fiscalYearMode = options.fiscalYearMode || fiscalYearContext.getMode()
+    const isReconstruction = options.isReconstruction || fiscalYearContext.isReconstructionMode()
 
     return {
       workflowType,
@@ -139,6 +146,11 @@ export class WorkflowEngine {
         percentage: 0
       },
       status: 'NOT_STARTED',
+      // FASE 4.5: Fiscal Year Context
+      tahunAnggaran,
+      fiscalYearMode,
+      isReconstruction,
+      reconstructionDate: isReconstruction ? new Date().toISOString() : null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
@@ -450,6 +462,63 @@ export class WorkflowEngine {
   async getCommonMistakes(workflowType) {
     const workflow = await this.getWorkflow(workflowType)
     return workflow.commonMistakes || []
+  }
+
+  /**
+   * FASE 4.5: Get workflow instances for specific fiscal year
+   * @param {number} tahunAnggaran - Fiscal year
+   * @returns {Promise<Array>} Workflow instances for that year
+   */
+  async getInstancesByFiscalYear(tahunAnggaran) {
+    // TODO: Integrate with database query
+    // return await WorkflowInstanceModel.find({ tahunAnggaran })
+    console.log(`[WorkflowEngine] Query instances for TA ${tahunAnggaran}`)
+    return []
+  }
+
+  /**
+   * FASE 4.5: Create workflow filter with fiscal year context
+   * @param {Object} additionalFilters - Additional filters
+   * @returns {Object} Filter object with fiscal year
+   */
+  createFiscalYearFilter(additionalFilters = {}) {
+    return fiscalYearContext.createFilter(additionalFilters)
+  }
+
+  /**
+   * FASE 4.5: Wrap workflow instance with fiscal year context
+   * @param {Object} instance - Workflow instance
+   * @returns {Object} Instance with fiscal year context
+   */
+  wrapWithFiscalYearContext(instance) {
+    return fiscalYearContext.wrapWithContext(instance)
+  }
+
+  /**
+   * FASE 4.5: Check if workflow is in reconstruction mode
+   * @param {Object} workflowInstance - Workflow instance
+   * @returns {boolean}
+   */
+  isReconstructionWorkflow(workflowInstance) {
+    return workflowInstance.isReconstruction === true
+  }
+
+  /**
+   * FASE 4.5: Get reconstruction metadata
+   * @param {Object} workflowInstance - Workflow instance
+   * @returns {Object|null} Reconstruction metadata
+   */
+  getReconstructionMetadata(workflowInstance) {
+    if (!workflowInstance.isReconstruction) {
+      return null
+    }
+
+    return {
+      isReconstruction: true,
+      reconstructionDate: workflowInstance.reconstructionDate,
+      tahunAnggaran: workflowInstance.tahunAnggaran,
+      fiscalYearMode: workflowInstance.fiscalYearMode
+    }
   }
 }
 

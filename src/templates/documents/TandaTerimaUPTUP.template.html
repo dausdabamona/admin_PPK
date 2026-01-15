@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tanda Terima Uang Persediaan - {{nomor_tanda_terima}}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2.5cm;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .no-print {
+        display: none;
+      }
+    }
+
+    body {
+      font-family: "Times New Roman", serif;
+      font-size: 12pt;
+      line-height: 1.6;
+      margin: 2.5cm;
+      color: #000;
+    }
+
+    /* KOP SURAT */
+    .kop {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .kop-logo {
+      height: 80px;
+      margin-bottom: 10px;
+    }
+
+    .kop-text {
+      font-weight: bold;
+      line-height: 1.3;
+    }
+
+    .kop-title {
+      font-size: 14pt;
+      text-transform: uppercase;
+    }
+
+    .kop-subtitle {
+      font-size: 12pt;
+    }
+
+    .kop-address {
+      font-size: 10pt;
+      font-weight: normal;
+      margin-top: 5px;
+    }
+
+    .kop-line {
+      border: none;
+      border-bottom: 3px solid #000;
+      margin: 10px 0 20px 0;
+    }
+
+    /* JUDUL DOKUMEN */
+    .document-title {
+      text-align: center;
+      margin: 30px 0 20px 0;
+    }
+
+    .document-title h1 {
+      font-size: 14pt;
+      font-weight: bold;
+      text-decoration: underline;
+      margin: 0 0 5px 0;
+      text-transform: uppercase;
+    }
+
+    .document-subtitle {
+      font-size: 12pt;
+      font-weight: bold;
+      margin: 5px 0;
+    }
+
+    .document-number {
+      font-size: 12pt;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    /* KONTEN */
+    .content {
+      margin-top: 30px;
+      text-align: justify;
+    }
+
+    .opening-text {
+      margin: 20px 0;
+    }
+
+    .identity-section {
+      margin: 20px 0 20px 40px;
+      line-height: 2;
+    }
+
+    .identity-row {
+      display: flex;
+      margin: 5px 0;
+    }
+
+    .identity-label {
+      width: 150px;
+      display: inline-block;
+    }
+
+    .identity-separator {
+      width: 20px;
+      display: inline-block;
+    }
+
+    .identity-value {
+      flex: 1;
+    }
+
+    .statement-text {
+      margin: 20px 0;
+    }
+
+    .from-section {
+      margin: 20px 0 20px 40px;
+      line-height: 2;
+    }
+
+    /* JUMLAH UANG BOX */
+    .amount-box {
+      margin: 30px auto;
+      max-width: 500px;
+      padding: 20px;
+      border: 3px double #000;
+      background-color: #f0f8ff;
+      text-align: center;
+    }
+
+    .amount-title {
+      font-weight: bold;
+      margin-bottom: 15px;
+      font-size: 13pt;
+    }
+
+    .amount-number {
+      font-size: 18pt;
+      font-weight: bold;
+      color: #006400;
+      margin: 10px 0;
+    }
+
+    .amount-words {
+      font-size: 11pt;
+      font-style: italic;
+      margin: 10px 0;
+      padding: 10px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    /* PURPOSE BOX */
+    .purpose-box {
+      margin: 30px 0;
+      padding: 15px;
+      border-left: 4px solid #0066cc;
+      background-color: #f0f8ff;
+    }
+
+    .purpose-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .purpose-type {
+      font-size: 13pt;
+      font-weight: bold;
+      color: #0066cc;
+      margin: 10px 0;
+      text-align: center;
+      padding: 10px;
+      background-color: #fff;
+      border: 2px solid #0066cc;
+    }
+
+    .purpose-detail {
+      margin: 10px 0;
+      text-indent: 30px;
+    }
+
+    .closing-text {
+      margin: 30px 0;
+    }
+
+    /* TANDA TANGAN - 2 PIHAK */
+    .signature-container {
+      margin-top: 60px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .signature-box {
+      width: 45%;
+      text-align: center;
+    }
+
+    .signature-title {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .signature-space {
+      height: 80px;
+    }
+
+    .signature-name {
+      font-weight: bold;
+      text-decoration: underline;
+      margin-top: 5px;
+    }
+
+    .signature-nip {
+      margin-top: 2px;
+    }
+
+    /* WATERMARK */
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 72pt;
+      font-weight: bold;
+      color: rgba(255, 0, 0, 0.15);
+      z-index: -1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .watermark-footer {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 8pt;
+      color: #999;
+      font-style: italic;
+    }
+
+    /* FOOTER NOTE */
+    .footer-note {
+      margin-top: 30px;
+      font-size: 10pt;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+<!-- WATERMARK (if reconstruction) -->
+{{#if isReconstruction}}
+<div class="watermark">REKONSTRUKSI ADMINISTRASI TA {{tahunAnggaran}}</div>
+<div class="watermark-footer">
+  Dokumen ini hasil rekonstruksi administrasi tanggal {{reconstructionDate}} - Bukan dokumen asli tahun berjalan
+</div>
+{{/if}}
+
+<!-- KOP SURAT -->
+<div class="kop">
+  {{#if logo_satker}}
+  <img src="{{logo_satker}}" alt="Logo KKP" class="kop-logo">
+  {{/if}}
+
+  <div class="kop-text">
+    <div class="kop-title">KEMENTERIAN KELAUTAN DAN PERIKANAN</div>
+    <div class="kop-subtitle">{{nama_unit_eselon1}}</div>
+    <div class="kop-subtitle">{{nama_satuan_kerja}}</div>
+    <div class="kop-address">
+      Alamat: {{alamat_satker}} Telp: {{telepon}} Email: {{email}}
+    </div>
+  </div>
+
+  <hr class="kop-line">
+</div>
+
+<!-- JUDUL DOKUMEN -->
+<div class="document-title">
+  <h1>TANDA TERIMA</h1>
+  <div class="document-subtitle">UANG PERSEDIAAN / TAMBAHAN UANG PERSEDIAAN</div>
+  <div class="document-number">Nomor: {{nomor_tanda_terima}}</div>
+</div>
+
+<!-- KONTEN -->
+<div class="content">
+  <!-- Pembukaan -->
+  <p class="opening-text">
+    Yang bertanda tangan di bawah ini:
+  </p>
+
+  <!-- Identitas Penerima -->
+  <div class="identity-section">
+    <div class="identity-row">
+      <span class="identity-label">Nama</span>
+      <span class="identity-separator">:</span>
+      <span class="identity-value">{{nama_penerima}}</span>
+    </div>
+    <div class="identity-row">
+      <span class="identity-label">NIP</span>
+      <span class="identity-separator">:</span>
+      <span class="identity-value">{{nip_penerima}}</span>
+    </div>
+    <div class="identity-row">
+      <span class="identity-label">Jabatan</span>
+      <span class="identity-separator">:</span>
+      <span class="identity-value">{{jabatan_penerima}}</span>
+    </div>
+    <div class="identity-row">
+      <span class="identity-label">Satuan Kerja</span>
+      <span class="identity-separator">:</span>
+      <span class="identity-value">{{nama_satker}}</span>
+    </div>
+  </div>
+
+  <!-- Pernyataan -->
+  <p class="statement-text">
+    menyatakan dengan sebenarnya telah menerima uang dari:
+  </p>
+
+  <!-- Identitas Pemberi -->
+  <div class="from-section">
+    <div class="identity-row">
+      <span class="identity-label">Nama</span>
+      <span class="identity-separator">:</span>
+      <span class="identity-value">{{nama_bendahara}}</span>
+    </div>
+    <div class="identity-row">
+      <span class="identity-label">NIP</span>
+      <span class="identity-separator">:</span>
+      <span class="identity-value">{{nip_bendahara}}</span>
+    </div>
+    <div class="identity-row">
+      <span class="identity-label">Jabatan</span>
+      <span class="identity-separator">:</span>
+      <span class="identity-value">Bendahara Pengeluaran / Bendahara Pengeluaran Pembantu*)</span>
+    </div>
+    <div class="identity-row">
+      <span class="identity-label">Satuan Kerja</span>
+      <span class="identity-separator">:</span>
+      <span class="identity-value">{{nama_satker}}</span>
+    </div>
+  </div>
+
+  <!-- Jumlah Uang -->
+  <div class="amount-box">
+    <div class="amount-title">sejumlah uang:</div>
+    <div class="amount-number">Rp {{jumlah_angka}}</div>
+    <div class="amount-words">( {{jumlah_terbilang}} )</div>
+  </div>
+
+  <!-- Keperluan/Tujuan -->
+  <div class="purpose-box">
+    <div class="purpose-title">Uang tersebut diterima sebagai:</div>
+
+    <div class="purpose-type">
+      {{jenis_uang}} *)
+    </div>
+
+    <div class="purpose-detail">
+      untuk keperluan: <strong>{{uraian_keperluan}}</strong>
+    </div>
+  </div>
+
+  <!-- Penutup -->
+  <p class="closing-text">
+    Demikian tanda terima ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya.
+  </p>
+</div>
+
+<!-- TANDA TANGAN - 2 PIHAK -->
+<div class="signature-container">
+  <!-- Bendahara (Kiri) -->
+  <div class="signature-box">
+    <div class="signature-title">Mengetahui,</div>
+    <div class="signature-title">Bendahara Pengeluaran</div>
+    <div class="signature-space"></div>
+    <div class="signature-name">{{nama_bendahara}}</div>
+    <div class="signature-nip">NIP. {{nip_bendahara}}</div>
+  </div>
+
+  <!-- Penerima (Kanan) -->
+  <div class="signature-box">
+    <div class="signature-title">{{kota}}, {{tanggal}}</div>
+    <div class="signature-title">Penerima,</div>
+    <div class="signature-space"></div>
+    <div class="signature-name">{{nama_penerima}}</div>
+    <div class="signature-nip">NIP. {{nip_penerima}}</div>
+  </div>
+</div>
+
+<!-- FOOTER NOTE -->
+<div class="footer-note">
+  Keterangan: *) Coret yang tidak perlu
+</div>
+
+</body>
+</html>

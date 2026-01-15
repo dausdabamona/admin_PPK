@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kuitansi Rampung Perjalanan Dinas - {{nama_pegawai}}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2.5cm;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .no-print {
+        display: none;
+      }
+    }
+
+    body {
+      font-family: "Times New Roman", serif;
+      font-size: 12pt;
+      line-height: 1.6;
+      margin: 2.5cm;
+      color: #000;
+    }
+
+    /* KOP SURAT */
+    .kop {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .kop-logo {
+      height: 80px;
+      margin-bottom: 10px;
+    }
+
+    .kop-text {
+      font-weight: bold;
+      line-height: 1.3;
+    }
+
+    .kop-title {
+      font-size: 14pt;
+      text-transform: uppercase;
+    }
+
+    .kop-subtitle {
+      font-size: 12pt;
+    }
+
+    .kop-address {
+      font-size: 10pt;
+      font-weight: normal;
+      margin-top: 5px;
+    }
+
+    .kop-line {
+      border: none;
+      border-bottom: 3px solid #000;
+      margin: 10px 0 20px 0;
+    }
+
+    /* JUDUL DOKUMEN */
+    .document-title {
+      text-align: center;
+      margin: 30px 0 20px 0;
+    }
+
+    .document-title h1 {
+      font-size: 14pt;
+      font-weight: bold;
+      text-decoration: underline;
+      margin: 0 0 10px 0;
+      text-transform: uppercase;
+    }
+
+    .document-subtitle {
+      font-size: 11pt;
+      font-weight: bold;
+      margin: 5px 0;
+    }
+
+    .document-number {
+      font-size: 12pt;
+      font-weight: bold;
+      margin: 5px 0;
+    }
+
+    /* KONTEN KUITANSI */
+    .content {
+      margin-top: 30px;
+    }
+
+    .receipt-section {
+      margin: 20px 0;
+      line-height: 2;
+    }
+
+    .receipt-row {
+      display: flex;
+      margin: 5px 0;
+    }
+
+    .receipt-label {
+      width: 180px;
+      display: inline-block;
+    }
+
+    .receipt-separator {
+      width: 20px;
+      display: inline-block;
+    }
+
+    .receipt-value {
+      flex: 1;
+      font-weight: bold;
+    }
+
+    /* AMOUNT HIGHLIGHT BOX */
+    .amount-box {
+      margin: 30px 0;
+      padding: 20px;
+      border: 3px double #000;
+      background-color: #fffacd;
+      text-align: center;
+    }
+
+    .amount-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 13pt;
+    }
+
+    .amount-number {
+      font-size: 18pt;
+      font-weight: bold;
+      color: #8b4513;
+      margin: 10px 0;
+    }
+
+    .amount-words {
+      font-size: 11pt;
+      font-style: italic;
+      margin: 10px 0;
+      padding: 10px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    /* SETTLEMENT CALCULATION BOX */
+    .settlement-box {
+      margin: 30px 0;
+      padding: 20px;
+      border: 2px solid #ff8c00;
+      background-color: #fff8dc;
+    }
+
+    .settlement-title {
+      font-weight: bold;
+      margin-bottom: 15px;
+      font-size: 13pt;
+      text-align: center;
+      color: #ff8c00;
+    }
+
+    .settlement-table {
+      width: 100%;
+      margin: 10px 0;
+    }
+
+    .settlement-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 8px 0;
+      padding: 5px;
+      border-bottom: 1px dotted #ddd;
+    }
+
+    .settlement-row.total {
+      font-weight: bold;
+      font-size: 14pt;
+      border-top: 2px solid #ff8c00;
+      border-bottom: 2px solid #ff8c00;
+      margin-top: 15px;
+      padding-top: 10px;
+      background-color: #fff;
+    }
+
+    .settlement-label {
+      font-weight: bold;
+    }
+
+    .settlement-value {
+      font-weight: bold;
+      text-align: right;
+    }
+
+    /* DETAIL PERJALANAN DINAS */
+    .travel-details {
+      margin: 30px 0;
+      padding: 15px;
+      border-left: 4px solid #0066cc;
+      background-color: #f0f8ff;
+    }
+
+    .travel-details-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 13pt;
+      color: #0066cc;
+    }
+
+    .travel-row {
+      display: flex;
+      margin: 5px 0;
+    }
+
+    .travel-label {
+      width: 150px;
+      display: inline-block;
+    }
+
+    .travel-separator {
+      width: 20px;
+      display: inline-block;
+    }
+
+    .travel-value {
+      flex: 1;
+    }
+
+    /* CLOSING TEXT */
+    .closing-text {
+      margin: 30px 0;
+      text-align: center;
+      font-style: italic;
+    }
+
+    /* TANDA TANGAN - 3 PIHAK */
+    .signature-container {
+      margin-top: 60px;
+    }
+
+    .signature-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 40px;
+    }
+
+    .signature-box {
+      width: 30%;
+      text-align: center;
+    }
+
+    .signature-title {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .materai-note {
+      margin: 10px 0;
+      font-size: 10pt;
+      color: #666;
+      font-style: italic;
+    }
+
+    .signature-space {
+      height: 80px;
+      border: 1px dashed #ccc;
+      margin: 10px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      font-size: 10pt;
+    }
+
+    .signature-name {
+      font-weight: bold;
+      text-decoration: underline;
+      margin-top: 5px;
+    }
+
+    .signature-nip {
+      margin-top: 2px;
+    }
+
+    /* WATERMARK */
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 72pt;
+      font-weight: bold;
+      color: rgba(255, 0, 0, 0.15);
+      z-index: -1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .watermark-footer {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 8pt;
+      color: #999;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+<!-- WATERMARK (if reconstruction) -->
+{{#if isReconstruction}}
+<div class="watermark">REKONSTRUKSI ADMINISTRASI TA {{tahunAnggaran}}</div>
+<div class="watermark-footer">
+  Dokumen ini hasil rekonstruksi administrasi tanggal {{reconstructionDate}} - Bukan dokumen asli tahun berjalan
+</div>
+{{/if}}
+
+<!-- KOP SURAT -->
+<div class="kop">
+  {{#if logo_satker}}
+  <img src="{{logo_satker}}" alt="Logo KKP" class="kop-logo">
+  {{/if}}
+
+  <div class="kop-text">
+    <div class="kop-title">KEMENTERIAN KELAUTAN DAN PERIKANAN</div>
+    <div class="kop-subtitle">{{nama_unit_eselon1}}</div>
+    <div class="kop-subtitle">{{nama_satuan_kerja}}</div>
+    <div class="kop-address">
+      Alamat: {{alamat_satker}} Telp: {{telepon}} Email: {{email}}
+    </div>
+  </div>
+
+  <hr class="kop-line">
+</div>
+
+<!-- JUDUL DOKUMEN -->
+<div class="document-title">
+  <h1>KUITANSI RAMPUNG PERJALANAN DINAS</h1>
+  <div class="document-subtitle">(Pelunasan Biaya Perjalanan Dinas)</div>
+  {{#if nomor_kuitansi}}
+  <div class="document-number">Nomor: {{nomor_kuitansi}}</div>
+  {{/if}}
+</div>
+
+<!-- KONTEN KUITANSI -->
+<div class="content">
+  <!-- Informasi Penerimaan -->
+  <div class="receipt-section">
+    <div class="receipt-row">
+      <span class="receipt-label">Sudah terima dari</span>
+      <span class="receipt-separator">:</span>
+      <span class="receipt-value">Bendahara Pengeluaran {{nama_satker}}</span>
+    </div>
+  </div>
+
+  <!-- Jumlah Uang Rampung -->
+  <div class="amount-box">
+    <div class="amount-title">Uang sejumlah:</div>
+    <div class="amount-number">Rp {{jumlah_rampung}}</div>
+    <div class="amount-words">( {{terbilang_rampung}} )</div>
+  </div>
+
+  <!-- Settlement Calculation -->
+  <div class="settlement-box">
+    <div class="settlement-title">Merupakan pelunasan atas biaya perjalanan dinas dengan rincian:</div>
+
+    <div class="settlement-table">
+      <div class="settlement-row">
+        <span class="settlement-label">Total Biaya Riil Perjalanan Dinas</span>
+        <span class="settlement-value">Rp {{total_biaya_riil}}</span>
+      </div>
+      <div class="settlement-row">
+        <span class="settlement-label">Uang Muka yang Telah Diterima</span>
+        <span class="settlement-value">( Rp {{uang_muka}} )</span>
+      </div>
+      <div class="settlement-row total">
+        <span class="settlement-label">Sisa yang Dibayarkan</span>
+        <span class="settlement-value">Rp {{jumlah_rampung}}</span>
+      </div>
+    </div>
+
+    {{#if isKelebihanUangMuka}}
+    <div style="margin-top: 15px; padding: 10px; background-color: #ffe4e1; border: 2px solid #dc143c; text-align: center;">
+      <strong>KELEBIHAN UANG MUKA:</strong> Rp {{kelebihan_uang_muka}}<br>
+      <em>(Disetor kembali ke Kas Negara)</em>
+    </div>
+    {{/if}}
+  </div>
+
+  <!-- Detail Perjalanan Dinas -->
+  <div class="travel-details">
+    <div class="travel-details-title">Data Perjalanan Dinas</div>
+
+    <div class="travel-row">
+      <span class="travel-label">Nama</span>
+      <span class="travel-separator">:</span>
+      <span class="travel-value">{{nama_pegawai}}</span>
+    </div>
+    <div class="travel-row">
+      <span class="travel-label">NIP</span>
+      <span class="travel-separator">:</span>
+      <span class="travel-value">{{nip_pegawai}}</span>
+    </div>
+    <div class="travel-row">
+      <span class="travel-label">Jabatan</span>
+      <span class="travel-separator">:</span>
+      <span class="travel-value">{{jabatan_pegawai}}</span>
+    </div>
+    <div class="travel-row">
+      <span class="travel-label">Tujuan</span>
+      <span class="travel-separator">:</span>
+      <span class="travel-value">{{tujuan}}</span>
+    </div>
+    <div class="travel-row">
+      <span class="travel-label">Tanggal</span>
+      <span class="travel-separator">:</span>
+      <span class="travel-value">{{tanggal_berangkat}} s.d. {{tanggal_kembali}}</span>
+    </div>
+    <div class="travel-row">
+      <span class="travel-label">Dasar</span>
+      <span class="travel-separator">:</span>
+      <span class="travel-value">Surat Tugas Nomor {{nomor_surat_tugas}} tanggal {{tanggal_surat_tugas}}</span>
+    </div>
+    <div class="travel-row">
+      <span class="travel-label">Akun</span>
+      <span class="travel-separator">:</span>
+      <span class="travel-value">{{kode_akun}}</span>
+    </div>
+  </div>
+
+  <!-- Penutup -->
+  <p class="closing-text">
+    Demikian kuitansi ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya.
+  </p>
+</div>
+
+<!-- TANDA TANGAN - 3 PIHAK -->
+<div class="signature-container">
+  <!-- Row 1: Penerima, PPK, Bendahara -->
+  <div class="signature-row">
+    <!-- Yang Menerima (Kiri) -->
+    <div class="signature-box">
+      <div class="signature-title">{{kota}}, {{tanggal}}</div>
+      <div class="signature-title">Yang Menerima,</div>
+      <div class="materai-note">Materai Rp 10.000</div>
+      <div class="signature-space">(tanda tangan)</div>
+      <div class="signature-name">{{nama_pegawai}}</div>
+      <div class="signature-nip">NIP. {{nip_pegawai}}</div>
+    </div>
+
+    <!-- PPK (Tengah) -->
+    <div class="signature-box">
+      <div class="signature-title">Mengetahui,</div>
+      <div class="signature-title">Pejabat Pembuat Komitmen</div>
+      <div class="signature-space">(tanda tangan)</div>
+      <div class="signature-name">{{nama_ppk}}</div>
+      <div class="signature-nip">NIP. {{nip_ppk}}</div>
+    </div>
+
+    <!-- Bendahara (Kanan) -->
+    <div class="signature-box">
+      <div class="signature-title">Bendahara Pengeluaran</div>
+      <div class="signature-space">(tanda tangan)</div>
+      <div class="signature-name">{{nama_bendahara}}</div>
+      <div class="signature-nip">NIP. {{nip_bendahara}}</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Surat Perintah Pendebitan Rekening - {{nomor_sppr}}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2.5cm;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .no-print {
+        display: none;
+      }
+    }
+
+    body {
+      font-family: "Times New Roman", serif;
+      font-size: 12pt;
+      line-height: 1.5;
+      margin: 2.5cm;
+      color: #000;
+    }
+
+    /* KOP SURAT */
+    .kop {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .kop-logo {
+      height: 80px;
+      margin-bottom: 10px;
+    }
+
+    .kop-text {
+      font-weight: bold;
+      line-height: 1.3;
+    }
+
+    .kop-title {
+      font-size: 14pt;
+      text-transform: uppercase;
+    }
+
+    .kop-subtitle {
+      font-size: 12pt;
+    }
+
+    .kop-address {
+      font-size: 10pt;
+      font-weight: normal;
+      margin-top: 5px;
+    }
+
+    .kop-line {
+      border: none;
+      border-bottom: 3px solid #000;
+      margin: 10px 0 20px 0;
+    }
+
+    /* JUDUL SURAT */
+    .document-title {
+      text-align: center;
+      margin: 30px 0 20px 0;
+    }
+
+    .document-title h1 {
+      font-size: 14pt;
+      font-weight: bold;
+      text-decoration: underline;
+      margin: 0 0 10px 0;
+      text-transform: uppercase;
+    }
+
+    .document-number {
+      font-size: 12pt;
+      font-weight: bold;
+      margin: 5px 0;
+    }
+
+    /* KONTEN SURAT */
+    .content {
+      margin-top: 30px;
+      text-align: justify;
+    }
+
+    .identity-section {
+      margin: 20px 0;
+      line-height: 2;
+    }
+
+    .identity-row {
+      display: flex;
+      margin: 5px 0;
+    }
+
+    .identity-label {
+      width: 150px;
+      display: inline-block;
+    }
+
+    .identity-separator {
+      width: 20px;
+      display: inline-block;
+    }
+
+    .identity-value {
+      flex: 1;
+    }
+
+    .instruction-text {
+      margin: 20px 0;
+      text-indent: 50px;
+    }
+
+    .details-section {
+      margin: 20px 0 20px 40px;
+      line-height: 2;
+    }
+
+    .detail-row {
+      display: flex;
+      margin: 5px 0;
+    }
+
+    .detail-label {
+      width: 180px;
+      display: inline-block;
+    }
+
+    .detail-separator {
+      width: 20px;
+      display: inline-block;
+    }
+
+    .detail-value {
+      flex: 1;
+      font-weight: bold;
+    }
+
+    .closing-text {
+      margin: 30px 0;
+      text-indent: 50px;
+    }
+
+    /* TANDA TANGAN */
+    .signature-container {
+      margin-top: 50px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .signature-left {
+      width: 45%;
+      text-align: center;
+    }
+
+    .signature-right {
+      width: 45%;
+      text-align: center;
+    }
+
+    .signature-title {
+      margin-bottom: 5px;
+    }
+
+    .signature-space {
+      height: 80px;
+    }
+
+    .signature-name {
+      font-weight: bold;
+      text-decoration: underline;
+      margin-top: 5px;
+    }
+
+    .signature-nip {
+      margin-top: 2px;
+    }
+
+    /* WATERMARK */
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 72pt;
+      font-weight: bold;
+      color: rgba(255, 0, 0, 0.15);
+      z-index: -1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .watermark-footer {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 8pt;
+      color: #999;
+      font-style: italic;
+    }
+
+    /* FOOTER NOTE */
+    .footer-note {
+      margin-top: 40px;
+      font-size: 10pt;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+<!-- WATERMARK (if reconstruction) -->
+{{#if isReconstruction}}
+<div class="watermark">REKONSTRUKSI ADMINISTRASI TA {{tahunAnggaran}}</div>
+<div class="watermark-footer">
+  Dokumen ini hasil rekonstruksi administrasi tanggal {{reconstructionDate}} - Bukan dokumen asli tahun berjalan
+</div>
+{{/if}}
+
+<!-- KOP SURAT -->
+<div class="kop">
+  {{#if logo_satker}}
+  <img src="{{logo_satker}}" alt="Logo KKP" class="kop-logo">
+  {{/if}}
+
+  <div class="kop-text">
+    <div class="kop-title">KEMENTERIAN KELAUTAN DAN PERIKANAN</div>
+    <div class="kop-subtitle">{{nama_unit_eselon1}}</div>
+    <div class="kop-subtitle">{{nama_satuan_kerja}}</div>
+    <div class="kop-address">
+      Alamat: {{alamat_satker}} Telp: {{telepon}} Email: {{email}}
+    </div>
+  </div>
+
+  <hr class="kop-line">
+</div>
+
+<!-- JUDUL SURAT -->
+<div class="document-title">
+  <h1>SURAT PERINTAH PENDEBITAN REKENING</h1>
+  <div class="document-number">Nomor: {{nomor_sppr}}</div>
+</div>
+
+<!-- KONTEN SURAT -->
+<div class="content">
+  <!-- Identitas Pejabat -->
+  <p>Yang bertanda tangan di bawah ini:</p>
+
+  <div class="identity-section">
+    <div class="identity-row">
+      <span class="identity-label">Nama</span>
+      <span class="identity-separator">:</span>
+      <span class="identity-value">{{nama_ppk}}</span>
+    </div>
+    <div class="identity-row">
+      <span class="identity-label">NIP</span>
+      <span class="identity-separator">:</span>
+      <span class="identity-value">{{nip_ppk}}</span>
+    </div>
+    <div class="identity-row">
+      <span class="identity-label">Jabatan</span>
+      <span class="identity-separator">:</span>
+      <span class="identity-value">{{jabatan_ppk}}</span>
+    </div>
+    <div class="identity-row">
+      <span class="identity-label">Satuan Kerja</span>
+      <span class="identity-separator">:</span>
+      <span class="identity-value">{{nama_satker}}</span>
+    </div>
+  </div>
+
+  <!-- Perintah -->
+  <p class="instruction-text">
+    dengan ini memerintahkan kepada Bendahara Pengeluaran/Bendahara Pengeluaran Pembantu*)
+    untuk melakukan pendebitan rekening menggunakan Kartu Debit Pemerintah/transfer bank*)
+    dengan rincian sebagai berikut:
+  </p>
+
+  <!-- Rincian Pendebitan -->
+  <div class="details-section">
+    <div class="detail-row">
+      <span class="detail-label">Nama Bank</span>
+      <span class="detail-separator">:</span>
+      <span class="detail-value">{{nama_bank}}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Cabang</span>
+      <span class="detail-separator">:</span>
+      <span class="detail-value">{{cabang_bank}}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Nomor Rekening</span>
+      <span class="detail-separator">:</span>
+      <span class="detail-value">{{nomor_rekening}}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Atas Nama</span>
+      <span class="detail-separator">:</span>
+      <span class="detail-value">{{nama_rekening}}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Jumlah</span>
+      <span class="detail-separator">:</span>
+      <span class="detail-value">Rp {{jumlah_angka}} ({{jumlah_terbilang}})</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Dasar Pembayaran</span>
+      <span class="detail-separator">:</span>
+      <span class="detail-value">Surat Perintah Bayar (SPBy) Nomor {{nomor_spby}} tanggal {{tanggal_spby}}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Keperluan</span>
+      <span class="detail-separator">:</span>
+      <span class="detail-value">{{uraian_keperluan}}</span>
+    </div>
+  </div>
+
+  <!-- Waktu Pelaksanaan -->
+  <p style="margin: 20px 0 20px 40px;">
+    Pendebitan agar dilaksanakan pada:
+  </p>
+
+  <div style="margin: 10px 0 20px 40px;">
+    <div class="detail-row">
+      <span class="detail-label">Hari/Tanggal</span>
+      <span class="detail-separator">:</span>
+      <span class="detail-value">{{hari_tanggal_pelaksanaan}}</span>
+    </div>
+  </div>
+
+  <!-- Penutup -->
+  <p class="closing-text">
+    Demikian Surat Perintah Pendebitan Rekening ini dibuat untuk dipergunakan sebagaimana mestinya.
+  </p>
+</div>
+
+<!-- TANDA TANGAN -->
+<div class="signature-container">
+  <!-- Bendahara (Kiri) -->
+  <div class="signature-left">
+    <div class="signature-title">Mengetahui,</div>
+    <div class="signature-title">Bendahara Pengeluaran</div>
+    <div class="signature-space"></div>
+    <div class="signature-name">{{nama_bendahara}}</div>
+    <div class="signature-nip">NIP. {{nip_bendahara}}</div>
+  </div>
+
+  <!-- PPK (Kanan) -->
+  <div class="signature-right">
+    <div class="signature-title">{{kota}}, {{tanggal_surat}}</div>
+    <div class="signature-title">Pejabat Pembuat Komitmen</div>
+    <div class="signature-space"></div>
+    <div class="signature-name">{{nama_ppk}}</div>
+    <div class="signature-nip">NIP. {{nip_ppk}}</div>
+  </div>
+</div>
+
+<!-- FOOTER NOTE -->
+<div class="footer-note">
+  Keterangan: *) Coret yang tidak perlu
+</div>
+
+</body>
+</html>
