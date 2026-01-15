@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rincian Biaya Perjalanan Dinas - {{nama_pegawai}}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2.5cm;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .no-print {
+        display: none;
+      }
+    }
+
+    body {
+      font-family: "Times New Roman", serif;
+      font-size: 12pt;
+      line-height: 1.6;
+      margin: 2.5cm;
+      color: #000;
+    }
+
+    /* KOP SURAT */
+    .kop {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .kop-logo {
+      height: 80px;
+      margin-bottom: 10px;
+    }
+
+    .kop-text {
+      font-weight: bold;
+      line-height: 1.3;
+    }
+
+    .kop-title {
+      font-size: 14pt;
+      text-transform: uppercase;
+    }
+
+    .kop-subtitle {
+      font-size: 12pt;
+    }
+
+    .kop-address {
+      font-size: 10pt;
+      font-weight: normal;
+      margin-top: 5px;
+    }
+
+    .kop-line {
+      border: none;
+      border-bottom: 3px solid #000;
+      margin: 10px 0 20px 0;
+    }
+
+    /* JUDUL DOKUMEN */
+    .document-title {
+      text-align: center;
+      margin: 30px 0 20px 0;
+    }
+
+    .document-title h1 {
+      font-size: 14pt;
+      font-weight: bold;
+      text-decoration: underline;
+      margin: 0 0 10px 0;
+      text-transform: uppercase;
+    }
+
+    /* DETAIL HEADER */
+    .header-details {
+      margin: 30px 0;
+      padding: 15px;
+      border: 2px solid #0066cc;
+      background-color: #f0f8ff;
+    }
+
+    .header-row {
+      display: flex;
+      margin: 5px 0;
+    }
+
+    .header-label {
+      width: 150px;
+      display: inline-block;
+      font-weight: bold;
+    }
+
+    .header-separator {
+      width: 20px;
+      display: inline-block;
+    }
+
+    .header-value {
+      flex: 1;
+    }
+
+    /* TABEL RINCIAN BIAYA */
+    .expense-table-container {
+      margin: 30px 0;
+    }
+
+    .expense-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11pt;
+    }
+
+    .expense-table th,
+    .expense-table td {
+      border: 1px solid #000;
+      padding: 8px 6px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .expense-table th {
+      background-color: #e0e0e0;
+      font-weight: bold;
+    }
+
+    .expense-table .col-no {
+      width: 40px;
+    }
+
+    .expense-table .col-uraian {
+      width: 180px;
+      text-align: left;
+      padding-left: 10px;
+    }
+
+    .expense-table .col-satuan {
+      width: 80px;
+    }
+
+    .expense-table .col-jumlah {
+      width: 60px;
+    }
+
+    .expense-table .col-tarif {
+      width: 100px;
+      text-align: right;
+      padding-right: 10px;
+    }
+
+    .expense-table .col-total {
+      width: 120px;
+      text-align: right;
+      padding-right: 10px;
+      font-weight: bold;
+    }
+
+    .expense-table .row-subtotal {
+      background-color: #f0f0f0;
+      font-weight: bold;
+    }
+
+    .expense-table .row-total {
+      background-color: #e8e8e8;
+      font-weight: bold;
+      font-size: 12pt;
+    }
+
+    .expense-table .amount {
+      text-align: right;
+      padding-right: 10px;
+    }
+
+    /* GRAND TOTAL BOX */
+    .grand-total-box {
+      margin: 30px 0;
+      padding: 20px;
+      border: 3px double #000;
+      background-color: #fffacd;
+      text-align: center;
+    }
+
+    .grand-total-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 13pt;
+    }
+
+    .grand-total-number {
+      font-size: 18pt;
+      font-weight: bold;
+      color: #8b4513;
+      margin: 10px 0;
+    }
+
+    .grand-total-words {
+      font-size: 11pt;
+      font-style: italic;
+      margin: 10px 0;
+      padding: 10px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    /* TANDA TANGAN - 2 PIHAK */
+    .signature-container {
+      margin-top: 60px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .signature-box {
+      width: 45%;
+      text-align: center;
+    }
+
+    .signature-title {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .signature-space {
+      height: 80px;
+      border: 1px dashed #ccc;
+      margin: 10px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      font-size: 10pt;
+    }
+
+    .signature-name {
+      font-weight: bold;
+      text-decoration: underline;
+      margin-top: 5px;
+    }
+
+    .signature-nip {
+      margin-top: 2px;
+    }
+
+    /* WATERMARK */
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 72pt;
+      font-weight: bold;
+      color: rgba(255, 0, 0, 0.15);
+      z-index: -1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .watermark-footer {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 8pt;
+      color: #999;
+      font-style: italic;
+    }
+
+    /* FOOTER NOTE */
+    .footer-note {
+      margin-top: 30px;
+      font-size: 10pt;
+      font-style: italic;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- WATERMARK (if reconstruction) -->
+{{#if isReconstruction}}
+<div class="watermark">REKONSTRUKSI ADMINISTRASI TA {{tahunAnggaran}}</div>
+<div class="watermark-footer">
+  Dokumen ini hasil rekonstruksi administrasi tanggal {{reconstructionDate}} - Bukan dokumen asli tahun berjalan
+</div>
+{{/if}}
+
+<!-- KOP SURAT -->
+<div class="kop">
+  {{#if logo_satker}}
+  <img src="{{logo_satker}}" alt="Logo KKP" class="kop-logo">
+  {{/if}}
+
+  <div class="kop-text">
+    <div class="kop-title">KEMENTERIAN KELAUTAN DAN PERIKANAN</div>
+    <div class="kop-subtitle">{{nama_unit_eselon1}}</div>
+    <div class="kop-subtitle">{{nama_satuan_kerja}}</div>
+    <div class="kop-address">
+      Alamat: {{alamat_satker}} Telp: {{telepon}} Email: {{email}}
+    </div>
+  </div>
+
+  <hr class="kop-line">
+</div>
+
+<!-- JUDUL DOKUMEN -->
+<div class="document-title">
+  <h1>RINCIAN BIAYA PERJALANAN DINAS</h1>
+</div>
+
+<!-- HEADER DETAILS -->
+<div class="header-details">
+  <div class="header-row">
+    <span class="header-label">Nama</span>
+    <span class="header-separator">:</span>
+    <span class="header-value">{{nama_pegawai}}</span>
+  </div>
+  <div class="header-row">
+    <span class="header-label">NIP</span>
+    <span class="header-separator">:</span>
+    <span class="header-value">{{nip_pegawai}}</span>
+  </div>
+  <div class="header-row">
+    <span class="header-label">Jabatan</span>
+    <span class="header-separator">:</span>
+    <span class="header-value">{{jabatan_pegawai}}</span>
+  </div>
+  <div class="header-row">
+    <span class="header-label">Tujuan</span>
+    <span class="header-separator">:</span>
+    <span class="header-value">{{tujuan}}</span>
+  </div>
+  <div class="header-row">
+    <span class="header-label">Tanggal</span>
+    <span class="header-separator">:</span>
+    <span class="header-value">{{tanggal_berangkat}} s.d. {{tanggal_kembali}}</span>
+  </div>
+  <div class="header-row">
+    <span class="header-label">Dasar</span>
+    <span class="header-separator">:</span>
+    <span class="header-value">Surat Tugas Nomor {{nomor_surat_tugas}} tanggal {{tanggal_surat_tugas}}</span>
+  </div>
+</div>
+
+<!-- TABEL RINCIAN BIAYA -->
+<div class="expense-table-container">
+  <table class="expense-table">
+    <thead>
+      <tr>
+        <th class="col-no">No</th>
+        <th class="col-uraian">Uraian Biaya</th>
+        <th class="col-satuan">Satuan</th>
+        <th class="col-jumlah">Jumlah</th>
+        <th class="col-tarif">Tarif (Rp)</th>
+        <th class="col-total">Total (Rp)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Uang Harian -->
+      <tr>
+        <td class="col-no">1</td>
+        <td class="col-uraian">Uang Harian</td>
+        <td class="col-satuan">{{satuan_harian}} hari</td>
+        <td class="col-jumlah">{{jumlah_harian}}</td>
+        <td class="col-tarif amount">{{formatCurrency tarif_harian}}</td>
+        <td class="col-total amount">{{formatCurrency total_harian}}</td>
+      </tr>
+
+      <!-- Transport Berangkat -->
+      <tr>
+        <td class="col-no">2</td>
+        <td class="col-uraian">Transport Berangkat</td>
+        <td class="col-satuan">1 kali</td>
+        <td class="col-jumlah">1</td>
+        <td class="col-tarif amount">{{formatCurrency tarif_transport_berangkat}}</td>
+        <td class="col-total amount">{{formatCurrency total_transport_berangkat}}</td>
+      </tr>
+
+      <!-- Transport Kembali -->
+      <tr>
+        <td class="col-no">3</td>
+        <td class="col-uraian">Transport Kembali</td>
+        <td class="col-satuan">1 kali</td>
+        <td class="col-jumlah">1</td>
+        <td class="col-tarif amount">{{formatCurrency tarif_transport_kembali}}</td>
+        <td class="col-total amount">{{formatCurrency total_transport_kembali}}</td>
+      </tr>
+
+      <!-- Penginapan -->
+      {{#if jumlah_malam}}
+      <tr>
+        <td class="col-no">4</td>
+        <td class="col-uraian">Penginapan</td>
+        <td class="col-satuan">{{jumlah_malam}} malam</td>
+        <td class="col-jumlah">{{jumlah_malam}}</td>
+        <td class="col-tarif amount">{{formatCurrency tarif_penginapan}}</td>
+        <td class="col-total amount">{{formatCurrency total_penginapan}}</td>
+      </tr>
+      {{/if}}
+
+      <!-- Biaya Lain-lain -->
+      {{#if has_biaya_lain}}
+      <tr>
+        <td class="col-no">{{nomor_biaya_lain}}</td>
+        <td class="col-uraian">Biaya Lain-lain{{#if uraian_biaya_lain}} ({{uraian_biaya_lain}}){{/if}}</td>
+        <td class="col-satuan">-</td>
+        <td class="col-jumlah">-</td>
+        <td class="col-tarif amount">{{formatCurrency tarif_biaya_lain}}</td>
+        <td class="col-total amount">{{formatCurrency total_biaya_lain}}</td>
+      </tr>
+      {{/if}}
+
+      <!-- Custom Items (loop) -->
+      {{#each custom_items}}
+      <tr>
+        <td class="col-no">{{increment @index}}</td>
+        <td class="col-uraian">{{this.uraian}}</td>
+        <td class="col-satuan">{{this.satuan}}</td>
+        <td class="col-jumlah">{{this.jumlah}}</td>
+        <td class="col-tarif amount">{{formatCurrency this.tarif}}</td>
+        <td class="col-total amount">{{formatCurrency this.total}}</td>
+      </tr>
+      {{/each}}
+
+      <!-- Row Total -->
+      <tr class="row-total">
+        <td colspan="5" style="text-align: center;"><strong>JUMLAH KESELURUHAN</strong></td>
+        <td class="amount">{{formatCurrency grand_total}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- GRAND TOTAL BOX -->
+<div class="grand-total-box">
+  <div class="grand-total-title">Total Biaya Perjalanan Dinas:</div>
+  <div class="grand-total-number">Rp {{grand_total}}</div>
+  <div class="grand-total-words">( {{terbilang_grand_total}} )</div>
+</div>
+
+<!-- TANDA TANGAN - 2 PIHAK -->
+<div class="signature-container">
+  <!-- Mengetahui, PPK (Kiri) -->
+  <div class="signature-box">
+    <div class="signature-title">Mengetahui,</div>
+    <div class="signature-title">Pejabat Pembuat Komitmen</div>
+    <div class="signature-space">(tanda tangan)</div>
+    <div class="signature-name">{{nama_ppk}}</div>
+    <div class="signature-nip">NIP. {{nip_ppk}}</div>
+  </div>
+
+  <!-- Yang Melakukan Perjalanan Dinas (Kanan) -->
+  <div class="signature-box">
+    <div class="signature-title">{{kota}}, {{tanggal}}</div>
+    <div class="signature-title">Yang Melakukan Perjalanan Dinas</div>
+    <div class="signature-space">(tanda tangan)</div>
+    <div class="signature-name">{{nama_pegawai}}</div>
+    <div class="signature-nip">NIP. {{nip_pegawai}}</div>
+  </div>
+</div>
+
+<!-- FOOTER NOTE -->
+<div class="footer-note">
+  Catatan: Rincian biaya ini dilampirkan dengan bukti-bukti pengeluaran yang sah
+</div>
+
+</body>
+</html>

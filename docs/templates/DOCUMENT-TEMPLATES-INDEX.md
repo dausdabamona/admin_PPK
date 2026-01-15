@@ -120,6 +120,118 @@ Semua template:
 
 ---
 
+### 6. Kuitansi Uang Muka Perjalanan Dinas ⭐ NEW
+
+**File**: `src/templates/documents/KuitansiUangMukaPerdin.template.html`
+
+**Purpose**: Kuitansi tanda terima uang muka untuk biaya perjalanan dinas pegawai.
+
+**Key Fields**:
+- `nama_pegawai`, `nip_pegawai`, `jabatan_pegawai` - Data pegawai
+- `tujuan` - Tujuan perjalanan dinas
+- `tanggal_berangkat`, `tanggal_kembali` - Periode perjalanan
+- `nomor_surat_tugas`, `tanggal_surat_tugas` - Dasar perjalanan
+- `jumlah_uang_muka`, `terbilang_uang_muka` - Nilai uang muka
+- `kode_akun` - Kode akun belanja
+- `nama_ppk`, `nip_ppk` - Data PPK
+- `nama_bendahara`, `nip_bendahara` - Data Bendahara
+
+**Tanda Tangan**:
+- Yang Menerima / Pegawai (kiri) - **dengan Materai Rp 10.000**
+- PPK (tengah)
+- Bendahara Pengeluaran (kanan)
+
+**Special Features**:
+- Materai requirement indicator
+- Travel details box dengan border biru
+- Amount highlighting dengan background hijau
+
+**Generator**: `KuitansiPerdinGenerator.js` (planned)
+
+---
+
+### 7. Kuitansi Rampung Perjalanan Dinas ⭐ NEW
+
+**File**: `src/templates/documents/KuitansiRampungPerdin.template.html`
+
+**Purpose**: Kuitansi pelunasan (rampung) biaya perjalanan dinas setelah perjalanan selesai.
+
+**Key Fields**:
+- Semua field dari Kuitansi Uang Muka
+- `jumlah_rampung`, `terbilang_rampung` - Nilai pelunasan
+- `total_biaya_riil` - Total biaya riil yang dikeluarkan
+- `uang_muka` - Uang muka yang telah diterima
+- `isKelebihanUangMuka` - Flag jika ada kelebihan (harus disetor)
+- `kelebihan_uang_muka` - Jumlah kelebihan (jika ada)
+
+**Tanda Tangan**:
+- Yang Menerima / Pegawai (kiri) - **dengan Materai Rp 10.000**
+- PPK (tengah)
+- Bendahara Pengeluaran (kanan)
+
+**Special Features**:
+- Settlement calculation box dengan rincian:
+  - Total Biaya Riil
+  - Uang Muka yang Diterima
+  - **Sisa yang Dibayarkan** (bisa positif atau negatif)
+- Warning box jika kelebihan uang muka (harus disetor ke kas negara)
+- Amount highlighting dengan background kuning
+
+**Calculation Logic**:
+```
+Sisa Dibayar = Total Biaya Riil - Uang Muka
+```
+- Jika positif: pegawai terima tambahan
+- Jika negatif: pegawai setor kembali
+
+**Generator**: `KuitansiPerdinGenerator.js` (planned)
+
+---
+
+### 8. Rincian Biaya Perjalanan Dinas ⭐ NEW
+
+**File**: `src/templates/documents/RincianBiayaPerdin.template.html`
+
+**Purpose**: Rincian breakdown biaya perjalanan dinas dengan tabel detail per item pengeluaran.
+
+**Key Fields**:
+- `nama_pegawai`, `nip_pegawai`, `jabatan_pegawai` - Data pegawai
+- `tujuan`, `tanggal_berangkat`, `tanggal_kembali` - Data perjalanan
+- `nomor_surat_tugas`, `tanggal_surat_tugas` - Dasar perjalanan
+- Rincian biaya (standard items):
+  - `satuan_harian`, `jumlah_harian`, `tarif_harian`, `total_harian` - Uang harian
+  - `tarif_transport_berangkat`, `total_transport_berangkat` - Transport berangkat
+  - `tarif_transport_kembali`, `total_transport_kembali` - Transport kembali
+  - `jumlah_malam`, `tarif_penginapan`, `total_penginapan` - Penginapan (optional)
+  - `has_biaya_lain`, `uraian_biaya_lain`, `tarif_biaya_lain`, `total_biaya_lain` - Biaya lain-lain
+- `custom_items` - Array untuk item custom tambahan
+- `grand_total`, `terbilang_grand_total` - Total keseluruhan
+- `nama_ppk`, `nip_ppk` - Data PPK
+
+**Tanda Tangan**:
+- PPK (kiri)
+- Yang Melakukan Perjalanan Dinas / Pegawai (kanan)
+
+**Table Structure**:
+| No | Uraian Biaya | Satuan | Jumlah | Tarif (Rp) | Total (Rp) |
+|----|--------------|--------|--------|------------|------------|
+| 1  | Uang Harian  | X hari | X      | X          | X          |
+| 2  | Transport Berangkat | 1 kali | 1 | X | X |
+| 3  | Transport Kembali | 1 kali | 1 | X | X |
+| 4  | Penginapan | X malam | X | X | X |
+| 5  | Biaya Lain-lain | - | - | X | X |
+| ** | **JUMLAH KESELURUHAN** | | | | **TOTAL** |
+
+**Special Features**:
+- Dynamic table dengan support custom items
+- Grand total box dengan amount highlighting (background kuning)
+- Right-aligned currency formatting
+- Footer note untuk lampiran bukti pengeluaran
+
+**Generator**: `KuitansiPerdinGenerator.js` (planned)
+
+---
+
 ## 🚀 Template Usage
 
 ### Basic Generation
@@ -324,22 +436,31 @@ if (fiscalYearContext.isReconstructionMode()) {
 src/
 ├── templates/
 │   └── documents/
-│       ├── SPR.template.html
-│       ├── SPPR.template.html
-│       ├── BeritaAcaraPembayaran.template.html
-│       ├── SPJPackageCover.template.html
-│       ├── SPJPackagePengesahan.template.html
-│       ├── PPHP.template.html (planned)
-│       ├── BAST.template.html (planned)
-│       └── Kuitansi.template.html (planned)
+│       ├── index.js ✅ (Template Registry)
+│       ├── SPR.template.html ✅
+│       ├── SPPR.template.html ✅
+│       ├── BeritaAcaraPembayaran.template.html ✅
+│       ├── PPHP.template.html ✅
+│       ├── BAST.template.html ✅
+│       ├── TandaTerimaUPTUP.template.html ✅
+│       ├── RPD.template.html ✅
+│       ├── KuitansiUangMukaPerdin.template.html ✅ NEW
+│       ├── KuitansiRampungPerdin.template.html ✅ NEW
+│       ├── RincianBiayaPerdin.template.html ✅ NEW
+│       ├── SPJPackageCover.template.html ✅
+│       ├── SPJPackagePengesahan.template.html ✅
+│       ├── SPTJB.template.html (planned)
+│       ├── DaftarIsi.template.html (planned - auto-generated)
+│       └── Kronologi.template.html (planned - auto-generated)
 ├── services/
 │   └── generators/
-│       ├── SPRGenerator.js
+│       ├── SPRGenerator.js ✅
 │       ├── SPPRGenerator.js (planned)
 │       ├── BeritaAcaraGenerator.js (planned)
+│       ├── KuitansiPerdinGenerator.js (planned)
 │       └── SPJPackageGenerator.js (planned)
 └── hooks/
-    └── useFiscalYear.js (FASE 4.5 integration)
+    └── useFiscalYear.js ✅ (FASE 4.5 integration)
 ```
 
 ---
@@ -385,30 +506,34 @@ describe('SPR Template', () => {
 
 ## ✅ Template Completion Status
 
-### Implemented ✅ (9 templates)
+### Implemented ✅ (12 templates)
 - [x] SPR (Surat Pendebitan Rekening)
 - [x] SPPR (Surat Perintah Pendebitan Rekening)
 - [x] Berita Acara Pembayaran
-- [x] PPHP (Pemeriksaan Hasil Pekerjaan) ⭐ NEW
-- [x] BAST (Berita Acara Serah Terima) ⭐ NEW
-- [x] Tanda Terima UP/TUP ⭐ NEW
-- [x] RPD (Rencana Penarikan Dana) Bulanan ⭐ NEW
+- [x] PPHP (Pemeriksaan Hasil Pekerjaan)
+- [x] BAST (Berita Acara Serah Terima)
+- [x] Tanda Terima UP/TUP
+- [x] RPD (Rencana Penarikan Dana) Bulanan
+- [x] Kuitansi Uang Muka Perjalanan Dinas ⭐ NEW
+- [x] Kuitansi Rampung Perjalanan Dinas ⭐ NEW
+- [x] Rincian Biaya Perjalanan Dinas ⭐ NEW
 - [x] SPJ Package Cover
 - [x] SPJ Package Lembar Pengesahan
 
 ### In Progress 🚧
-- [ ] Template Registry System (index.js) ⭐ NEW - Implemented but needs documentation
+- [x] Template Registry System (index.js) ✅ COMPLETE
 
-### Planned 📋 (5 templates)
-- [ ] Kuitansi
-- [ ] SPBy (Surat Perintah Bayar)
+### Planned 📋 (2 templates - excluding SAKTI documents)
 - [ ] SPTJB (Surat Pernyataan Tanggung Jawab Belanja)
-- [ ] SSP (Bukti Setor Pajak)
 - [ ] Daftar Isi Otomatis (auto-generated)
 - [ ] Kronologi Administratif (auto-generated)
 
+### Excluded ❌ (already in SAKTI)
+- ~~SPBy (Surat Perintah Bayar)~~ - Already in SAKTI
+- ~~SSP (Bukti Setor Pajak)~~ - Already in SAKTI
+
 ---
 
-**Last Updated**: January 2024
+**Last Updated**: January 2026
 **Author**: Admin PPK Development Team
-**Version**: 1.0.0
+**Version**: 1.1.0 - Added Perjalanan Dinas Templates

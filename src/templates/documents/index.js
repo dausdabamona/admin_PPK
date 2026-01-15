@@ -13,11 +13,14 @@
  * - BAST (Berita Acara Serah Terima)
  * - Tanda Terima UP/TUP
  * - RPD Bulanan (Rencana Penarikan Dana)
+ * - Kuitansi Uang Muka Perjalanan Dinas
+ * - Kuitansi Rampung Perjalanan Dinas
+ * - Rincian Biaya Perjalanan Dinas
  * - SPJ Package Cover
  * - SPJ Package Lembar Pengesahan
  *
  * @author Admin PPK Development Team
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import * as path from 'path'
@@ -37,6 +40,9 @@ export const TEMPLATE_PATHS = {
   BAST: path.resolve(__dirname, 'BAST.template.html'),
   TANDA_TERIMA_UPTUP: path.resolve(__dirname, 'TandaTerimaUPTUP.template.html'),
   RPD: path.resolve(__dirname, 'RPD.template.html'),
+  KUITANSI_UM_PERDIN: path.resolve(__dirname, 'KuitansiUangMukaPerdin.template.html'),
+  KUITANSI_RAMPUNG_PERDIN: path.resolve(__dirname, 'KuitansiRampungPerdin.template.html'),
+  RINCIAN_BIAYA_PERDIN: path.resolve(__dirname, 'RincianBiayaPerdin.template.html'),
   SPJ_COVER: path.resolve(__dirname, 'SPJPackageCover.template.html'),
   SPJ_PENGESAHAN: path.resolve(__dirname, 'SPJPackagePengesahan.template.html')
 }
@@ -218,6 +224,82 @@ export const TEMPLATE_METADATA = {
       'nip_bendahara'
     ],
     signatures: ['PPK', 'KPA', 'Bendahara']
+  },
+
+  KUITANSI_UM_PERDIN: {
+    name: 'Kuitansi Uang Muka Perjalanan Dinas',
+    code: 'KUITANSI_UM_PERDIN',
+    category: 'PERJALANAN_DINAS',
+    description: 'Kuitansi uang muka biaya perjalanan dinas',
+    requiredFields: [
+      'nama_pegawai',
+      'nip_pegawai',
+      'jabatan_pegawai',
+      'tujuan',
+      'tanggal_berangkat',
+      'tanggal_kembali',
+      'nomor_surat_tugas',
+      'tanggal_surat_tugas',
+      'jumlah_uang_muka',
+      'terbilang_uang_muka',
+      'kode_akun',
+      'nama_ppk',
+      'nip_ppk',
+      'nama_bendahara',
+      'nip_bendahara'
+    ],
+    signatures: ['Penerima', 'PPK', 'Bendahara'],
+    materai: true
+  },
+
+  KUITANSI_RAMPUNG_PERDIN: {
+    name: 'Kuitansi Rampung Perjalanan Dinas',
+    code: 'KUITANSI_RAMPUNG_PERDIN',
+    category: 'PERJALANAN_DINAS',
+    description: 'Kuitansi pelunasan biaya perjalanan dinas (rampung)',
+    requiredFields: [
+      'nama_pegawai',
+      'nip_pegawai',
+      'jabatan_pegawai',
+      'tujuan',
+      'tanggal_berangkat',
+      'tanggal_kembali',
+      'nomor_surat_tugas',
+      'tanggal_surat_tugas',
+      'jumlah_rampung',
+      'terbilang_rampung',
+      'total_biaya_riil',
+      'uang_muka',
+      'kode_akun',
+      'nama_ppk',
+      'nip_ppk',
+      'nama_bendahara',
+      'nip_bendahara'
+    ],
+    signatures: ['Penerima', 'PPK', 'Bendahara'],
+    materai: true
+  },
+
+  RINCIAN_BIAYA_PERDIN: {
+    name: 'Rincian Biaya Perjalanan Dinas',
+    code: 'RINCIAN_BIAYA_PERDIN',
+    category: 'PERJALANAN_DINAS',
+    description: 'Rincian biaya perjalanan dinas dengan breakdown per item',
+    requiredFields: [
+      'nama_pegawai',
+      'nip_pegawai',
+      'jabatan_pegawai',
+      'tujuan',
+      'tanggal_berangkat',
+      'tanggal_kembali',
+      'nomor_surat_tugas',
+      'tanggal_surat_tugas',
+      'grand_total',
+      'terbilang_grand_total',
+      'nama_ppk',
+      'nip_ppk'
+    ],
+    signatures: ['PPK', 'Pegawai']
   }
 }
 
@@ -270,11 +352,12 @@ export function getTemplatesByCategory(category) {
  * Template categories
  */
 export const TEMPLATE_CATEGORIES = {
-  PAYMENT: 'PAYMENT',           // SPR, SPPR
-  BERITA_ACARA: 'BERITA_ACARA', // BA Pembayaran, PPHP, BAST
-  RECEIPT: 'RECEIPT',           // Tanda Terima
-  PLANNING: 'PLANNING',         // RPD
-  SPJ_PACKAGE: 'SPJ_PACKAGE'    // Cover, Pengesahan
+  PAYMENT: 'PAYMENT',                 // SPR, SPPR
+  BERITA_ACARA: 'BERITA_ACARA',       // BA Pembayaran, PPHP, BAST
+  RECEIPT: 'RECEIPT',                 // Tanda Terima UP/TUP
+  PLANNING: 'PLANNING',               // RPD
+  PERJALANAN_DINAS: 'PERJALANAN_DINAS', // Kuitansi UM, Kuitansi Rampung, Rincian Biaya
+  SPJ_PACKAGE: 'SPJ_PACKAGE'          // Cover, Pengesahan
 }
 
 export default {
