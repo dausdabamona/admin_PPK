@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Berita Acara Pembayaran - {{nomor_ba_pembayaran}}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2.5cm;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .no-print {
+        display: none;
+      }
+    }
+
+    body {
+      font-family: "Times New Roman", serif;
+      font-size: 12pt;
+      line-height: 1.6;
+      margin: 2.5cm;
+      color: #000;
+    }
+
+    /* KOP SURAT */
+    .kop {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .kop-logo {
+      height: 80px;
+      margin-bottom: 10px;
+    }
+
+    .kop-text {
+      font-weight: bold;
+      line-height: 1.3;
+    }
+
+    .kop-title {
+      font-size: 14pt;
+      text-transform: uppercase;
+    }
+
+    .kop-subtitle {
+      font-size: 12pt;
+    }
+
+    .kop-address {
+      font-size: 10pt;
+      font-weight: normal;
+      margin-top: 5px;
+    }
+
+    .kop-line {
+      border: none;
+      border-bottom: 3px solid #000;
+      margin: 10px 0 20px 0;
+    }
+
+    /* JUDUL DOKUMEN */
+    .document-title {
+      text-align: center;
+      margin: 30px 0 20px 0;
+    }
+
+    .document-title h1 {
+      font-size: 14pt;
+      font-weight: bold;
+      text-decoration: underline;
+      margin: 0 0 10px 0;
+      text-transform: uppercase;
+    }
+
+    .document-number {
+      font-size: 12pt;
+      font-weight: bold;
+      margin: 5px 0;
+    }
+
+    /* KONTEN */
+    .content {
+      margin-top: 30px;
+      text-align: justify;
+    }
+
+    .opening-text {
+      margin: 20px 0;
+      text-indent: 50px;
+    }
+
+    .parties-section {
+      margin: 20px 0 20px 40px;
+    }
+
+    .party {
+      margin: 15px 0;
+    }
+
+    .party-row {
+      display: flex;
+      margin: 5px 0;
+    }
+
+    .party-label {
+      width: 120px;
+      display: inline-block;
+    }
+
+    .party-separator {
+      width: 20px;
+      display: inline-block;
+    }
+
+    .party-value {
+      flex: 1;
+    }
+
+    .statement-text {
+      margin: 20px 0;
+      text-indent: 50px;
+    }
+
+    .details-section {
+      margin: 20px 0 20px 40px;
+      line-height: 2;
+    }
+
+    .detail-row {
+      display: flex;
+      margin: 5px 0;
+    }
+
+    .detail-label {
+      width: 180px;
+      display: inline-block;
+    }
+
+    .detail-separator {
+      width: 20px;
+      display: inline-block;
+    }
+
+    .detail-value {
+      flex: 1;
+      font-weight: bold;
+    }
+
+    .mechanism-text {
+      margin: 20px 0 20px 40px;
+    }
+
+    .confirmation-text {
+      margin: 30px 0;
+      text-indent: 50px;
+    }
+
+    .closing-text {
+      margin: 30px 0;
+      text-indent: 50px;
+    }
+
+    /* TANDA TANGAN - 3 PIHAK */
+    .signature-container {
+      margin-top: 60px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .signature-box {
+      width: 45%;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .signature-full {
+      width: 100%;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .signature-title {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .signature-space {
+      height: 80px;
+    }
+
+    .signature-name {
+      font-weight: bold;
+      text-decoration: underline;
+      margin-top: 5px;
+    }
+
+    .signature-nip {
+      margin-top: 2px;
+    }
+
+    .signature-position {
+      margin-top: 2px;
+    }
+
+    /* WATERMARK */
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 72pt;
+      font-weight: bold;
+      color: rgba(255, 0, 0, 0.15);
+      z-index: -1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .watermark-footer {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 8pt;
+      color: #999;
+      font-style: italic;
+    }
+
+    /* FOOTER NOTE */
+    .footer-note {
+      margin-top: 30px;
+      font-size: 10pt;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+<!-- WATERMARK (if reconstruction) -->
+{{#if isReconstruction}}
+<div class="watermark">REKONSTRUKSI ADMINISTRASI TA {{tahunAnggaran}}</div>
+<div class="watermark-footer">
+  Dokumen ini hasil rekonstruksi administrasi tanggal {{reconstructionDate}} - Bukan dokumen asli tahun berjalan
+</div>
+{{/if}}
+
+<!-- KOP SURAT -->
+<div class="kop">
+  {{#if logo_satker}}
+  <img src="{{logo_satker}}" alt="Logo KKP" class="kop-logo">
+  {{/if}}
+
+  <div class="kop-text">
+    <div class="kop-title">KEMENTERIAN KELAUTAN DAN PERIKANAN</div>
+    <div class="kop-subtitle">{{nama_unit_eselon1}}</div>
+    <div class="kop-subtitle">{{nama_satuan_kerja}}</div>
+    <div class="kop-address">
+      Alamat: {{alamat_satker}} Telp: {{telepon}} Email: {{email}}
+    </div>
+  </div>
+
+  <hr class="kop-line">
+</div>
+
+<!-- JUDUL DOKUMEN -->
+<div class="document-title">
+  <h1>BERITA ACARA PEMBAYARAN</h1>
+  <div class="document-number">Nomor: {{nomor_ba_pembayaran}}</div>
+</div>
+
+<!-- KONTEN -->
+<div class="content">
+  <!-- Pembukaan -->
+  <p class="opening-text">
+    Pada hari ini {{hari}}, tanggal {{tanggal}}, bertempat di {{kota}},
+    kami yang bertanda tangan di bawah ini:
+  </p>
+
+  <!-- Para Pihak -->
+  <div class="parties-section">
+    <!-- Pihak Pertama -->
+    <div class="party">
+      <strong>1. PIHAK PERTAMA:</strong>
+      <div style="margin-left: 20px; margin-top: 10px;">
+        <div class="party-row">
+          <span class="party-label">Nama</span>
+          <span class="party-separator">:</span>
+          <span class="party-value">{{nama_ppk}}</span>
+        </div>
+        <div class="party-row">
+          <span class="party-label">NIP</span>
+          <span class="party-separator">:</span>
+          <span class="party-value">{{nip_ppk}}</span>
+        </div>
+        <div class="party-row">
+          <span class="party-label">Jabatan</span>
+          <span class="party-separator">:</span>
+          <span class="party-value">Pejabat Pembuat Komitmen</span>
+        </div>
+        <div class="party-row">
+          <span class="party-label">Satuan Kerja</span>
+          <span class="party-separator">:</span>
+          <span class="party-value">{{nama_satker}}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pihak Kedua -->
+    <div class="party">
+      <strong>2. PIHAK KEDUA:</strong>
+      <div style="margin-left: 20px; margin-top: 10px;">
+        <div class="party-row">
+          <span class="party-label">Nama</span>
+          <span class="party-separator">:</span>
+          <span class="party-value">{{nama_penyedia}}</span>
+        </div>
+        <div class="party-row">
+          <span class="party-label">Jabatan</span>
+          <span class="party-separator">:</span>
+          <span class="party-value">{{jabatan_penyedia}}</span>
+        </div>
+        <div class="party-row">
+          <span class="party-label">Alamat</span>
+          <span class="party-separator">:</span>
+          <span class="party-value">{{alamat_penyedia}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pernyataan -->
+  <p class="statement-text">
+    menyatakan bahwa telah dilakukan pembayaran atas kegiatan:
+  </p>
+
+  <!-- Rincian Kegiatan -->
+  <div class="details-section">
+    <div class="detail-row">
+      <span class="detail-label">Nama Kegiatan</span>
+      <span class="detail-separator">:</span>
+      <span class="detail-value">{{nama_kegiatan}}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Nomor Kontrak</span>
+      <span class="detail-separator">:</span>
+      <span class="detail-value">{{nomor_kontrak}}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Tanggal Kontrak</span>
+      <span class="detail-separator">:</span>
+      <span class="detail-value">{{tanggal_kontrak}}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Nilai Kontrak</span>
+      <span class="detail-separator">:</span>
+      <span class="detail-value">Rp {{nilai_kontrak}} ({{nilai_kontrak_terbilang}})</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Nilai Dibayar</span>
+      <span class="detail-separator">:</span>
+      <span class="detail-value">Rp {{nilai_dibayar}} ({{nilai_dibayar_terbilang}})</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Termin</span>
+      <span class="detail-separator">:</span>
+      <span class="detail-value">{{termin_pembayaran}}</span>
+    </div>
+  </div>
+
+  <!-- Mekanisme -->
+  <p class="mechanism-text">
+    Pembayaran tersebut telah dilaksanakan melalui mekanisme:
+    <strong>UP / TUP / LS / Swakelola / Perjalanan Dinas*)</strong>
+    sesuai dengan ketentuan yang berlaku.
+  </p>
+
+  <!-- Konfirmasi -->
+  <p class="confirmation-text">
+    Dengan ditandatanganinya Berita Acara Pembayaran ini, pihak penerima menyatakan bahwa
+    pembayaran telah diterima dengan benar dan tidak ada tuntutan di kemudian hari
+    sehubungan dengan pembayaran tersebut.
+  </p>
+
+  <!-- Penutup -->
+  <p class="closing-text">
+    Demikian Berita Acara Pembayaran ini dibuat dengan sebenarnya untuk dipergunakan
+    sebagaimana mestinya.
+  </p>
+</div>
+
+<!-- TANDA TANGAN - 3 PIHAK -->
+<div class="signature-container">
+  <!-- Pihak Kedua (Kiri) -->
+  <div class="signature-box">
+    <div class="signature-title">{{kota}}, {{tanggal}}</div>
+    <div class="signature-title">PIHAK KEDUA,</div>
+    <div class="signature-title">Penerima Pembayaran</div>
+    <div class="signature-space"></div>
+    <div class="signature-name">{{nama_penyedia}}</div>
+    <div class="signature-position">{{jabatan_penyedia}}</div>
+  </div>
+
+  <!-- Pihak Pertama (Kanan) -->
+  <div class="signature-box">
+    <div class="signature-title">{{kota}}, {{tanggal}}</div>
+    <div class="signature-title">PIHAK PERTAMA,</div>
+    <div class="signature-title">Pejabat Pembuat Komitmen</div>
+    <div class="signature-space"></div>
+    <div class="signature-name">{{nama_ppk}}</div>
+    <div class="signature-nip">NIP. {{nip_ppk}}</div>
+  </div>
+
+  <!-- Bendahara (Tengah Bawah) -->
+  <div class="signature-full">
+    <div class="signature-title">Mengetahui,</div>
+    <div class="signature-title">Bendahara Pengeluaran</div>
+    <div class="signature-space"></div>
+    <div class="signature-name">{{nama_bendahara}}</div>
+    <div class="signature-nip">NIP. {{nip_bendahara}}</div>
+  </div>
+</div>
+
+<!-- FOOTER NOTE -->
+<div class="footer-note">
+  Keterangan: *) Coret yang tidak perlu
+</div>
+
+</body>
+</html>

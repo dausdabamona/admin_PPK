@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lembar Pengesahan Paket SPJ - {{nama_kegiatan}} TA {{tahun_anggaran}}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2.5cm;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    }
+
+    body {
+      font-family: "Times New Roman", serif;
+      font-size: 12pt;
+      line-height: 1.6;
+      margin: 2.5cm;
+      color: #000;
+    }
+
+    /* KOP SURAT */
+    .kop {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .kop-logo {
+      height: 80px;
+      margin-bottom: 10px;
+    }
+
+    .kop-text {
+      font-weight: bold;
+      line-height: 1.3;
+    }
+
+    .kop-title {
+      font-size: 14pt;
+      text-transform: uppercase;
+    }
+
+    .kop-subtitle {
+      font-size: 12pt;
+    }
+
+    .kop-address {
+      font-size: 10pt;
+      font-weight: normal;
+      margin-top: 5px;
+    }
+
+    .kop-line {
+      border: none;
+      border-bottom: 3px solid #000;
+      margin: 10px 0 20px 0;
+    }
+
+    /* JUDUL */
+    .document-title {
+      text-align: center;
+      margin: 30px 0;
+    }
+
+    .document-title h1 {
+      font-size: 14pt;
+      font-weight: bold;
+      text-decoration: underline;
+      margin: 0 0 10px 0;
+      text-transform: uppercase;
+    }
+
+    .document-subtitle {
+      font-size: 12pt;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    /* DETAIL PAKET */
+    .package-details {
+      margin: 30px auto;
+      max-width: 600px;
+    }
+
+    .detail-row {
+      display: flex;
+      margin: 10px 0;
+    }
+
+    .detail-label {
+      width: 180px;
+      font-weight: bold;
+      display: inline-block;
+    }
+
+    .detail-separator {
+      width: 20px;
+      display: inline-block;
+    }
+
+    .detail-value {
+      flex: 1;
+    }
+
+    /* PERNYATAAN */
+    .statement-box {
+      margin: 40px 0;
+      padding: 20px;
+      border: 2px solid #000;
+      background-color: #f9f9f9;
+      text-align: justify;
+    }
+
+    .statement-text {
+      line-height: 1.8;
+      text-indent: 50px;
+    }
+
+    /* TANDA TANGAN - 3 PEJABAT */
+    .signature-container {
+      margin-top: 60px;
+    }
+
+    .signature-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 40px;
+    }
+
+    .signature-box {
+      width: 45%;
+      text-align: center;
+    }
+
+    .signature-full {
+      width: 100%;
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    .signature-title {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .signature-space {
+      height: 80px;
+    }
+
+    .signature-name {
+      font-weight: bold;
+      text-decoration: underline;
+      margin-top: 5px;
+    }
+
+    .signature-nip {
+      margin-top: 2px;
+    }
+
+    /* WATERMARK */
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 72pt;
+      font-weight: bold;
+      color: rgba(255, 0, 0, 0.15);
+      z-index: -1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .watermark-footer {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 8pt;
+      color: #999;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+<!-- WATERMARK (if reconstruction) -->
+{{#if isReconstruction}}
+<div class="watermark">REKONSTRUKSI ADMINISTRASI TA {{tahunAnggaran}}</div>
+<div class="watermark-footer">
+  Dokumen ini hasil rekonstruksi administrasi tanggal {{reconstructionDate}} - Bukan dokumen asli tahun berjalan
+</div>
+{{/if}}
+
+<!-- KOP SURAT -->
+<div class="kop">
+  {{#if logo_satker}}
+  <img src="{{logo_satker}}" alt="Logo KKP" class="kop-logo">
+  {{/if}}
+
+  <div class="kop-text">
+    <div class="kop-title">KEMENTERIAN KELAUTAN DAN PERIKANAN</div>
+    <div class="kop-subtitle">{{nama_unit_eselon1}}</div>
+    <div class="kop-subtitle">{{nama_satuan_kerja}}</div>
+    <div class="kop-address">
+      Alamat: {{alamat_satker}} Telp: {{telepon}} Email: {{email}}
+    </div>
+  </div>
+
+  <hr class="kop-line">
+</div>
+
+<!-- JUDUL -->
+<div class="document-title">
+  <h1>LEMBAR PENGESAHAN</h1>
+  <div class="document-subtitle">PAKET PERTANGGUNGJAWABAN KEUANGAN</div>
+  <div class="document-subtitle">TAHUN ANGGARAN {{tahun_anggaran}}</div>
+</div>
+
+<!-- DETAIL PAKET -->
+<div class="package-details">
+  <div class="detail-row">
+    <span class="detail-label">Kegiatan</span>
+    <span class="detail-separator">:</span>
+    <span class="detail-value">{{nama_kegiatan}}</span>
+  </div>
+
+  <div class="detail-row">
+    <span class="detail-label">Satuan Kerja</span>
+    <span class="detail-separator">:</span>
+    <span class="detail-value">{{nama_satker}}</span>
+  </div>
+
+  <div class="detail-row">
+    <span class="detail-label">Jenis Pembayaran</span>
+    <span class="detail-separator">:</span>
+    <span class="detail-value">{{jenis_pembayaran}}</span>
+  </div>
+
+  <div class="detail-row">
+    <span class="detail-label">Nilai</span>
+    <span class="detail-separator">:</span>
+    <span class="detail-value">
+      <strong>Rp {{nilai_total}}</strong>
+      <div style="font-size: 10pt; margin-top: 3px;">({{nilai_terbilang}})</div>
+    </span>
+  </div>
+</div>
+
+<!-- PERNYATAAN -->
+<div class="statement-box">
+  <p class="statement-text">
+    Dengan ini menyatakan bahwa seluruh dokumen dalam Paket Pertanggungjawaban Keuangan ini
+    telah diperiksa kebenaran administrasi dan keuangannya, serta dipertanggungjawabkan
+    sesuai ketentuan peraturan perundang-undangan.
+  </p>
+
+  <p class="statement-text">
+    Dokumen yang terlampir telah lengkap dan akurat, siap untuk diproses lebih lanjut
+    dan/atau diaudit oleh pihak yang berwenang.
+  </p>
+</div>
+
+<!-- TANDA TANGAN -->
+<div class="signature-container">
+  <!-- Row 1: PPK dan KPA -->
+  <div class="signature-row">
+    <!-- PPK (Kiri) -->
+    <div class="signature-box">
+      <div class="signature-title">{{kota}}, {{tanggal}}</div>
+      <div class="signature-title">Pejabat Pembuat Komitmen</div>
+      <div class="signature-space"></div>
+      <div class="signature-name">{{nama_ppk}}</div>
+      <div class="signature-nip">NIP. {{nip_ppk}}</div>
+    </div>
+
+    <!-- KPA (Kanan) -->
+    <div class="signature-box">
+      <div class="signature-title">{{kota}}, {{tanggal}}</div>
+      <div class="signature-title">Mengetahui,</div>
+      <div class="signature-title">Kuasa Pengguna Anggaran</div>
+      <div class="signature-space"></div>
+      <div class="signature-name">{{nama_kpa}}</div>
+      <div class="signature-nip">NIP. {{nip_kpa}}</div>
+    </div>
+  </div>
+
+  <!-- Row 2: Bendahara (Tengah) -->
+  <div class="signature-full">
+    <div class="signature-title">Mengetahui,</div>
+    <div class="signature-title">Bendahara Pengeluaran</div>
+    <div class="signature-space"></div>
+    <div class="signature-name">{{nama_bendahara}}</div>
+    <div class="signature-nip">NIP. {{nip_bendahara}}</div>
+  </div>
+</div>
+
+</body>
+</html>
