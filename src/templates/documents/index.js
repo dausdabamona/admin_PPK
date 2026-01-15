@@ -16,11 +16,14 @@
  * - Kuitansi Uang Muka Perjalanan Dinas
  * - Kuitansi Rampung Perjalanan Dinas
  * - Rincian Biaya Perjalanan Dinas
+ * - Daftar Nominatif Swakelola (Multi-Supplier)
+ * - Rekapitulasi Pajak Swakelola (Tax Summary)
+ * - Kuitansi Swakelola (Per Supplier)
  * - SPJ Package Cover
  * - SPJ Package Lembar Pengesahan
  *
  * @author Admin PPK Development Team
- * @version 1.1.0
+ * @version 1.3.0
  */
 
 import * as path from 'path'
@@ -43,6 +46,9 @@ export const TEMPLATE_PATHS = {
   KUITANSI_UM_PERDIN: path.resolve(__dirname, 'KuitansiUangMukaPerdin.template.html'),
   KUITANSI_RAMPUNG_PERDIN: path.resolve(__dirname, 'KuitansiRampungPerdin.template.html'),
   RINCIAN_BIAYA_PERDIN: path.resolve(__dirname, 'RincianBiayaPerdin.template.html'),
+  DAFTAR_NOMINATIF_SWAKELOLA: path.resolve(__dirname, 'DaftarNominatifSwakelola.template.html'),
+  REKAP_PAJAK_SWAKELOLA: path.resolve(__dirname, 'RekapitulasiPajakSwakelola.template.html'),
+  KUITANSI_SWAKELOLA: path.resolve(__dirname, 'KuitansiSwakelola.template.html'),
   SPJ_COVER: path.resolve(__dirname, 'SPJPackageCover.template.html'),
   SPJ_PENGESAHAN: path.resolve(__dirname, 'SPJPackagePengesahan.template.html')
 }
@@ -300,6 +306,72 @@ export const TEMPLATE_METADATA = {
       'nip_ppk'
     ],
     signatures: ['PPK', 'Pegawai']
+  },
+
+  DAFTAR_NOMINATIF_SWAKELOLA: {
+    name: 'Daftar Nominatif Pembayaran Swakelola',
+    code: 'DAFTAR_NOMINATIF_SWAKELOLA',
+    category: 'SWAKELOLA',
+    description: 'Daftar pembayaran multi-supplier swakelola dengan perhitungan pajak',
+    requiredFields: [
+      'nama_kegiatan',
+      'kode_kegiatan',
+      'nama_satker',
+      'bulan_pembayaran',
+      'suppliers', // Array of suppliers
+      'nama_ppk',
+      'nip_ppk',
+      'nama_bendahara',
+      'nip_bendahara'
+    ],
+    signatures: ['PPK', 'Bendahara'],
+    multiSupplier: true,
+    taxCalculation: true
+  },
+
+  REKAP_PAJAK_SWAKELOLA: {
+    name: 'Rekapitulasi Pajak Swakelola',
+    code: 'REKAP_PAJAK_SWAKELOLA',
+    category: 'SWAKELOLA',
+    description: 'Rekapitulasi pajak pembayaran swakelola (PPh & PPN)',
+    requiredFields: [
+      'nama_kegiatan',
+      'kode_kegiatan',
+      'nama_satker',
+      'bulan_pembayaran',
+      'nama_ppk',
+      'nip_ppk',
+      'nama_bendahara',
+      'nip_bendahara',
+      'nama_verifikator',
+      'nip_verifikator'
+    ],
+    signatures: ['Verifikator', 'PPK', 'Bendahara'],
+    taxSummary: true
+  },
+
+  KUITANSI_SWAKELOLA: {
+    name: 'Kuitansi Pembayaran Swakelola',
+    code: 'KUITANSI_SWAKELOLA',
+    category: 'SWAKELOLA',
+    description: 'Kuitansi individual per supplier untuk pembayaran swakelola',
+    requiredFields: [
+      'nama_kegiatan',
+      'kode_kegiatan',
+      'nama_satker',
+      'bulan_pembayaran',
+      'nama_penyedia',
+      'uraian',
+      'nilai_bruto',
+      'nilai_netto',
+      'nama_ppk',
+      'nip_ppk',
+      'nama_bendahara',
+      'nip_bendahara'
+    ],
+    signatures: ['Penerima/Supplier', 'PPK', 'Bendahara'],
+    materai: true,
+    perSupplier: true
   }
 }
 
@@ -357,6 +429,7 @@ export const TEMPLATE_CATEGORIES = {
   RECEIPT: 'RECEIPT',                 // Tanda Terima UP/TUP
   PLANNING: 'PLANNING',               // RPD
   PERJALANAN_DINAS: 'PERJALANAN_DINAS', // Kuitansi UM, Kuitansi Rampung, Rincian Biaya
+  SWAKELOLA: 'SWAKELOLA',             // Daftar Nominatif, Rekap Pajak (Multi-Supplier)
   SPJ_PACKAGE: 'SPJ_PACKAGE'          // Cover, Pengesahan
 }
 

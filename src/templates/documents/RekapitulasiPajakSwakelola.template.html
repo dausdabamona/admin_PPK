@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rekapitulasi Pajak Swakelola - {{nama_kegiatan}}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2.5cm;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .no-print {
+        display: none;
+      }
+    }
+
+    body {
+      font-family: "Times New Roman", serif;
+      font-size: 12pt;
+      line-height: 1.6;
+      margin: 2.5cm;
+      color: #000;
+    }
+
+    /* KOP SURAT */
+    .kop {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .kop-logo {
+      height: 80px;
+      margin-bottom: 10px;
+    }
+
+    .kop-text {
+      font-weight: bold;
+      line-height: 1.3;
+    }
+
+    .kop-title {
+      font-size: 14pt;
+      text-transform: uppercase;
+    }
+
+    .kop-subtitle {
+      font-size: 12pt;
+    }
+
+    .kop-line {
+      border: none;
+      border-bottom: 3px solid #000;
+      margin: 10px 0 20px 0;
+    }
+
+    /* JUDUL DOKUMEN */
+    .document-title {
+      text-align: center;
+      margin: 30px 0 20px 0;
+    }
+
+    .document-title h1 {
+      font-size: 14pt;
+      font-weight: bold;
+      text-decoration: underline;
+      margin: 0 0 10px 0;
+      text-transform: uppercase;
+    }
+
+    .document-subtitle {
+      font-size: 11pt;
+      margin: 5px 0;
+    }
+
+    /* DETAIL KEGIATAN */
+    .kegiatan-detail {
+      margin: 25px 0;
+      padding: 15px;
+      border: 2px solid #0066cc;
+      background-color: #f0f8ff;
+    }
+
+    .detail-row {
+      display: flex;
+      margin: 5px 0;
+    }
+
+    .detail-label {
+      width: 200px;
+      font-weight: bold;
+    }
+
+    .detail-separator {
+      width: 20px;
+    }
+
+    .detail-value {
+      flex: 1;
+    }
+
+    /* TABEL REKAP PPH */
+    .rekap-section {
+      margin: 30px 0;
+    }
+
+    .rekap-section-title {
+      font-weight: bold;
+      font-size: 13pt;
+      margin-bottom: 15px;
+      padding: 8px;
+      background-color: #d0d0d0;
+      border-left: 5px solid #0066cc;
+    }
+
+    .rekap-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-size: 11pt;
+    }
+
+    .rekap-table th,
+    .rekap-table td {
+      border: 1px solid #000;
+      padding: 8px 6px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .rekap-table th {
+      background-color: #e0e0e0;
+      font-weight: bold;
+    }
+
+    .rekap-table .col-no {
+      width: 50px;
+    }
+
+    .rekap-table .col-jenis {
+      width: 120px;
+    }
+
+    .rekap-table .col-tarif {
+      width: 80px;
+    }
+
+    .rekap-table .col-bruto {
+      text-align: right;
+      padding-right: 10px;
+    }
+
+    .rekap-table .col-pajak {
+      text-align: right;
+      padding-right: 10px;
+      font-weight: bold;
+    }
+
+    .rekap-table .row-subtotal {
+      background-color: #f0f0f0;
+      font-weight: bold;
+    }
+
+    .rekap-table .row-total {
+      background-color: #e8e8e8;
+      font-weight: bold;
+      font-size: 12pt;
+    }
+
+    /* GRAND TOTAL BOX */
+    .grand-total-box {
+      margin: 30px auto;
+      max-width: 600px;
+      padding: 20px;
+      border: 3px double #000;
+      background-color: #fffacd;
+      text-align: center;
+    }
+
+    .grand-total-title {
+      font-weight: bold;
+      margin-bottom: 15px;
+      font-size: 13pt;
+      text-transform: uppercase;
+    }
+
+    .grand-total-breakdown {
+      text-align: left;
+      margin: 15px 0;
+      padding: 15px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+    }
+
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 8px 0;
+      padding: 5px;
+      border-bottom: 1px dotted #999;
+    }
+
+    .breakdown-row.total {
+      font-weight: bold;
+      font-size: 14pt;
+      border-top: 2px solid #000;
+      border-bottom: 2px solid #000;
+      margin-top: 15px;
+      padding-top: 10px;
+    }
+
+    .breakdown-label {
+      font-weight: bold;
+    }
+
+    .breakdown-value {
+      text-align: right;
+    }
+
+    /* TANDA TANGAN - 3 PIHAK */
+    .signature-container {
+      margin-top: 50px;
+    }
+
+    .signature-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+    }
+
+    .signature-box {
+      width: 30%;
+      text-align: center;
+    }
+
+    .signature-title {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .signature-space {
+      height: 80px;
+      border: 1px dashed #ccc;
+      margin: 10px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      font-size: 10pt;
+    }
+
+    .signature-name {
+      font-weight: bold;
+      text-decoration: underline;
+      margin-top: 5px;
+    }
+
+    .signature-nip {
+      margin-top: 2px;
+    }
+
+    /* WATERMARK */
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 72pt;
+      font-weight: bold;
+      color: rgba(255, 0, 0, 0.15);
+      z-index: -1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .watermark-footer {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 8pt;
+      color: #999;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+<!-- WATERMARK (if reconstruction) -->
+{{#if isReconstruction}}
+<div class="watermark">REKONSTRUKSI ADMINISTRASI TA {{tahunAnggaran}}</div>
+<div class="watermark-footer">
+  Dokumen ini hasil rekonstruksi administrasi tanggal {{reconstructionDate}} - Bukan dokumen asli tahun berjalan
+</div>
+{{/if}}
+
+<!-- KOP SURAT -->
+<div class="kop">
+  {{#if logo_satker}}
+  <img src="{{logo_satker}}" alt="Logo KKP" class="kop-logo">
+  {{/if}}
+
+  <div class="kop-text">
+    <div class="kop-title">KEMENTERIAN KELAUTAN DAN PERIKANAN</div>
+    <div class="kop-subtitle">{{nama_unit_eselon1}}</div>
+    <div class="kop-subtitle">{{nama_satuan_kerja}}</div>
+  </div>
+
+  <hr class="kop-line">
+</div>
+
+<!-- JUDUL DOKUMEN -->
+<div class="document-title">
+  <h1>REKAPITULASI PAJAK PEMBAYARAN SWAKELOLA</h1>
+  <div class="document-subtitle">TAHUN ANGGARAN {{tahun_anggaran}}</div>
+</div>
+
+<!-- DETAIL KEGIATAN -->
+<div class="kegiatan-detail">
+  <div class="detail-row">
+    <span class="detail-label">Nama Kegiatan</span>
+    <span class="detail-separator">:</span>
+    <span class="detail-value">{{nama_kegiatan}}</span>
+  </div>
+  <div class="detail-row">
+    <span class="detail-label">Kode Kegiatan</span>
+    <span class="detail-separator">:</span>
+    <span class="detail-value">{{kode_kegiatan}}</span>
+  </div>
+  <div class="detail-row">
+    <span class="detail-label">Satuan Kerja</span>
+    <span class="detail-separator">:</span>
+    <span class="detail-value">{{nama_satker}}</span>
+  </div>
+  <div class="detail-row">
+    <span class="detail-label">Bulan Pembayaran</span>
+    <span class="detail-separator">:</span>
+    <span class="detail-value">{{bulan_pembayaran}}</span>
+  </div>
+</div>
+
+<!-- REKAP PPH -->
+<div class="rekap-section">
+  <div class="rekap-section-title">A. PAJAK PENGHASILAN (PPh)</div>
+
+  <table class="rekap-table">
+    <thead>
+      <tr>
+        <th class="col-no">No</th>
+        <th class="col-jenis">Jenis PPh</th>
+        <th class="col-tarif">Tarif</th>
+        <th>Jumlah Transaksi</th>
+        <th>Nilai Bruto (Rp)</th>
+        <th>Total PPh (Rp)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#if pph21}}
+      <tr>
+        <td>1</td>
+        <td>PPh Pasal 21</td>
+        <td>{{pph21.tarif}}%</td>
+        <td>{{pph21.jumlah_transaksi}}</td>
+        <td class="col-bruto">{{formatCurrency pph21.nilai_bruto}}</td>
+        <td class="col-pajak">{{formatCurrency pph21.total_pph}}</td>
+      </tr>
+      {{/if}}
+
+      {{#if pph22}}
+      <tr>
+        <td>2</td>
+        <td>PPh Pasal 22</td>
+        <td>{{pph22.tarif}}%</td>
+        <td>{{pph22.jumlah_transaksi}}</td>
+        <td class="col-bruto">{{formatCurrency pph22.nilai_bruto}}</td>
+        <td class="col-pajak">{{formatCurrency pph22.total_pph}}</td>
+      </tr>
+      {{/if}}
+
+      {{#if pph23}}
+      <tr>
+        <td>3</td>
+        <td>PPh Pasal 23</td>
+        <td>{{pph23.tarif}}%</td>
+        <td>{{pph23.jumlah_transaksi}}</td>
+        <td class="col-bruto">{{formatCurrency pph23.nilai_bruto}}</td>
+        <td class="col-pajak">{{formatCurrency pph23.total_pph}}</td>
+      </tr>
+      {{/if}}
+
+      <tr class="row-subtotal">
+        <td colspan="4" style="text-align: center;"><strong>SUBTOTAL PPh</strong></td>
+        <td class="col-bruto">{{formatCurrency total_bruto_pph}}</td>
+        <td class="col-pajak">{{formatCurrency total_pph}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- REKAP PPN -->
+<div class="rekap-section">
+  <div class="rekap-section-title">B. PAJAK PERTAMBAHAN NILAI (PPN)</div>
+
+  <table class="rekap-table">
+    <thead>
+      <tr>
+        <th class="col-no">No</th>
+        <th class="col-jenis">Jenis PPN</th>
+        <th class="col-tarif">Tarif</th>
+        <th>Jumlah Transaksi</th>
+        <th>Dasar Pengenaan Pajak (Rp)</th>
+        <th>Total PPN (Rp)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#if ppn}}
+      <tr>
+        <td>1</td>
+        <td>PPN 11%</td>
+        <td>11%</td>
+        <td>{{ppn.jumlah_transaksi}}</td>
+        <td class="col-bruto">{{formatCurrency ppn.dpp}}</td>
+        <td class="col-pajak">{{formatCurrency ppn.total_ppn}}</td>
+      </tr>
+      {{/if}}
+
+      <tr class="row-subtotal">
+        <td colspan="4" style="text-align: center;"><strong>SUBTOTAL PPN</strong></td>
+        <td class="col-bruto">{{formatCurrency total_dpp}}</td>
+        <td class="col-pajak">{{formatCurrency total_ppn}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- GRAND TOTAL BOX -->
+<div class="grand-total-box">
+  <div class="grand-total-title">Rekapitulasi Total Pajak</div>
+
+  <div class="grand-total-breakdown">
+    <div class="breakdown-row">
+      <span class="breakdown-label">Total Nilai Bruto Transaksi</span>
+      <span class="breakdown-value">Rp {{formatCurrency grand_total_bruto}}</span>
+    </div>
+    <div class="breakdown-row">
+      <span class="breakdown-label">Total Potongan PPh</span>
+      <span class="breakdown-value">( Rp {{formatCurrency total_pph}} )</span>
+    </div>
+    <div class="breakdown-row">
+      <span class="breakdown-label">Total Potongan PPN</span>
+      <span class="breakdown-value">( Rp {{formatCurrency total_ppn}} )</span>
+    </div>
+    <div class="breakdown-row total">
+      <span class="breakdown-label">Total Potongan Pajak</span>
+      <span class="breakdown-value">Rp {{formatCurrency total_pajak}}</span>
+    </div>
+  </div>
+
+  <div style="margin-top: 15px; font-size: 11pt; font-style: italic;">
+    Total Dibayarkan (Netto): <strong>Rp {{formatCurrency total_netto}}</strong>
+  </div>
+
+  <div style="margin-top: 10px; font-size: 10pt; font-style: italic;">
+    ({{terbilang_total_netto}})
+  </div>
+</div>
+
+<!-- CATATAN -->
+<div style="margin: 30px 0; padding: 15px; background-color: #fff8dc; border-left: 4px solid #ff8c00;">
+  <strong>Catatan Pajak:</strong>
+  <ul style="margin: 10px 0; padding-left: 20px;">
+    <li>PPh Pasal 21: Pajak atas penghasilan pegawai/tenaga ahli</li>
+    <li>PPh Pasal 22: Pajak atas pembelian barang</li>
+    <li>PPh Pasal 23: Pajak atas jasa</li>
+    <li>PPN 11%: Pajak Pertambahan Nilai (berlaku sejak April 2022)</li>
+    <li>Semua pajak akan disetorkan ke Kas Negara melalui MPN G2</li>
+  </ul>
+</div>
+
+<!-- TANDA TANGAN - 3 PIHAK -->
+<div class="signature-container">
+  <div class="signature-row">
+    <!-- Verifikator (Kiri) -->
+    <div class="signature-box">
+      <div class="signature-title">Verifikator</div>
+      <div class="signature-space">(tanda tangan)</div>
+      <div class="signature-name">{{nama_verifikator}}</div>
+      <div class="signature-nip">NIP. {{nip_verifikator}}</div>
+    </div>
+
+    <!-- PPK (Tengah) -->
+    <div class="signature-box">
+      <div class="signature-title">Pejabat Pembuat Komitmen</div>
+      <div class="signature-space">(tanda tangan)</div>
+      <div class="signature-name">{{nama_ppk}}</div>
+      <div class="signature-nip">NIP. {{nip_ppk}}</div>
+    </div>
+
+    <!-- Bendahara (Kanan) -->
+    <div class="signature-box">
+      <div class="signature-title">{{kota}}, {{tanggal}}</div>
+      <div class="signature-title">Bendahara Pengeluaran</div>
+      <div class="signature-space">(tanda tangan)</div>
+      <div class="signature-name">{{nama_bendahara}}</div>
+      <div class="signature-nip">NIP. {{nip_bendahara}}</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
