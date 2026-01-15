@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surat Pernyataan Tanggung Jawab Belanja</title>
+    <style>
+        /* Page Setup - A4 Portrait */
+        @page {
+            size: A4 portrait;
+            margin: 2cm 2.5cm 2cm 2.5cm;
+        }
+
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: #000;
+            background: #fff;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+
+        /* Document Container */
+        .document {
+            width: 21cm;
+            min-height: 29.7cm;
+            margin: 0 auto;
+            padding: 0;
+            background: white;
+        }
+
+        /* Header - Kop Surat */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #000;
+            padding-bottom: 10px;
+        }
+
+        .header-text {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .header-title {
+            font-size: 16pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .header-subtitle {
+            font-size: 14pt;
+            font-weight: bold;
+        }
+
+        .header-address {
+            font-size: 10pt;
+            margin-top: 5px;
+        }
+
+        /* Document Header */
+        .doc-header {
+            text-align: center;
+            margin: 30px 0 20px 0;
+        }
+
+        .doc-title {
+            font-size: 14pt;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 5px;
+        }
+
+        .doc-number {
+            font-size: 11pt;
+            margin-bottom: 20px;
+        }
+
+        /* Content */
+        .content {
+            text-align: justify;
+            margin: 20px 0;
+        }
+
+        .opening {
+            margin-bottom: 15px;
+        }
+
+        /* Identity Table */
+        .details-table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+        }
+
+        .details-table td {
+            padding: 5px;
+            vertical-align: top;
+        }
+
+        .details-table td:first-child {
+            width: 35%;
+        }
+
+        .details-table td:nth-child(2) {
+            width: 5%;
+            text-align: center;
+        }
+
+        .details-table td:last-child {
+            width: 60%;
+        }
+
+        /* Statement Box */
+        .statement-box {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #000;
+            background: #f9f9f9;
+        }
+
+        .statement-intro {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .statement-list {
+            margin-left: 0;
+            padding-left: 0;
+            list-style-position: inside;
+        }
+
+        .statement-list li {
+            margin-bottom: 10px;
+            text-align: justify;
+        }
+
+        /* Payment Details Table */
+        .payment-details {
+            margin: 20px 0;
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000;
+        }
+
+        .payment-details th,
+        .payment-details td {
+            padding: 8px;
+            border: 1px solid #000;
+        }
+
+        .payment-details th {
+            background: #e0e0e0;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .payment-details td:first-child {
+            width: 35%;
+        }
+
+        /* Closing */
+        .closing {
+            margin-top: 20px;
+        }
+
+        /* Signature Section */
+        .signature-section {
+            margin-top: 40px;
+        }
+
+        .signature-box {
+            width: 50%;
+            margin-left: auto;
+            text-align: center;
+        }
+
+        .signature-role {
+            font-weight: bold;
+            margin-bottom: 80px;
+        }
+
+        .signature-name {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .signature-nip {
+            font-size: 10pt;
+        }
+
+        /* Witness Section */
+        .witness-section {
+            margin-top: 40px;
+            border-top: 1px dashed #999;
+            padding-top: 20px;
+        }
+
+        .witness-title {
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Utilities */
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-bold {
+            font-weight: bold;
+        }
+
+        .mt-20 {
+            margin-top: 20px;
+        }
+
+        .mb-20 {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="document">
+        <!-- Kop Surat -->
+        <div class="header">
+            <div class="header-content">
+                <div class="header-text">
+                    <div class="header-title">KEMENTERIAN KEUANGAN REPUBLIK INDONESIA</div>
+                    <div class="header-subtitle">{{satkerNama}}</div>
+                    <div class="header-address">{{satkerAlamat}}</div>
+                    <div class="header-address">Telepon: {{satkerTelepon}} | Email: {{satkerEmail}}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Title & Number -->
+        <div class="doc-header">
+            <div class="doc-title">{{judulDokumen}}</div>
+            <div class="doc-number">Nomor: {{nomorSurat}}</div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Opening -->
+            <div class="opening">
+                Yang bertanda tangan di bawah ini:
+            </div>
+
+            <!-- PPK Identity -->
+            <table class="details-table">
+                <tr>
+                    <td>Nama</td>
+                    <td>:</td>
+                    <td><strong>{{ppkNama}}</strong></td>
+                </tr>
+                <tr>
+                    <td>NIP</td>
+                    <td>:</td>
+                    <td>{{ppkNip}}</td>
+                </tr>
+                <tr>
+                    <td>Jabatan</td>
+                    <td>:</td>
+                    <td>{{ppkJabatan}}</td>
+                </tr>
+                <tr>
+                    <td>Unit Kerja</td>
+                    <td>:</td>
+                    <td>{{satkerNama}}</td>
+                </tr>
+            </table>
+
+            <p>
+                Selaku Pejabat Pembuat Komitmen (PPK) pada {{satkerNama}}, dengan ini menyatakan
+                dengan sesungguhnya bahwa:
+            </p>
+
+            <!-- Payment Details -->
+            <div class="mt-20">
+                <p><strong>Sehubungan dengan pembayaran:</strong></p>
+                <table class="payment-details">
+                    <tr>
+                        <th>Uraian</th>
+                        <th>Keterangan</th>
+                    </tr>
+                    <tr>
+                        <td>Uraian Kegiatan</td>
+                        <td>{{kegiatanUraian}}</td>
+                    </tr>
+                    <tr>
+                        <td>Tahun Anggaran</td>
+                        <td>{{tahunAnggaran}}</td>
+                    </tr>
+                    <tr>
+                        <td>Nomor Kontrak</td>
+                        <td>{{kontrakNomor}}</td>
+                    </tr>
+                    <tr>
+                        <td>Tanggal Kontrak</td>
+                        <td>{{kontrakTanggalPanjang}}</td>
+                    </tr>
+                    <tr>
+                        <td>Penyedia/Penerima</td>
+                        <td>{{penyediaNama}}</td>
+                    </tr>
+                    <tr>
+                        <td>Nilai Pembayaran</td>
+                        <td><strong>{{nilaiKontrak}}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Terbilang</td>
+                        <td><em>{{nilaiKontrakTerbilang}}</em></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Statement Box -->
+            <div class="statement-box">
+                <div class="statement-intro">
+                    Dengan ini kami menyatakan bertanggung jawab penuh bahwa:
+                </div>
+                <ol class="statement-list">
+                    <li>Belanja sebagaimana tersebut di atas dibebankan pada DIPA yang sah dan mencukupi.</li>
+                    <li>Belanja dimaksud merupakan pengeluaran yang sah dan menjadi tanggung jawab kami.</li>
+                    <li>Belanja tersebut telah dilaksanakan sesuai dengan ketentuan peraturan perundang-undangan.</li>
+                    <li>Barang/jasa yang dibeli/diterima telah sesuai dengan spesifikasi yang ditetapkan dalam kontrak.</li>
+                    <li>Harga yang dibayarkan tidak melebihi harga yang berlaku di pasaran dan wajar.</li>
+                    <li>Pembayaran tersebut belum pernah diajukan sebelumnya untuk penerbitan SPM.</li>
+                    <li>Keseluruhan data dan dokumen yang kami sampaikan adalah benar, lengkap, dan dapat dipertanggungjawabkan.</li>
+                    <li>Apabila di kemudian hari terdapat kelebihan pembayaran atau pembayaran yang tidak seharusnya terjadi, kami bersedia untuk mengembalikan kelebihan tersebut ke Kas Negara.</li>
+                </ol>
+            </div>
+
+            <!-- Closing Statement -->
+            <div class="closing mt-20">
+                <p>
+                    Demikian pernyataan ini kami buat dengan sebenar-benarnya dengan penuh kesadaran
+                    serta tanggung jawab dan tanpa paksaan dari pihak manapun. Apabila dikemudian hari
+                    pernyataan ini tidak benar, kami bersedia dituntut sesuai dengan ketentuan peraturan
+                    perundang-undangan yang berlaku.
+                </p>
+            </div>
+
+            <!-- Date & Place -->
+            <div class="text-right mt-20">
+                <p>{{satkerKota}}, {{tanggalSurat}}</p>
+            </div>
+
+            <!-- PPK Signature -->
+            <div class="signature-section">
+                <div class="signature-box">
+                    <div class="signature-role">Pejabat Pembuat Komitmen</div>
+                    <div class="signature-name">{{ppkNama}}</div>
+                    <div class="signature-nip">NIP. {{ppkNip}}</div>
+                </div>
+            </div>
+
+            <!-- Witness/Approval Section (Optional) -->
+            <div class="witness-section">
+                <div class="witness-title">Mengetahui:</div>
+                <div class="signature-section">
+                    <div class="signature-box">
+                        <div class="signature-role">Kepala Satuan Kerja</div>
+                        <div class="signature-name">{{kepalaSatkerNama}}</div>
+                        <div class="signature-nip">NIP. {{kepalaSatkerNip}}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Note -->
+            <div class="mt-20" style="font-size: 9pt; color: #666; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 40px;">
+                <p style="text-align: center;">
+                    <em>Dokumen ini dibuat secara otomatis oleh Sistem Admin PPK</em>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

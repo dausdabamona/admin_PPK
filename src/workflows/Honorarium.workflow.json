@@ -1,0 +1,296 @@
+{
+  "process": "HONORARIUM",
+  "processName": "Honorarium/PJLP",
+  "description": "Proses pembayaran honorarium atau Pegawai Tidak Tetap/PJLP (Pejabat Pembuat Komitmen untuk Layanan Profesional)",
+  "category": "BELANJA_PEGAWAI",
+  "version": "1.0.0",
+  "applicableTo": ["honor_narasumber", "honor_tim", "pjlp", "tenaga_ahli"],
+
+  "steps": [
+    {
+      "id": "step-1-master-data",
+      "order": 1,
+      "label": "Input Master Data Kegiatan",
+      "description": "Isi data dasar pembayaran honorarium",
+      "required": true,
+      "documents": [],
+      "validations": [
+        "satker_complete",
+        "ppk_complete",
+        "kegiatan_complete"
+      ],
+      "dependencies": [],
+      "estimatedDuration": "15 menit",
+      "helpText": "Isi data lengkap: jenis honorarium, kegiatan, periode pembayaran."
+    },
+    {
+      "id": "step-2-sk-dasar",
+      "order": 2,
+      "label": "SK/Surat Tugas",
+      "description": "Buat SK atau surat tugas sebagai dasar pembayaran honorarium",
+      "required": true,
+      "documents": ["KONTRAK"],
+      "validations": [
+        "sk_signed",
+        "sk_before_pelaksanaan"
+      ],
+      "dependencies": ["step-1-master-data"],
+      "estimatedDuration": "5 menit",
+      "helpText": "SK atau surat tugas harus terbit sebelum pelaksanaan kegiatan.",
+      "auditNotes": "Auditor akan memeriksa: (1) SK sebelum kegiatan, (2) Besaran honor sesuai standar, (3) Ditandatangani pejabat berwenang"
+    },
+    {
+      "id": "step-3-daftar-nominatif",
+      "order": 3,
+      "label": "Daftar Nominatif Penerima",
+      "description": "Buat daftar nominatif semua penerima honorarium",
+      "required": true,
+      "documents": ["NOMINATIF"],
+      "validations": [
+        "nominatif_nik_complete",
+        "nominatif_rekening_complete",
+        "nominatif_signed_all"
+      ],
+      "dependencies": ["step-2-sk-dasar"],
+      "estimatedDuration": "15 menit",
+      "helpText": "Nominatif harus mencantumkan: nama, NIK/NIP, jabatan, honor bruto, potongan pajak, honor netto, rekening, tanda tangan.",
+      "auditNotes": "Auditor akan memeriksa kelengkapan data dan tanda tangan semua penerima",
+      "businessRules": [
+        "Setiap penerima harus tanda tangan",
+        "NIK/NIP wajib tercantum",
+        "Nomor rekening harus valid",
+        "Total nominatif harus sama dengan total SPR"
+      ]
+    },
+    {
+      "id": "step-4-daftar-hadir",
+      "order": 4,
+      "label": "Daftar Hadir/Bukti Pelaksanaan",
+      "description": "Kumpulkan daftar hadir atau bukti pelaksanaan tugas",
+      "required": true,
+      "documents": ["BAP"],
+      "validations": [
+        "daftar_hadir_exist",
+        "daftar_hadir_signed"
+      ],
+      "dependencies": ["step-3-daftar-nominatif"],
+      "estimatedDuration": "10 menit",
+      "helpText": "Daftar hadir atau bukti kinerja menunjukkan bahwa tugas benar-benar dilaksanakan.",
+      "auditNotes": "Auditor akan memeriksa bukti pelaksanaan tugas/kegiatan"
+    },
+    {
+      "id": "step-5-kuitansi",
+      "order": 5,
+      "label": "Kuitansi Penerimaan",
+      "description": "Kuitansi dari setiap penerima honorarium",
+      "required": true,
+      "documents": ["KUITANSI"],
+      "validations": [
+        "kuitansi_signed_all",
+        "kuitansi_materai"
+      ],
+      "dependencies": ["step-4-daftar-hadir"],
+      "estimatedDuration": "10 menit",
+      "helpText": "Kuitansi ditandatangani semua penerima dengan materai (jika diperlukan).",
+      "auditNotes": "Kuitansi adalah bukti resmi penerimaan pembayaran"
+    },
+    {
+      "id": "step-6-ssp-pajak",
+      "order": 6,
+      "label": "SSP/Bukti Setor Pajak",
+      "description": "Bukti penyetoran PPh Pasal 21 (jika ada potongan)",
+      "required": false,
+      "documents": ["RPD"],
+      "validations": [
+        "ssp_valid",
+        "ssp_amount_match"
+      ],
+      "dependencies": ["step-5-kuitansi"],
+      "estimatedDuration": "5 menit",
+      "helpText": "Jika ada potongan PPh 21, lampirkan bukti setor pajak (SSP/billing).",
+      "auditNotes": "Potongan pajak harus disetorkan sesuai ketentuan perpajakan"
+    },
+    {
+      "id": "step-7-sptjb",
+      "order": 7,
+      "label": "SPTJB PPK",
+      "description": "Surat Pernyataan Tanggung Jawab Belanja dari PPK",
+      "required": true,
+      "documents": ["SPTJB"],
+      "validations": [
+        "sptjb_ppk_complete"
+      ],
+      "dependencies": ["step-6-ssp-pajak"],
+      "estimatedDuration": "3 menit",
+      "helpText": "SPTJB adalah pernyataan tanggung jawab hukum PPK."
+    },
+    {
+      "id": "step-8-spr",
+      "order": 8,
+      "label": "SPR/SPM",
+      "description": "Surat Permintaan Pembayaran",
+      "required": true,
+      "documents": ["SPR"],
+      "validations": [
+        "spr_nilai_match_nominatif",
+        "spr_potongan_valid"
+      ],
+      "dependencies": ["step-7-sptjb"],
+      "estimatedDuration": "5 menit",
+      "helpText": "SPR mencakup total honor bruto, potongan pajak, dan honor netto sesuai nominatif.",
+      "auditNotes": "Total SPR harus sama dengan total di daftar nominatif"
+    }
+  ],
+
+  "auditChecks": [
+    {
+      "id": "check-1",
+      "rule": "SK/Surat Tugas sebelum pelaksanaan",
+      "severity": "critical",
+      "message": "SK atau surat tugas harus diterbitkan sebelum pelaksanaan kegiatan"
+    },
+    {
+      "id": "check-2",
+      "rule": "Nominatif ditandatangani semua penerima",
+      "severity": "critical",
+      "message": "Setiap penerima harus menandatangani daftar nominatif"
+    },
+    {
+      "id": "check-3",
+      "rule": "Total nominatif = Total SPR",
+      "severity": "critical",
+      "message": "Total di nominatif harus sama dengan total di SPR"
+    },
+    {
+      "id": "check-4",
+      "rule": "Besaran honor sesuai standar",
+      "severity": "warning",
+      "message": "Besaran honorarium harus sesuai dengan standar biaya yang berlaku"
+    },
+    {
+      "id": "check-5",
+      "rule": "Ada bukti pelaksanaan tugas",
+      "severity": "critical",
+      "message": "Harus ada daftar hadir atau bukti pelaksanaan tugas"
+    },
+    {
+      "id": "check-6",
+      "rule": "NIK/NIP semua penerima tercantum",
+      "severity": "critical",
+      "message": "NIK atau NIP wajib tercantum untuk semua penerima"
+    },
+    {
+      "id": "check-7",
+      "rule": "Nomor rekening valid",
+      "severity": "critical",
+      "message": "Nomor rekening harus valid dan sesuai nama penerima"
+    },
+    {
+      "id": "check-8",
+      "rule": "Potongan pajak sesuai ketentuan",
+      "severity": "warning",
+      "message": "Potongan PPh 21 harus sesuai dengan ketentuan perpajakan"
+    }
+  ],
+
+  "requiredDocuments": [
+    "KONTRAK",
+    "NOMINATIF",
+    "BAP",
+    "KUITANSI",
+    "SPTJB",
+    "SPR"
+  ],
+
+  "optionalDocuments": [
+    "RPD"
+  ],
+
+  "documentOrder": [
+    "COVER",
+    "RPD",
+    "SPR",
+    "SPTJB",
+    "BAP",
+    "NOMINATIF",
+    "KUITANSI",
+    "KONTRAK"
+  ],
+
+  "complianceLevel": {
+    "GREEN": {
+      "label": "Siap Audit",
+      "minScore": 95,
+      "icon": "✅",
+      "color": "#22c55e"
+    },
+    "YELLOW": {
+      "label": "Hampir Lengkap",
+      "minScore": 80,
+      "icon": "⚠️",
+      "color": "#eab308"
+    },
+    "RED": {
+      "label": "Perlu Perbaikan",
+      "minScore": 0,
+      "icon": "❌",
+      "color": "#ef4444"
+    }
+  },
+
+  "tips": [
+    "Pastikan besaran honor sesuai dengan standar biaya yang berlaku",
+    "Kumpulkan tanda tangan semua penerima di nominatif dan kuitansi",
+    "Pastikan NIK/NIP dan nomor rekening valid",
+    "Simpan bukti pelaksanaan tugas (daftar hadir, output kerja)",
+    "Hitung dan potong pajak sesuai ketentuan perpajakan"
+  ],
+
+  "commonMistakes": [
+    {
+      "mistake": "Nominatif tidak lengkap tanda tangan",
+      "solution": "Pastikan semua penerima menandatangani nominatif dan kuitansi",
+      "impact": "Critical - pembayaran tidak bisa diproses"
+    },
+    {
+      "mistake": "Total nominatif tidak sama dengan SPR",
+      "solution": "Hitung ulang dan pastikan total sama persis",
+      "impact": "Critical - akan ditolak"
+    },
+    {
+      "mistake": "Tidak ada bukti pelaksanaan tugas",
+      "solution": "Siapkan daftar hadir atau bukti output kerja",
+      "impact": "Critical - tidak bisa dibuktikan tugas dilaksanakan"
+    },
+    {
+      "mistake": "Besaran honor melebihi standar",
+      "solution": "Cek PMK standar biaya terbaru",
+      "impact": "Warning - kelebihan tidak bisa dibayarkan"
+    },
+    {
+      "mistake": "Rekening tidak sesuai nama penerima",
+      "solution": "Konfirmasi ulang nomor rekening dengan penerima",
+      "impact": "Warning - bisa menyebabkan gagal transfer"
+    }
+  ],
+
+  "legalReferences": [
+    {
+      "title": "PMK tentang Standar Biaya Masukan",
+      "description": "Standar biaya honorarium berbagai jenis kegiatan",
+      "url": "https://jdih.kemenkeu.go.id/"
+    },
+    {
+      "title": "UU PPh dan aturan turunannya",
+      "description": "Ketentuan perpajakan untuk honorarium",
+      "url": "https://www.pajak.go.id/"
+    }
+  ],
+
+  "meta": {
+    "createdBy": "Admin PPK Development Team",
+    "createdAt": "2025-01-14",
+    "version": "1.0.0",
+    "status": "active"
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "process": "TUP",
+  "processName": "Tambahan Uang Persediaan (TUP)",
+  "description": "Proses permintaan Tambahan Uang Persediaan untuk menutup kekurangan UP",
+  "category": "BELANJA_OPERASIONAL",
+  "version": "1.0.0",
+  "applicableTo": ["operasional", "atk", "keperluan_rutin"],
+
+  "steps": [
+    {
+      "id": "step-1-master-data",
+      "order": 1,
+      "label": "Input Master Data Kegiatan",
+      "description": "Isi data dasar untuk permintaan TUP",
+      "required": true,
+      "documents": [],
+      "validations": [
+        "satker_complete",
+        "ppk_complete",
+        "bendahara_complete"
+      ],
+      "dependencies": [],
+      "estimatedDuration": "10 menit",
+      "helpText": "TUP adalah tambahan UP untuk menutup kekurangan. Harus ada UP yang masih berjalan."
+    },
+    {
+      "id": "step-2-bukti-penggunaan",
+      "order": 2,
+      "label": "Bukti Penggunaan UP ≥ 50%",
+      "description": "Lampirkan bukti bahwa UP sudah terpakai minimal 50%",
+      "required": true,
+      "documents": ["RPD"],
+      "validations": [
+        "up_usage_min_50_percent"
+      ],
+      "dependencies": ["step-1-master-data"],
+      "estimatedDuration": "10 menit",
+      "helpText": "TUP hanya bisa diajukan jika UP sudah terpakai minimal 50%.",
+      "auditNotes": "Auditor akan memeriksa bukti penggunaan UP minimal 50%"
+    },
+    {
+      "id": "step-3-rencana-tambahan",
+      "order": 3,
+      "label": "Rencana Penggunaan TUP",
+      "description": "Buat rincian rencana penggunaan tambahan dana",
+      "required": true,
+      "documents": ["RPD"],
+      "validations": [
+        "rencana_rinci_exist",
+        "total_tup_valid"
+      ],
+      "dependencies": ["step-2-bukti-penggunaan"],
+      "estimatedDuration": "10 menit",
+      "helpText": "Jelaskan untuk apa tambahan dana diperlukan."
+    },
+    {
+      "id": "step-4-sptjb",
+      "order": 4,
+      "label": "SPTJB Bendahara",
+      "description": "Surat Pernyataan Tanggung Jawab Bendahara untuk TUP",
+      "required": true,
+      "documents": ["SPTJB"],
+      "validations": [
+        "bendahara_signed"
+      ],
+      "dependencies": ["step-3-rencana-tambahan"],
+      "estimatedDuration": "3 menit",
+      "helpText": "SPTJB ditandatangani oleh Bendahara."
+    },
+    {
+      "id": "step-5-spm",
+      "order": 5,
+      "label": "SPM TUP",
+      "description": "Surat Perintah Membayar Tambahan UP",
+      "required": true,
+      "documents": ["SPR"],
+      "validations": [
+        "spm_nilai_valid",
+        "spm_rekening_valid"
+      ],
+      "dependencies": ["step-4-sptjb"],
+      "estimatedDuration": "5 menit",
+      "helpText": "SPM TUP dikirim ke KPPN untuk pencairan dana tambahan."
+    }
+  ],
+
+  "auditChecks": [
+    {
+      "id": "check-1",
+      "rule": "UP sudah terpakai minimal 50%",
+      "severity": "critical",
+      "message": "TUP hanya bisa diajukan jika UP sudah terpakai minimal 50%"
+    },
+    {
+      "id": "check-2",
+      "rule": "Nilai TUP ≤ Pagu yang tersedia",
+      "severity": "critical",
+      "message": "Nilai TUP tidak boleh melebihi pagu yang tersedia"
+    },
+    {
+      "id": "check-3",
+      "rule": "Ada UP yang masih berjalan",
+      "severity": "critical",
+      "message": "Harus ada UP yang masih aktif sebelum mengajukan TUP"
+    }
+  ],
+
+  "requiredDocuments": [
+    "RPD",
+    "SPTJB",
+    "SPR"
+  ],
+
+  "optionalDocuments": [],
+
+  "documentOrder": [
+    "COVER",
+    "RPD",
+    "SPR",
+    "SPTJB"
+  ],
+
+  "complianceLevel": {
+    "GREEN": {
+      "label": "Siap Diajukan",
+      "minScore": 95,
+      "icon": "✅",
+      "color": "#22c55e"
+    },
+    "YELLOW": {
+      "label": "Hampir Lengkap",
+      "minScore": 80,
+      "icon": "⚠️",
+      "color": "#eab308"
+    },
+    "RED": {
+      "label": "Perlu Perbaikan",
+      "minScore": 0,
+      "icon": "❌",
+      "color": "#ef4444"
+    }
+  },
+
+  "tips": [
+    "Pastikan UP sudah terpakai minimal 50% sebelum mengajukan TUP",
+    "Siapkan bukti penggunaan UP yang jelas",
+    "TUP harus dipertanggungjawabkan bersamaan dengan UP"
+  ],
+
+  "meta": {
+    "createdBy": "Admin PPK Development Team",
+    "createdAt": "2025-01-14",
+    "version": "1.0.0",
+    "status": "active"
+  }
+}

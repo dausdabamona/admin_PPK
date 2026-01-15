@@ -1,0 +1,385 @@
+{
+  "process": "LS_KONTRAK",
+  "processName": "Pembayaran Langsung (LS) - Kontrak",
+  "description": "Proses pembayaran langsung kepada penyedia barang/jasa berdasarkan kontrak",
+  "category": "BELANJA_BARANG_JASA",
+  "version": "1.0.0",
+  "applicableTo": ["barang", "jasa_konsultansi", "jasa_lainnya", "pekerjaan_konstruksi"],
+
+  "steps": [
+    {
+      "id": "step-1-master-data",
+      "order": 1,
+      "label": "Input Master Data Kegiatan",
+      "description": "Isi data dasar: satker, PPK, kegiatan, anggaran, penyedia, dan rekening",
+      "required": true,
+      "documents": [],
+      "validations": [
+        "satker_complete",
+        "ppk_complete",
+        "kegiatan_complete",
+        "penyedia_complete",
+        "bank_complete"
+      ],
+      "dependencies": [],
+      "estimatedDuration": "15-20 menit",
+      "helpText": "Pastikan semua data terisi dengan lengkap dan benar. Data ini akan digunakan di semua dokumen."
+    },
+    {
+      "id": "step-2-kontrak",
+      "order": 2,
+      "label": "Kontrak/Surat Perjanjian",
+      "description": "Buat dan tandatangani kontrak dengan penyedia",
+      "required": true,
+      "documents": ["KONTRAK"],
+      "validations": [
+        "kontrak_nomor_exist",
+        "kontrak_tanggal_valid",
+        "kontrak_nilai_valid"
+      ],
+      "dependencies": ["step-1-master-data"],
+      "estimatedDuration": "5 menit",
+      "helpText": "Kontrak harus ditandatangani sebelum pekerjaan dimulai. Pastikan nomor dan tanggal kontrak sudah benar.",
+      "auditNotes": "Auditor akan memeriksa: (1) Kontrak ditandatangani sebelum pekerjaan, (2) Nilai sesuai pagu, (3) Spesifikasi jelas"
+    },
+    {
+      "id": "step-3-bap",
+      "order": 3,
+      "label": "Berita Acara Pemeriksaan (BAP)",
+      "description": "Lakukan pemeriksaan hasil pekerjaan oleh Tim PPHP",
+      "required": true,
+      "documents": ["BAP"],
+      "validations": [
+        "bap_tanggal_after_selesai",
+        "pphp_minimal_1",
+        "bap_hasil_complete"
+      ],
+      "dependencies": ["step-2-kontrak"],
+      "estimatedDuration": "5 menit",
+      "helpText": "BAP dibuat setelah pekerjaan selesai. Tim PPHP minimal 1 orang (untuk nilai tertentu minimal 3 orang).",
+      "auditNotes": "Auditor akan memeriksa: (1) Tanggal BAP setelah selesai pekerjaan, (2) Tim PPHP sesuai ketentuan, (3) Hasil pemeriksaan lengkap"
+    },
+    {
+      "id": "step-4-bast",
+      "order": 4,
+      "label": "Berita Acara Serah Terima (BAST)",
+      "description": "Serahterima hasil pekerjaan dari penyedia ke PPK",
+      "required": true,
+      "documents": ["BAST"],
+      "validations": [
+        "bast_tanggal_after_bap",
+        "bast_tanggal_after_selesai",
+        "bast_pihak_complete"
+      ],
+      "dependencies": ["step-3-bap"],
+      "estimatedDuration": "5 menit",
+      "helpText": "BAST dibuat setelah BAP. Ini menandakan pekerjaan sudah diterima dengan baik oleh PPK.",
+      "auditNotes": "Auditor akan memeriksa: (1) Tanggal BAST ≥ tanggal BAP, (2) Ditandatangani penyedia dan PPK, (3) Disaksikan PPHP",
+      "businessRules": [
+        "Tanggal BAST harus sama atau setelah tanggal BAP",
+        "Tanggal BAST harus sama atau setelah tanggal selesai pekerjaan"
+      ]
+    },
+    {
+      "id": "step-5-sppr",
+      "order": 5,
+      "label": "Surat Pernyataan Penyelesaian Pekerjaan (SPPR)",
+      "description": "Pernyataan dari penyedia bahwa pekerjaan telah selesai",
+      "required": true,
+      "documents": ["SPPR"],
+      "validations": [
+        "sppr_tanggal_after_bast",
+        "sppr_penyedia_complete"
+      ],
+      "dependencies": ["step-4-bast"],
+      "estimatedDuration": "3 menit",
+      "helpText": "SPPR adalah pernyataan resmi dari penyedia. Dibuat setelah BAST.",
+      "auditNotes": "Auditor akan memeriksa: (1) Ditandatangani penyedia, (2) Tanggal setelah BAST, (3) Pernyataan lengkap"
+    },
+    {
+      "id": "step-6-sptjb",
+      "order": 6,
+      "label": "Surat Pernyataan Tanggung Jawab Belanja (SPTJB)",
+      "description": "Pernyataan tanggung jawab PPK atas belanja yang dilakukan",
+      "required": true,
+      "documents": ["SPTJB"],
+      "validations": [
+        "sptjb_ppk_complete",
+        "sptjb_tanggal_valid"
+      ],
+      "dependencies": ["step-5-sppr"],
+      "estimatedDuration": "3 menit",
+      "helpText": "SPTJB adalah pernyataan tanggung jawab hukum PPK. Harus ditandatangani dengan sadar.",
+      "auditNotes": "Auditor akan memeriksa: (1) Ditandatangani PPK, (2) Pernyataan sesuai ketentuan, (3) Diketahui Kepala Satker",
+      "warningMessage": "Dokumen ini adalah pernyataan tanggung jawab hukum. Pastikan semua data sudah benar sebelum menandatangani."
+    },
+    {
+      "id": "step-7-kuitansi",
+      "order": 7,
+      "label": "Kuitansi Pembayaran",
+      "description": "Kuitansi tanda terima pembayaran dari penyedia",
+      "required": true,
+      "documents": ["KUITANSI"],
+      "validations": [
+        "kuitansi_nilai_match",
+        "kuitansi_materai_exist",
+        "kuitansi_penyedia_signed"
+      ],
+      "dependencies": ["step-6-sptjb"],
+      "estimatedDuration": "3 menit",
+      "helpText": "Kuitansi harus diberi materai sesuai ketentuan perpajakan.",
+      "auditNotes": "Auditor akan memeriksa: (1) Nilai sesuai SPR, (2) Materai sesuai ketentuan, (3) Ditandatangani penyedia"
+    },
+    {
+      "id": "step-8-spr",
+      "order": 8,
+      "label": "Surat Permintaan Pembayaran (SPR)",
+      "description": "Permintaan pembayaran dari PPK ke Bendahara",
+      "required": true,
+      "documents": ["SPR"],
+      "validations": [
+        "spr_nilai_valid",
+        "spr_potongan_valid",
+        "spr_rekening_valid"
+      ],
+      "dependencies": ["step-7-kuitansi"],
+      "estimatedDuration": "5 menit",
+      "helpText": "SPR adalah dokumen formal permintaan pembayaran. Semua dokumen pendukung harus sudah lengkap.",
+      "auditNotes": "Auditor akan memeriksa: (1) Nilai pembayaran sesuai, (2) Potongan pajak benar, (3) Rekening tujuan benar"
+    },
+    {
+      "id": "step-9-nominatif",
+      "order": 9,
+      "label": "Daftar Nominatif (Opsional)",
+      "description": "Daftar rincian penerima (jika belanja honor/personel)",
+      "required": false,
+      "documents": ["NOMINATIF"],
+      "validations": [
+        "nominatif_total_match"
+      ],
+      "dependencies": ["step-8-spr"],
+      "estimatedDuration": "5 menit",
+      "helpText": "Nominatif diperlukan jika ada komponen honor/pembayaran ke beberapa orang.",
+      "auditNotes": "Hanya diperlukan untuk belanja yang melibatkan pembayaran ke beberapa personel"
+    },
+    {
+      "id": "step-10-cover-rpd",
+      "order": 10,
+      "label": "Cover & Rincian Paket Dokumen (RPD)",
+      "description": "Sampul dan daftar isi paket SPJ",
+      "required": true,
+      "documents": ["COVER", "RPD"],
+      "validations": [],
+      "dependencies": ["step-8-spr"],
+      "estimatedDuration": "2 menit",
+      "helpText": "Cover dan RPD akan dibuat otomatis oleh sistem saat Anda klik 'Generate Paket SPJ'.",
+      "auditNotes": "Cover dan RPD memudahkan auditor memahami isi paket dokumen"
+    }
+  ],
+
+  "auditChecks": [
+    {
+      "id": "check-1",
+      "rule": "Tanggal Kontrak ≤ Tanggal Mulai Kegiatan",
+      "severity": "critical",
+      "message": "Kontrak harus ditandatangani sebelum atau saat pekerjaan dimulai",
+      "field": "kontrakTanggal",
+      "comparison": "lte",
+      "compareWith": "kegiatanTanggalMulai"
+    },
+    {
+      "id": "check-2",
+      "rule": "Tanggal BAP ≥ Tanggal Selesai Kegiatan",
+      "severity": "critical",
+      "message": "BAP dibuat setelah pekerjaan selesai",
+      "field": "bapTanggal",
+      "comparison": "gte",
+      "compareWith": "kegiatanTanggalSelesai"
+    },
+    {
+      "id": "check-3",
+      "rule": "Tanggal BAST ≥ Tanggal BAP",
+      "severity": "critical",
+      "message": "BAST harus dibuat setelah atau bersamaan dengan BAP",
+      "field": "bastTanggal",
+      "comparison": "gte",
+      "compareWith": "bapTanggal"
+    },
+    {
+      "id": "check-4",
+      "rule": "Tanggal SPPR ≥ Tanggal BAST",
+      "severity": "warning",
+      "message": "SPPR sebaiknya dibuat setelah BAST",
+      "field": "spprTanggal",
+      "comparison": "gte",
+      "compareWith": "bastTanggal"
+    },
+    {
+      "id": "check-5",
+      "rule": "Nilai Kontrak ≤ Pagu Kegiatan",
+      "severity": "critical",
+      "message": "Nilai kontrak tidak boleh melebihi pagu yang tersedia",
+      "field": "kegiatanNilaiKontrak",
+      "comparison": "lte",
+      "compareWith": "kegiatanPagu"
+    },
+    {
+      "id": "check-6",
+      "rule": "Nilai SPR = Nilai Kontrak - Potongan",
+      "severity": "critical",
+      "message": "Nilai dibayar harus sesuai dengan kontrak dikurangi potongan pajak",
+      "formula": "nilaiKontrak - sumPotongan",
+      "field": "kegiatanNilaiDibayar"
+    },
+    {
+      "id": "check-7",
+      "rule": "PPHP minimal 1 orang",
+      "severity": "critical",
+      "message": "Tim PPHP harus minimal 1 orang (untuk nilai tertentu minimal 3 orang)",
+      "field": "pphp",
+      "validation": "array_min_length",
+      "minLength": 1
+    },
+    {
+      "id": "check-8",
+      "rule": "Nomor Kontrak terisi",
+      "severity": "critical",
+      "message": "Nomor kontrak wajib diisi",
+      "field": "kontrakNomor",
+      "validation": "not_empty"
+    },
+    {
+      "id": "check-9",
+      "rule": "Rekening Bank sesuai Penyedia",
+      "severity": "warning",
+      "message": "Pastikan rekening tujuan sesuai dengan nama penyedia",
+      "field": "bankAtasNama",
+      "validation": "similar_to",
+      "compareWith": "penyediaNama"
+    },
+    {
+      "id": "check-10",
+      "rule": "Potongan Pajak sesuai ketentuan",
+      "severity": "warning",
+      "message": "Pastikan potongan PPh sesuai dengan jenis penyedia dan nilai kontrak",
+      "validation": "custom",
+      "validator": "validatePotonganPajak"
+    }
+  ],
+
+  "requiredDocuments": [
+    "KONTRAK",
+    "BAP",
+    "BAST",
+    "SPPR",
+    "SPTJB",
+    "KUITANSI",
+    "SPR",
+    "COVER",
+    "RPD"
+  ],
+
+  "optionalDocuments": [
+    "NOMINATIF"
+  ],
+
+  "documentOrder": [
+    "COVER",
+    "RPD",
+    "SPR",
+    "SPPR",
+    "SPTJB",
+    "BAST",
+    "BAP",
+    "NOMINATIF",
+    "KUITANSI",
+    "KONTRAK"
+  ],
+
+  "complianceLevel": {
+    "GREEN": {
+      "label": "Siap Audit",
+      "minScore": 95,
+      "criteria": [
+        "Semua dokumen wajib lengkap",
+        "Semua critical checks passed",
+        "Tidak ada warning yang belum ditindaklanjuti"
+      ],
+      "icon": "✅",
+      "color": "#22c55e"
+    },
+    "YELLOW": {
+      "label": "Hampir Lengkap",
+      "minScore": 80,
+      "criteria": [
+        "Dokumen wajib lengkap",
+        "Ada beberapa warning",
+        "Critical checks passed"
+      ],
+      "icon": "⚠️",
+      "color": "#eab308"
+    },
+    "RED": {
+      "label": "Perlu Perbaikan",
+      "minScore": 0,
+      "criteria": [
+        "Ada dokumen wajib yang kurang",
+        "Ada critical checks yang gagal"
+      ],
+      "icon": "❌",
+      "color": "#ef4444"
+    }
+  },
+
+  "tips": [
+    "Siapkan semua data kontrak sebelum mulai proses",
+    "Koordinasikan dengan Tim PPHP untuk jadwal pemeriksaan",
+    "Pastikan tanggal dokumen mengikuti urutan logis",
+    "Periksa potongan pajak sesuai ketentuan terbaru",
+    "Simpan scan dokumen fisik sebagai backup"
+  ],
+
+  "commonMistakes": [
+    {
+      "mistake": "Tanggal BAST sebelum BAP",
+      "solution": "Perbaiki tanggal BAST agar setelah atau sama dengan tanggal BAP",
+      "impact": "Critical - akan ditolak oleh auditor"
+    },
+    {
+      "mistake": "Nilai kontrak melebihi pagu",
+      "solution": "Kurangi nilai kontrak atau ajukan revisi DIPA",
+      "impact": "Critical - tidak bisa dibayarkan"
+    },
+    {
+      "mistake": "Rekening tidak sesuai nama penyedia",
+      "solution": "Konfirmasi ulang dengan penyedia dan perbaiki data rekening",
+      "impact": "Warning - bisa menyebabkan penundaan pembayaran"
+    },
+    {
+      "mistake": "Lupa isi Tim PPHP",
+      "solution": "Tambahkan minimal 1 orang PPHP di Master Data",
+      "impact": "Critical - dokumen tidak lengkap"
+    }
+  ],
+
+  "legalReferences": [
+    {
+      "title": "PMK 190/PMK.05/2012",
+      "description": "Tata Cara Pembayaran dalam rangka Pelaksanaan APBN",
+      "url": "https://jdih.kemenkeu.go.id/fulltext/2012/190~PMK.05~2012Per.htm"
+    },
+    {
+      "title": "Perpres 16/2018",
+      "description": "Pengadaan Barang/Jasa Pemerintah",
+      "url": "https://jdih.lkpp.go.id/regulation/peraturan-presiden/peraturan-presiden-nomor-16-tahun-2018"
+    }
+  ],
+
+  "meta": {
+    "createdBy": "Admin PPK Development Team",
+    "createdAt": "2025-01-14",
+    "version": "1.0.0",
+    "lastUpdated": "2025-01-14",
+    "status": "active"
+  }
+}

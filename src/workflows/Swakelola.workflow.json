@@ -1,0 +1,253 @@
+{
+  "process": "SWAKELOLA",
+  "processName": "Swakelola",
+  "description": "Proses pelaksanaan kegiatan yang dilakukan secara swakelola (dikerjakan sendiri)",
+  "category": "BELANJA_KEGIATAN",
+  "version": "1.0.0",
+  "applicableTo": ["kegiatan_internal", "workshop", "pelatihan", "sosialisasi"],
+
+  "steps": [
+    {
+      "id": "step-1-master-data",
+      "order": 1,
+      "label": "Input Master Data Kegiatan",
+      "description": "Isi data dasar kegiatan swakelola",
+      "required": true,
+      "documents": [],
+      "validations": [
+        "satker_complete",
+        "ppk_complete",
+        "kegiatan_complete"
+      ],
+      "dependencies": [],
+      "estimatedDuration": "15 menit",
+      "helpText": "Swakelola adalah kegiatan yang dikerjakan sendiri tanpa penyedia pihak ketiga."
+    },
+    {
+      "id": "step-2-rab",
+      "order": 2,
+      "label": "Rencana Anggaran Biaya (RAB)",
+      "description": "Buat RAB kegiatan swakelola",
+      "required": true,
+      "documents": ["RPD"],
+      "validations": [
+        "rab_rinci_exist",
+        "rab_total_valid"
+      ],
+      "dependencies": ["step-1-master-data"],
+      "estimatedDuration": "15 menit",
+      "helpText": "RAB harus merinci semua komponen biaya: ATK, konsumsi, transport, honor, dll.",
+      "auditNotes": "Auditor akan memeriksa kewajaran harga dan kelengkapan rincian"
+    },
+    {
+      "id": "step-3-surat-tugas",
+      "order": 3,
+      "label": "Surat Tugas/SK Tim",
+      "description": "Buat surat tugas atau SK pembentukan tim pelaksana",
+      "required": true,
+      "documents": ["KONTRAK"],
+      "validations": [
+        "tim_pelaksana_exist",
+        "surat_tugas_signed"
+      ],
+      "dependencies": ["step-2-rab"],
+      "estimatedDuration": "5 menit",
+      "helpText": "Surat tugas atau SK tim menunjukkan siapa saja yang terlibat dalam kegiatan.",
+      "auditNotes": "Wajib ada dasar penugasan untuk setiap pelaksana"
+    },
+    {
+      "id": "step-4-pelaksanaan",
+      "order": 4,
+      "label": "Dokumen Pelaksanaan",
+      "description": "Kumpulkan bukti pelaksanaan: daftar hadir, foto, notulen, dll",
+      "required": true,
+      "documents": ["BAP"],
+      "validations": [
+        "bukti_pelaksanaan_exist"
+      ],
+      "dependencies": ["step-3-surat-tugas"],
+      "estimatedDuration": "10 menit",
+      "helpText": "Dokumentasikan kegiatan dengan baik: daftar hadir, foto, notulen.",
+      "auditNotes": "Auditor akan memeriksa bukti nyata pelaksanaan kegiatan"
+    },
+    {
+      "id": "step-5-laporan",
+      "order": 5,
+      "label": "Laporan Kegiatan",
+      "description": "Buat laporan hasil kegiatan",
+      "required": true,
+      "documents": ["BAST"],
+      "validations": [
+        "laporan_complete"
+      ],
+      "dependencies": ["step-4-pelaksanaan"],
+      "estimatedDuration": "15 menit",
+      "helpText": "Laporan mencakup: tujuan, peserta, materi, hasil, rekomendasi.",
+      "auditNotes": "Laporan menunjukkan output dan outcome kegiatan"
+    },
+    {
+      "id": "step-6-nominatif",
+      "order": 6,
+      "label": "Daftar Nominatif Penerima",
+      "description": "Buat daftar nominatif jika ada honor/transport/uang saku",
+      "required": true,
+      "documents": ["NOMINATIF"],
+      "validations": [
+        "nominatif_total_match",
+        "nominatif_signed"
+      ],
+      "dependencies": ["step-5-laporan"],
+      "estimatedDuration": "10 menit",
+      "helpText": "Nominatif harus ditandatangani semua penerima dengan melampirkan tanda tangan.",
+      "auditNotes": "Setiap penerima harus tanda tangan dan tercatat NIK/NIP"
+    },
+    {
+      "id": "step-7-kuitansi",
+      "order": 7,
+      "label": "Kuitansi Pembayaran",
+      "description": "Kuitansi untuk setiap penerima (jika ada)",
+      "required": true,
+      "documents": ["KUITANSI"],
+      "validations": [
+        "kuitansi_signed"
+      ],
+      "dependencies": ["step-6-nominatif"],
+      "estimatedDuration": "10 menit",
+      "helpText": "Kuitansi dibuat untuk setiap penerima honor/transport."
+    },
+    {
+      "id": "step-8-sptjb",
+      "order": 8,
+      "label": "SPTJB PPK",
+      "description": "Surat Pernyataan Tanggung Jawab Belanja dari PPK",
+      "required": true,
+      "documents": ["SPTJB"],
+      "validations": [
+        "sptjb_ppk_complete"
+      ],
+      "dependencies": ["step-7-kuitansi"],
+      "estimatedDuration": "3 menit",
+      "helpText": "SPTJB adalah pernyataan tanggung jawab hukum PPK."
+    },
+    {
+      "id": "step-9-spr",
+      "order": 9,
+      "label": "SPR/SPM",
+      "description": "Surat Permintaan Pembayaran",
+      "required": true,
+      "documents": ["SPR"],
+      "validations": [
+        "spr_nilai_valid",
+        "spr_potongan_valid"
+      ],
+      "dependencies": ["step-8-sptjb"],
+      "estimatedDuration": "5 menit",
+      "helpText": "SPR mencakup semua pembayaran: honor, transport, ATK, konsumsi, dll."
+    }
+  ],
+
+  "auditChecks": [
+    {
+      "id": "check-1",
+      "rule": "RAB rinci dan wajar",
+      "severity": "warning",
+      "message": "RAB harus merinci semua komponen biaya dengan harga wajar"
+    },
+    {
+      "id": "check-2",
+      "rule": "Ada bukti pelaksanaan nyata",
+      "severity": "critical",
+      "message": "Harus ada bukti kegiatan benar-benar dilaksanakan (daftar hadir, foto, notulen)"
+    },
+    {
+      "id": "check-3",
+      "rule": "Nominatif ditandatangani semua penerima",
+      "severity": "critical",
+      "message": "Setiap penerima harus tanda tangan di daftar nominatif"
+    },
+    {
+      "id": "check-4",
+      "rule": "Total nominatif = Total SPR",
+      "severity": "critical",
+      "message": "Total pembayaran di nominatif harus sama dengan nilai di SPR"
+    }
+  ],
+
+  "requiredDocuments": [
+    "RPD",
+    "KONTRAK",
+    "BAP",
+    "BAST",
+    "NOMINATIF",
+    "KUITANSI",
+    "SPTJB",
+    "SPR"
+  ],
+
+  "optionalDocuments": [],
+
+  "documentOrder": [
+    "COVER",
+    "RPD",
+    "SPR",
+    "SPTJB",
+    "BAST",
+    "BAP",
+    "NOMINATIF",
+    "KUITANSI",
+    "KONTRAK"
+  ],
+
+  "complianceLevel": {
+    "GREEN": {
+      "label": "Siap Audit",
+      "minScore": 95,
+      "icon": "✅",
+      "color": "#22c55e"
+    },
+    "YELLOW": {
+      "label": "Hampir Lengkap",
+      "minScore": 80,
+      "icon": "⚠️",
+      "color": "#eab308"
+    },
+    "RED": {
+      "label": "Perlu Perbaikan",
+      "minScore": 0,
+      "icon": "❌",
+      "color": "#ef4444"
+    }
+  },
+
+  "tips": [
+    "Dokumentasikan kegiatan dengan foto dan daftar hadir yang jelas",
+    "Pastikan semua penerima honor menandatangani nominatif dan kuitansi",
+    "Laporan kegiatan harus detail dan menunjukkan hasil nyata",
+    "RAB harus realistis dan sesuai standar biaya"
+  ],
+
+  "commonMistakes": [
+    {
+      "mistake": "Tidak ada bukti pelaksanaan",
+      "solution": "Siapkan daftar hadir, foto kegiatan, dan notulen",
+      "impact": "Critical - auditor akan menolak"
+    },
+    {
+      "mistake": "Nominatif tidak lengkap tanda tangan",
+      "solution": "Pastikan semua penerima tanda tangan dengan jelas",
+      "impact": "Critical - pembayaran bisa ditolak"
+    },
+    {
+      "mistake": "Laporan kegiatan terlalu umum",
+      "solution": "Buat laporan yang detail dengan hasil terukur",
+      "impact": "Warning - kurang meyakinkan"
+    }
+  ],
+
+  "meta": {
+    "createdBy": "Admin PPK Development Team",
+    "createdAt": "2025-01-14",
+    "version": "1.0.0",
+    "status": "active"
+  }
+}

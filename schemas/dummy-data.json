@@ -1,0 +1,248 @@
+{
+  "id": "MDK-2024-000001",
+  "tahunAnggaran": 2024,
+  "status": "active",
+
+  "satker": {
+    "kementerian": "Kementerian Keuangan",
+    "unitEselon1": "Direktorat Jenderal Perbendaharaan",
+    "kode": "123456",
+    "nama": "Kantor Pelayanan Perbendaharaan Negara Jakarta I",
+    "alamat": {
+      "jalan": "Jl. Ir. H. Juanda No. 1",
+      "kelurahan": "Pasar Baru",
+      "kecamatan": "Sawah Besar",
+      "kota": "Jakarta Pusat",
+      "provinsi": "DKI Jakarta",
+      "kodePos": "10710",
+      "lengkap": "Jl. Ir. H. Juanda No. 1, Pasar Baru, Sawah Besar, Jakarta Pusat, DKI Jakarta 10710"
+    },
+    "telepon": "021-3841234",
+    "email": "kppn.jakarta1@kemenkeu.go.id"
+  },
+
+  "pejabat": {
+    "kpa": {
+      "nama": "Dr. Ahmad Budiman, S.E., M.M.",
+      "nip": "196501011990031001",
+      "jabatan": "Kepala Kantor Pelayanan Perbendaharaan Negara Jakarta I",
+      "pangkat": "Pembina Utama Muda (IV/c)",
+      "ttd": "/uploads/ttd/kpa-196501011990031001.png"
+    },
+    "ppk": {
+      "nama": "Budi Santoso, S.Kom., M.T.",
+      "nip": "197203151995031002",
+      "jabatan": "Kepala Seksi Verifikasi dan Akuntansi",
+      "pangkat": "Penata Tingkat I (III/d)",
+      "ttd": "/uploads/ttd/ppk-197203151995031002.png"
+    },
+    "bendahara": {
+      "nama": "Siti Nurhaliza, S.E.",
+      "nip": "198005102005012001",
+      "ttd": "/uploads/ttd/bendahara-198005102005012001.png"
+    },
+    "pphp": [
+      {
+        "nama": "Agus Wijaya, S.T.",
+        "nip": "198506202010121001",
+        "jabatan": "Pelaksana Seksi Monitoring dan Evaluasi",
+        "role": "ketua",
+        "ttd": "/uploads/ttd/pphp-198506202010121001.png"
+      },
+      {
+        "nama": "Dewi Lestari, S.Sos.",
+        "nip": "199001152014032002",
+        "jabatan": "Pelaksana Seksi Verifikasi",
+        "role": "anggota",
+        "ttd": "/uploads/ttd/pphp-199001152014032002.png"
+      }
+    ]
+  },
+
+  "kegiatan": {
+    "program": {
+      "kode": "01",
+      "nama": "Program Dukungan Manajemen dan Pelaksanaan Tugas Teknis Lainnya"
+    },
+    "kegiatan": {
+      "kode": "01.01",
+      "nama": "Pengelolaan Layanan Perbendaharaan"
+    },
+    "output": {
+      "kode": "01.01.001",
+      "nama": "Layanan Manajemen dan Dukungan Teknis Lainnya",
+      "volume": "12",
+      "satuan": "bulan"
+    },
+    "komponen": {
+      "kode": "001",
+      "nama": "Layanan Perkantoran"
+    },
+    "akun": {
+      "kode": "521211",
+      "nama": "Belanja Barang Operasional Lainnya"
+    },
+    "uraian": "Pengadaan Alat Tulis Kantor (ATK) untuk keperluan operasional Kantor Pelayanan Perbendaharaan Negara Jakarta I Triwulan I Tahun Anggaran 2024",
+    "lokasi": "Jakarta Pusat",
+    "waktu": {
+      "mulai": "2024-01-15",
+      "selesai": "2024-03-30",
+      "durasi": 75
+    }
+  },
+
+  "anggaran": {
+    "sumberDana": "APBN",
+    "dipaRevisi": 0,
+    "pagu": 50000000,
+    "nilaiKontrak": 45000000,
+    "nilaiDibayar": 44550000,
+    "potongan": {
+      "pph21": 0,
+      "pph22": 0,
+      "pph23": 450000,
+      "ppn": 0,
+      "total": 450000
+    },
+    "terbilang": "Empat Puluh Empat Juta Lima Ratus Lima Puluh Ribu Rupiah"
+  },
+
+  "penyedia": {
+    "jenis": "badan_usaha",
+    "nama": "PT Maju Jaya Sentosa",
+    "pimpinan": "Ir. Bambang Setiawan",
+    "jabatan": "Direktur Utama",
+    "alamat": {
+      "jalan": "Jl. Sudirman No. 45",
+      "kelurahan": "Karet Tengsin",
+      "kecamatan": "Tanah Abang",
+      "kota": "Jakarta Pusat",
+      "provinsi": "DKI Jakarta",
+      "kodePos": "10220",
+      "lengkap": "Jl. Sudirman No. 45, Karet Tengsin, Tanah Abang, Jakarta Pusat, DKI Jakarta 10220"
+    },
+    "kontak": {
+      "telepon": "021-5701234",
+      "email": "info@majujaya.co.id"
+    },
+    "identitas": {
+      "npwp": "123456789012345",
+      "nik": "3175012345678901",
+      "nomorAkta": "AHU-0012345.AH.01.01.Tahun 2020"
+    }
+  },
+
+  "bank": {
+    "namaBank": "Bank Mandiri",
+    "cabang": "KCP Jakarta Sudirman",
+    "nomorRekening": "1370012345678",
+    "atasNama": "PT Maju Jaya Sentosa"
+  },
+
+  "dokumen": {
+    "kontrak": {
+      "nomor": "SPK-001/KPPN.016/2024",
+      "tanggal": "2024-01-15"
+    },
+    "spr": {
+      "nomor": "SPR-001/KPPN.016/2024",
+      "tanggal": "2024-03-31"
+    },
+    "sppr": {
+      "nomor": "SPPR-001/KPPN.016/2024",
+      "tanggal": "2024-03-30"
+    },
+    "bast": {
+      "nomor": "BAST-001/KPPN.016/2024",
+      "tanggal": "2024-03-30"
+    },
+    "bap": {
+      "nomor": "BAP-001/KPPN.016/2024",
+      "tanggal": "2024-03-29"
+    },
+    "sptjb": {
+      "nomor": "SPTJB-001/KPPN.016/2024",
+      "tanggal": "2024-03-31"
+    },
+    "rpd": {
+      "nomor": "RPD-001/KPPN.016/2024",
+      "tanggal": "2024-03-31"
+    },
+    "sp2d": {
+      "nomor": "SP2D-12345678/2024",
+      "tanggal": "2024-04-01"
+    },
+    "kuitansi": {
+      "nomor": "KWT-001/KPPN.016/2024",
+      "tanggal": "2024-03-31"
+    }
+  },
+
+  "lampiran": [
+    {
+      "jenis": "kontrak",
+      "nama": "Surat Perjanjian Kerja",
+      "file": "/uploads/documents/spk-001-2024.pdf",
+      "uploadedAt": "2024-01-15T10:30:00Z"
+    },
+    {
+      "jenis": "bast",
+      "nama": "Berita Acara Serah Terima",
+      "file": "/uploads/documents/bast-001-2024.pdf",
+      "uploadedAt": "2024-03-30T14:00:00Z"
+    },
+    {
+      "jenis": "foto",
+      "nama": "Foto Dokumentasi ATK 1",
+      "file": "/uploads/photos/atk-foto-1.jpg",
+      "uploadedAt": "2024-03-30T14:15:00Z"
+    },
+    {
+      "jenis": "foto",
+      "nama": "Foto Dokumentasi ATK 2",
+      "file": "/uploads/photos/atk-foto-2.jpg",
+      "uploadedAt": "2024-03-30T14:16:00Z"
+    },
+    {
+      "jenis": "faktur",
+      "nama": "Faktur Pembelian",
+      "file": "/uploads/documents/faktur-001-2024.pdf",
+      "uploadedAt": "2024-03-30T14:20:00Z"
+    }
+  ],
+
+  "metadata": {
+    "createdAt": "2024-01-15T08:00:00Z",
+    "updatedAt": "2024-03-31T16:00:00Z",
+    "createdBy": "user-ppk-001",
+    "version": 1,
+    "history": [
+      {
+        "timestamp": "2024-01-15T08:00:00Z",
+        "user": "user-ppk-001",
+        "action": "created",
+        "changes": {
+          "description": "Master data kegiatan dibuat"
+        }
+      },
+      {
+        "timestamp": "2024-03-30T14:00:00Z",
+        "user": "user-ppk-001",
+        "action": "updated",
+        "changes": {
+          "description": "Update dokumen BAST dan BAP",
+          "fields": ["dokumen.bast", "dokumen.bap"]
+        }
+      },
+      {
+        "timestamp": "2024-03-31T16:00:00Z",
+        "user": "user-ppk-001",
+        "action": "completed",
+        "changes": {
+          "description": "Paket SPJ selesai, status diubah menjadi completed",
+          "fields": ["status", "dokumen.spr", "dokumen.sp2d"]
+        }
+      }
+    ]
+  }
+}

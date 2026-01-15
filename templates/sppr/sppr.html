@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surat Pernyataan Penyelesaian Pekerjaan</title>
+    <style>
+        /* Page Setup - A4 Portrait */
+        @page {
+            size: A4 portrait;
+            margin: 2cm 2.5cm 2cm 2.5cm;
+        }
+
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: #000;
+            background: #fff;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+
+        /* Document Container */
+        .document {
+            width: 21cm;
+            min-height: 29.7cm;
+            margin: 0 auto;
+            padding: 0;
+            background: white;
+        }
+
+        /* Header - Kop Surat */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #000;
+            padding-bottom: 10px;
+        }
+
+        .header-logo {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            vertical-align: middle;
+        }
+
+        .header-text {
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 15px;
+        }
+
+        .header-title {
+            font-size: 16pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .header-subtitle {
+            font-size: 14pt;
+            font-weight: bold;
+        }
+
+        .header-address {
+            font-size: 10pt;
+            margin-top: 5px;
+        }
+
+        /* Document Header */
+        .doc-header {
+            text-align: center;
+            margin: 30px 0 20px 0;
+        }
+
+        .doc-title {
+            font-size: 14pt;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 5px;
+        }
+
+        .doc-number {
+            font-size: 11pt;
+            margin-bottom: 20px;
+        }
+
+        /* Content */
+        .content {
+            text-align: justify;
+            margin: 20px 0;
+        }
+
+        .opening {
+            margin-bottom: 15px;
+        }
+
+        .pernyataan {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+        }
+
+        .pernyataan p {
+            margin-bottom: 10px;
+            text-indent: 0;
+        }
+
+        /* Details Table */
+        .details-table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+        }
+
+        .details-table td {
+            padding: 5px;
+            vertical-align: top;
+        }
+
+        .details-table td:first-child {
+            width: 35%;
+            font-weight: normal;
+        }
+
+        .details-table td:nth-child(2) {
+            width: 5%;
+            text-align: center;
+        }
+
+        .details-table td:last-child {
+            width: 60%;
+        }
+
+        /* Identity Section */
+        .identity {
+            margin: 20px 0;
+        }
+
+        .identity-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        /* Closing */
+        .closing {
+            margin-top: 20px;
+        }
+
+        /* Signature Section */
+        .signature-section {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-box {
+            width: 45%;
+            text-align: center;
+        }
+
+        .signature-role {
+            font-weight: bold;
+            margin-bottom: 80px;
+        }
+
+        .signature-name {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .signature-nip {
+            font-size: 10pt;
+        }
+
+        .signature-detail {
+            font-size: 10pt;
+            margin-top: 5px;
+        }
+
+        /* Utilities */
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-bold {
+            font-weight: bold;
+        }
+
+        .mt-20 {
+            margin-top: 20px;
+        }
+
+        .mb-20 {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="document">
+        <!-- Kop Surat -->
+        <div class="header">
+            <div class="header-content">
+                <div class="header-text">
+                    <div class="header-title">KEMENTERIAN KEUANGAN REPUBLIK INDONESIA</div>
+                    <div class="header-subtitle">{{satkerNama}}</div>
+                    <div class="header-address">{{satkerAlamat}}</div>
+                    <div class="header-address">Telepon: {{satkerTelepon}} | Email: {{satkerEmail}}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Title & Number -->
+        <div class="doc-header">
+            <div class="doc-title">{{judulDokumen}}</div>
+            <div class="doc-number">Nomor: {{nomorSurat}}</div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Opening -->
+            <div class="opening">
+                Yang bertanda tangan di bawah ini:
+            </div>
+
+            <!-- Identity of Provider -->
+            <div class="identity">
+                <table class="details-table">
+                    <tr>
+                        <td>Nama</td>
+                        <td>:</td>
+                        <td><strong>{{penyediaNama}}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>NPWP</td>
+                        <td>:</td>
+                        <td>{{penyediaNpwp}}</td>
+                    </tr>
+                    <tr>
+                        <td>Alamat</td>
+                        <td>:</td>
+                        <td>{{penyediaAlamat}}</td>
+                    </tr>
+                    <tr>
+                        <td>Jabatan/Status</td>
+                        <td>:</td>
+                        <td>{{penyediaPimpinan}}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <p>
+                Dengan ini menyatakan dengan sebenarnya bahwa:
+            </p>
+
+            <!-- Pernyataan Box -->
+            <div class="pernyataan">
+                <p>
+                    1. Pekerjaan <strong>{{kegiatanUraian}}</strong> berdasarkan Surat Perjanjian Nomor
+                    <strong>{{kontrakNomor}}</strong> tanggal <strong>{{kontrakTanggalPanjang}}</strong>
+                    telah diselesaikan seluruhnya pada tanggal <strong>{{kegiatanTanggalSelesai}}</strong>.
+                </p>
+                <p>
+                    2. Seluruh hasil pekerjaan telah diserahkan kepada Pejabat Pembuat Komitmen (PPK)
+                    dan telah diterima dengan baik sesuai ketentuan dalam kontrak.
+                </p>
+                <p>
+                    3. Tidak ada lagi kewajiban yang harus dipenuhi terkait pelaksanaan pekerjaan tersebut.
+                </p>
+                <p>
+                    4. Pernyataan ini dibuat dengan sebenarnya tanpa ada paksaan dari pihak manapun dan
+                    dapat digunakan sebagaimana mestinya.
+                </p>
+            </div>
+
+            <!-- Work Details -->
+            <div class="mt-20">
+                <p><strong>Rincian Pekerjaan:</strong></p>
+                <table class="details-table">
+                    <tr>
+                        <td>Uraian Pekerjaan</td>
+                        <td>:</td>
+                        <td>{{kegiatanUraian}}</td>
+                    </tr>
+                    <tr>
+                        <td>Nomor Kontrak</td>
+                        <td>:</td>
+                        <td>{{kontrakNomor}}</td>
+                    </tr>
+                    <tr>
+                        <td>Tanggal Kontrak</td>
+                        <td>:</td>
+                        <td>{{kontrakTanggalPanjang}}</td>
+                    </tr>
+                    <tr>
+                        <td>Nilai Kontrak</td>
+                        <td>:</td>
+                        <td>{{nilaiKontrak}}</td>
+                    </tr>
+                    <tr>
+                        <td>Terbilang</td>
+                        <td>:</td>
+                        <td><em>{{nilaiKontrakTerbilang}}</em></td>
+                    </tr>
+                    <tr>
+                        <td>Waktu Pelaksanaan</td>
+                        <td>:</td>
+                        <td>{{kegiatanTanggalMulai}} s.d. {{kegiatanTanggalSelesai}}</td>
+                    </tr>
+                    <tr>
+                        <td>Lokasi Pekerjaan</td>
+                        <td>:</td>
+                        <td>{{kegiatanLokasi}}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Closing Statement -->
+            <div class="closing mt-20">
+                <p>
+                    Demikian pernyataan ini dibuat dengan sebenar-benarnya untuk dapat dipergunakan
+                    sebagaimana mestinya.
+                </p>
+            </div>
+
+            <!-- Date & Place -->
+            <div class="text-right mt-20">
+                <p>{{satkerKota}}, {{tanggalSurat}}</p>
+            </div>
+
+            <!-- Signature Section -->
+            <div class="signature-section">
+                <!-- Provider Signature -->
+                <div class="signature-box">
+                    <div class="signature-role">Yang Membuat Pernyataan,</div>
+                    <div class="signature-name">{{penyediaPimpinan}}</div>
+                    <div class="signature-detail">{{penyediaJenis}}</div>
+                    <div class="signature-detail">NPWP: {{penyediaNpwp}}</div>
+                </div>
+
+                <!-- PPK as Witness -->
+                <div class="signature-box">
+                    <div class="signature-role">Mengetahui,<br>Pejabat Pembuat Komitmen</div>
+                    <div class="signature-name">{{ppkNama}}</div>
+                    <div class="signature-nip">NIP. {{ppkNip}}</div>
+                </div>
+            </div>
+
+            <!-- Footer Note -->
+            <div class="mt-20" style="font-size: 9pt; color: #666; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 40px;">
+                <p style="text-align: center;">
+                    <em>Dokumen ini dibuat secara otomatis oleh Sistem Admin PPK</em>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

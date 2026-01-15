@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surat Permintaan Pembayaran (SPR)</title>
+    <style>
+        /* A4 Print-Ready Layout */
+        @page {
+            size: A4;
+            margin: 2cm 2.5cm 2cm 2.5cm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
+            line-height: 1.5;
+            color: #000;
+            background: #fff;
+        }
+
+        .document {
+            width: 21cm;
+            min-height: 29.7cm;
+            padding: 2cm 2.5cm;
+            margin: 0 auto;
+            background: white;
+        }
+
+        /* Kop Surat */
+        .letterhead {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #000;
+            padding-bottom: 10px;
+        }
+
+        .letterhead h1 {
+            font-size: 16pt;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .letterhead h2 {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .letterhead p {
+            font-size: 11pt;
+            margin: 2px 0;
+        }
+
+        /* Nomor Surat */
+        .document-header {
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        .document-title {
+            text-align: center;
+            font-size: 14pt;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 5px;
+        }
+
+        .document-number {
+            text-align: center;
+            font-size: 12pt;
+            margin-bottom: 20px;
+        }
+
+        /* Lampiran & Perihal */
+        .document-info {
+            margin-bottom: 20px;
+        }
+
+        .document-info table {
+            width: 100%;
+        }
+
+        .document-info td {
+            padding: 2px 0;
+            vertical-align: top;
+        }
+
+        .document-info td:first-child {
+            width: 100px;
+        }
+
+        .document-info td:nth-child(2) {
+            width: 10px;
+            text-align: center;
+        }
+
+        /* Content */
+        .content {
+            text-align: justify;
+            margin-bottom: 20px;
+        }
+
+        .content p {
+            margin-bottom: 10px;
+            text-indent: 40px;
+        }
+
+        /* Table Data */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .data-table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .data-table td.number {
+            text-align: center;
+            width: 40px;
+        }
+
+        .data-table td.currency {
+            text-align: right;
+        }
+
+        /* Signature Section */
+        .signature-section {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-box {
+            width: 45%;
+        }
+
+        .signature-box p {
+            margin-bottom: 5px;
+        }
+
+        .signature-box .name {
+            margin-top: 60px;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .signature-box .nip {
+            margin-top: 2px;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            .document {
+                width: 100%;
+                padding: 0;
+                page-break-after: always;
+            }
+
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="document">
+        <!-- KOP SURAT -->
+        <div class="letterhead">
+            <h1>KEMENTERIAN KEUANGAN REPUBLIK INDONESIA</h1>
+            <h2>{{satkerEselon1}}</h2>
+            <h2>{{satkerNama}}</h2>
+            <p>{{satkerAlamat}}</p>
+            <p>Telepon: {{satkerTelepon}} | Email: {{satkerEmail}}</p>
+        </div>
+
+        <!-- HEADER DOKUMEN -->
+        <div class="document-header">
+            <div class="document-title">{{judulDokumen}}</div>
+            <div class="document-number">Nomor: {{nomorSurat}}</div>
+        </div>
+
+        <!-- LAMPIRAN & PERIHAL -->
+        <div class="document-info">
+            <table>
+                <tr>
+                    <td>Lampiran</td>
+                    <td>:</td>
+                    <td>{{lampiranJumlah}}</td>
+                </tr>
+                <tr>
+                    <td>Tanggal</td>
+                    <td>:</td>
+                    <td>{{tanggalSurat}}</td>
+                </tr>
+                <tr>
+                    <td>Perihal</td>
+                    <td>:</td>
+                    <td><strong>{{perihal}}</strong></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- ISI SURAT -->
+        <div class="content">
+            <p style="text-indent: 0; margin-bottom: 15px;">Kepada Yth,<br>
+            <strong>Bendahara Pengeluaran</strong><br>
+            {{satkerNama}}<br>
+            di Tempat</p>
+
+            <p>Dengan hormat,</p>
+
+            <p>Berdasarkan {{keteranganTambahan}}, dengan ini kami mengajukan Permintaan Pembayaran untuk kegiatan {{kegiatanUraian}} dengan rincian sebagai berikut:</p>
+        </div>
+
+        <!-- TABEL RINCIAN -->
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Uraian</th>
+                    <th>Jumlah (Rp)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="number">1</td>
+                    <td>
+                        <strong>Program:</strong> {{programNama}}<br>
+                        <strong>Kegiatan:</strong> {{kegiatanNama}}<br>
+                        <strong>Output:</strong> {{outputNama}}<br>
+                        <strong>MAK:</strong> {{akunKode}} - {{akunNama}}<br>
+                        <strong>Sumber Dana:</strong> {{sumberDana}} {{tahunAnggaran}}
+                    </td>
+                    <td class="currency">{{nilaiKontrakFormat}}</td>
+                </tr>
+                <tr>
+                    <td class="number">2</td>
+                    <td>Potongan PPh Pasal 23</td>
+                    <td class="currency">{{potonganPph23Format}}</td>
+                </tr>
+                <tr>
+                    <td class="number">3</td>
+                    <td>Potongan PPN</td>
+                    <td class="currency">{{potonganPpnFormat}}</td>
+                </tr>
+                <tr>
+                    <td class="number"></td>
+                    <td style="text-align: right;"><strong>Total Potongan:</strong></td>
+                    <td class="currency"><strong>{{potonganTotalFormat}}</strong></td>
+                </tr>
+                <tr>
+                    <td class="number"></td>
+                    <td style="text-align: right;"><strong>Jumlah yang Dibayarkan:</strong></td>
+                    <td class="currency"><strong>{{nilaiDibayarFormat}}</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- TERBILANG -->
+        <div class="content">
+            <p style="text-indent: 0;"><em>Terbilang: {{terbilang}}</em></p>
+        </div>
+
+        <!-- DATA PENERIMA -->
+        <div class="content">
+            <p style="text-indent: 0; margin-top: 20px;"><strong>Data Penerima:</strong></p>
+            <table style="width: 100%; margin-top: 10px;">
+                <tr>
+                    <td style="width: 150px; padding: 3px 0;">Nama</td>
+                    <td style="width: 10px;">:</td>
+                    <td>{{penyediaNama}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 3px 0;">Alamat</td>
+                    <td>:</td>
+                    <td>{{penyediaAlamat}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 3px 0;">NPWP</td>
+                    <td>:</td>
+                    <td>{{npwpStatus}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 3px 0;">Bank</td>
+                    <td>:</td>
+                    <td>{{bankNama}} Cabang {{bankCabang}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 3px 0;">Nomor Rekening</td>
+                    <td>:</td>
+                    <td>{{bankRekening}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 3px 0;">Atas Nama</td>
+                    <td>:</td>
+                    <td>{{bankAtasNama}}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- PENUTUP -->
+        <div class="content">
+            <p>Demikian kami sampaikan, atas perhatian dan kerja samanya kami ucapkan terima kasih.</p>
+        </div>
+
+        <!-- TANDA TANGAN -->
+        <div class="signature-section">
+            <div class="signature-box">
+                <!-- Kosong untuk penerima -->
+            </div>
+            <div class="signature-box">
+                <p>{{satkerNama}},</p>
+                <p><strong>Pejabat Pembuat Komitmen</strong></p>
+                <p class="name">{{ppkNama}}</p>
+                <p class="nip">NIP. {{ppkNip}}</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

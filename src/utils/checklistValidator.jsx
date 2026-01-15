@@ -9,7 +9,7 @@ import db from '../db/database'
 /**
  * Get checklist status for SPPD
  * @param {number} sppdId - SPPD ID
- * @returns {Promise<{isComplete: boolean, checklist: object|null, missingDocs: string[]}>}
+ * @returns {Promise<{isComplete: boolean, checklist: object|null, missingDocs: string[], mandatoryMissing: string[], optionalMissing: string[]}>}
  */
 export async function getSppdChecklistStatus(sppdId) {
   const checklist = await db.checklistSPJ.where('sppdId').equals(sppdId).first()
@@ -19,15 +19,33 @@ export async function getSppdChecklistStatus(sppdId) {
       isComplete: false,
       checklist: null,
       missingDocs: ['Checklist SPJ belum dibuat'],
-      completionPercent: 0
+      mandatoryMissing: ['Checklist SPJ belum dibuat'],
+      optionalMissing: [],
+      completionPercent: 0,
+      totalMandatory: 0,
+      totalOptional: 0
     }
   }
 
   const missingDocs = []
+  const mandatoryMissing = []
+  const optionalMissing = []
+  let totalMandatory = 0
+  let totalOptional = 0
+
   if (checklist.items && Array.isArray(checklist.items)) {
     checklist.items.forEach(item => {
-      if (item.wajib && !item.checked) {
-        missingDocs.push(item.nama)
+      if (item.wajib) {
+        totalMandatory++
+        if (!item.checked) {
+          missingDocs.push(item.nama)
+          mandatoryMissing.push(item.nama)
+        }
+      } else {
+        totalOptional++
+        if (!item.checked) {
+          optionalMissing.push(item.nama)
+        }
       }
     })
   }
@@ -41,7 +59,12 @@ export async function getSppdChecklistStatus(sppdId) {
     isComplete,
     checklist,
     missingDocs,
-    completionPercent
+    mandatoryMissing,
+    optionalMissing,
+    completionPercent,
+    totalMandatory,
+    totalOptional,
+    lastUpdated: checklist.updatedAt || checklist.createdAt
   }
 }
 
@@ -49,7 +72,7 @@ export async function getSppdChecklistStatus(sppdId) {
  * Get checklist status for Swakelola Kegiatan
  * @param {number} kegiatanId - Kegiatan Swakelola ID
  * @param {number} rampungId - Optional Rampung ID for more specific check
- * @returns {Promise<{isComplete: boolean, checklist: object|null, missingDocs: string[]}>}
+ * @returns {Promise<{isComplete: boolean, checklist: object|null, missingDocs: string[], mandatoryMissing: string[], optionalMissing: string[]}>}
  */
 export async function getSwakelolaChecklistStatus(kegiatanId, rampungId = null) {
   let query = db.swakelolaChecklist.where('kegiatanId').equals(kegiatanId)
@@ -71,15 +94,33 @@ export async function getSwakelolaChecklistStatus(kegiatanId, rampungId = null) 
       isComplete: false,
       checklist: null,
       missingDocs: ['Checklist SPJ Swakelola belum dibuat'],
-      completionPercent: 0
+      mandatoryMissing: ['Checklist SPJ Swakelola belum dibuat'],
+      optionalMissing: [],
+      completionPercent: 0,
+      totalMandatory: 0,
+      totalOptional: 0
     }
   }
 
   const missingDocs = []
+  const mandatoryMissing = []
+  const optionalMissing = []
+  let totalMandatory = 0
+  let totalOptional = 0
+
   if (checklist.items && Array.isArray(checklist.items)) {
     checklist.items.forEach(item => {
-      if (item.wajib && !item.ada) {
-        missingDocs.push(item.nama)
+      if (item.wajib) {
+        totalMandatory++
+        if (!item.ada) {
+          missingDocs.push(item.nama)
+          mandatoryMissing.push(item.nama)
+        }
+      } else {
+        totalOptional++
+        if (!item.ada) {
+          optionalMissing.push(item.nama)
+        }
       }
     })
   }
@@ -93,7 +134,12 @@ export async function getSwakelolaChecklistStatus(kegiatanId, rampungId = null) 
     isComplete,
     checklist,
     missingDocs,
-    completionPercent
+    mandatoryMissing,
+    optionalMissing,
+    completionPercent,
+    totalMandatory,
+    totalOptional,
+    lastUpdated: checklist.updatedAt || checklist.createdAt
   }
 }
 
@@ -141,10 +187,26 @@ export async function getPjlpChecklistStatus(pjlpId, kontrakId, bulan, tahun) {
 
 function processChecklistResult(checklist) {
   const missingDocs = []
+  const mandatoryMissing = []
+  const optionalMissing = []
+  let totalMandatory = 0
+  let totalOptional = 0
+
   if (checklist.items && Array.isArray(checklist.items)) {
     checklist.items.forEach(item => {
-      if (item.wajib && !item.ada && !item.checked) {
-        missingDocs.push(item.nama)
+      const isChecked = item.ada || item.checked
+
+      if (item.wajib) {
+        totalMandatory++
+        if (!isChecked) {
+          missingDocs.push(item.nama)
+          mandatoryMissing.push(item.nama)
+        }
+      } else {
+        totalOptional++
+        if (!isChecked) {
+          optionalMissing.push(item.nama)
+        }
       }
     })
   }
@@ -158,7 +220,12 @@ function processChecklistResult(checklist) {
     isComplete,
     checklist,
     missingDocs,
-    completionPercent
+    mandatoryMissing,
+    optionalMissing,
+    completionPercent,
+    totalMandatory,
+    totalOptional,
+    lastUpdated: checklist.updatedAt || checklist.createdAt
   }
 }
 
