@@ -81,7 +81,8 @@ export class SwakelolaPaymentGenerator {
   constructor() {
     this.templates = {
       nominatif: path.resolve(__dirname, '../../templates/documents/DaftarNominatifSwakelola.template.html'),
-      rekapPajak: path.resolve(__dirname, '../../templates/documents/RekapitulasiPajakSwakelola.template.html')
+      rekapPajak: path.resolve(__dirname, '../../templates/documents/RekapitulasiPajakSwakelola.template.html'),
+      kuitansi: path.resolve(__dirname, '../../templates/documents/KuitansiSwakelola.template.html')
     }
     this.compiledTemplates = {}
 
@@ -108,7 +109,7 @@ export class SwakelolaPaymentGenerator {
    * @returns {Promise<void>}
    */
   async loadTemplates() {
-    if (Object.keys(this.compiledTemplates).length === 2) return
+    if (Object.keys(this.compiledTemplates).length === 3) return
 
     try {
       for (const [key, templatePath] of Object.entries(this.templates)) {
@@ -219,6 +220,180 @@ export class SwakelolaPaymentGenerator {
         masterDataId: masterData.masterId || masterData.id
       }
     }
+  }
+
+  /**
+   * Generate kuitansi for single supplier
+   *
+   * @param {Object} masterData - Master data kegiatan swakelola
+   * @param {Object} supplier - Processed supplier with tax calculations
+   * @param {Object} options - Generation options
+   * @returns {Promise<Object>} Kuitansi document
+   */
+  async generateKuitansiPerSupplier(masterData, supplier, options = {}) {
+    await this.loadTemplates()
+
+    // Get fiscal year context
+    const tahunAnggaran = options.tahunAnggaran || fiscalYearContext.getActiveYear()
+    const isReconstruction = options.isReconstruction || fiscalYearContext.isReconstructionMode()
+
+    // If supplier hasn't been processed with tax, calculate it
+    const processedSupplier = supplier.pph !== undefined
+      ? supplier
+      : this._calculateSupplierTax(supplier)
+
+    // Prepare kuitansi data
+    const data = {
+      // Kop Satker
+      logo_satker: masterData.logo_satker || '/assets/logo-kkp.png',
+      nama_unit_eselon1: masterData.nama_unit_eselon1 || 'DIREKTORAT JENDERAL ...',
+      nama_satuan_kerja: masterData.nama_satuan_kerja || masterData.satkerNama || '',
+      nama_satker: masterData.satkerNama || masterData.nama_satker || '',
+      alamat_satker: masterData.alamat_satker || '',
+      telepon: masterData.telepon || '',
+      email: masterData.email || '',
+
+      // Document info
+      tahun_anggaran: tahunAnggaran,
+      nomor_kuitansi: this._generateNomorKuitansi(masterData, processedSupplier, tahunAnggaran),
+
+      // Kegiatan info
+      nama_kegiatan: masterData.namaKegiatan || masterData.nama_kegiatan || '',
+      kode_kegiatan: masterData.kodeKegiatan || masterData.kode_kegiatan || '',
+      bulan_pembayaran: masterData.bulanPembayaran || this._getCurrentMonth(),
+
+      // Supplier info
+      nama_penyedia: processedSupplier.nama_penyedia,
+      npwp: processedSupplier.npwp !== '-' ? processedSupplier.npwp : null,
+      alamat_penyedia: processedSupplier.alamat_penyedia || processedSupplier.alamat || '',
+      uraian: processedSupplier.uraian,
+
+      // Amount info
+      nilai_bruto: this._formatCurrency(processedSupplier.nilai_bruto),
+      pph: this._formatCurrency(processedSupplier.pph),
+      ppn: processedSupplier.ppn > 0 ? this._formatCurrency(processedSupplier.ppn) : null,
+      nilai_netto: this._formatCurrency(processedSupplier.nilai_netto),
+      terbilang_netto: this._numberToWords(processedSupplier.nilai_netto),
+
+      // Tax info
+      jenis_pajak: processedSupplier.jenis_pajak,
+      tarif_pajak: processedSupplier.tarif_pajak,
+      has_npwp: processedSupplier.has_npwp,
+
+      // Pejabat
+      nama_ppk: masterData.ppkNama || masterData.nama_ppk || '',
+      nip_ppk: masterData.ppkNip || masterData.nip_ppk || '',
+      nama_bendahara: masterData.bendaharaNama || masterData.nama_bendahara || '',
+      nip_bendahara: masterData.bendaharaNip || masterData.nip_bendahara || '',
+
+      // Location & Date
+      kota: masterData.kota || masterData.kotaSatker || 'Jakarta',
+      tanggal: this._formatTanggalSurat(masterData.tanggalPembayaran || new Date()),
+
+      // FASE 4.5
+      tahunAnggaran,
+      isReconstruction,
+      reconstructionDate: isReconstruction ? this._formatTanggalSurat(new Date()) : null
+    }
+
+    // Generate HTML
+    const html = this.compiledTemplates.kuitansi(data)
+
+    return {
+      type: 'KUITANSI_SWAKELOLA',
+      title: `Kuitansi Swakelola - ${processedSupplier.nama_penyedia}`,
+      html,
+      data,
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        tahunAnggaran,
+        isReconstruction,
+        supplierName: processedSupplier.nama_penyedia,
+        nilaiNetto: processedSupplier.nilai_netto,
+        materai: true
+      }
+    }
+  }
+
+  /**
+   * Generate ALL kuitansi for all suppliers
+   *
+   * @param {Object} masterData - Master data kegiatan swakelola
+   * @param {Array<Object>} suppliers - Array of suppliers (raw or processed)
+   * @param {Object} options - Generation options
+   * @returns {Promise<Array<Object>>} Array of kuitansi documents
+   */
+  async generateAllKuitansi(masterData, suppliers, options = {}) {
+    await this.loadTemplates()
+
+    console.log(`[SwakelolaPaymentGenerator] Generating ${suppliers.length} kuitansi`)
+
+    const kuitansiDocs = []
+
+    for (const supplier of suppliers) {
+      const kuitansi = await this.generateKuitansiPerSupplier(masterData, supplier, options)
+      kuitansiDocs.push(kuitansi)
+    }
+
+    console.log(`[SwakelolaPaymentGenerator] ${kuitansiDocs.length} kuitansi generated`)
+
+    return kuitansiDocs
+  }
+
+  /**
+   * Generate COMPLETE package (Nominatif + Rekap Pajak + ALL Kuitansi)
+   *
+   * @param {Object} masterData - Master data kegiatan swakelola
+   * @param {Array<Object>} suppliers - Array of suppliers
+   * @param {Object} options - Generation options
+   * @returns {Promise<Object>} Complete package with all documents
+   */
+  async generateCompletePackage(masterData, suppliers, options = {}) {
+    console.log('[SwakelolaPaymentGenerator] Generating COMPLETE package')
+
+    // Generate main documents (Nominatif + Rekap Pajak)
+    const mainPackage = await this.generate(masterData, suppliers, options)
+
+    // Generate all kuitansi
+    // Use processed suppliers from mainPackage to avoid recalculation
+    const processedSuppliers = suppliers.map(s => this._calculateSupplierTax(s))
+    const allKuitansi = await this.generateAllKuitansi(masterData, processedSuppliers, options)
+
+    return {
+      type: 'SWAKELOLA_COMPLETE_PACKAGE',
+      title: `Paket Lengkap Swakelola - ${mainPackage.title}`,
+      documents: {
+        nominatif: mainPackage.documents.nominatif,
+        rekapPajak: mainPackage.documents.rekapPajak,
+        kuitansi: allKuitansi  // Array of all kuitansi
+      },
+      summary: mainPackage.summary,
+      taxBreakdown: mainPackage.taxBreakdown,
+      metadata: {
+        ...mainPackage.metadata,
+        totalDocuments: 2 + allKuitansi.length  // Nominatif + Rekap + Kuitansi
+      }
+    }
+  }
+
+  /**
+   * Generate nomor kuitansi for supplier
+   * @private
+   */
+  _generateNomorKuitansi(masterData, supplier, tahunAnggaran) {
+    if (masterData.nomorKuitansi || masterData.nomor_kuitansi) {
+      return masterData.nomorKuitansi || masterData.nomor_kuitansi
+    }
+
+    // Auto-generate format: KUIT-SWKL-{sequence}/{kode_satker}/{bulan}/{tahun}
+    const sequence = masterData.sequence || '001'
+    const kodeSatker = masterData.satkerKode || 'XXXX'
+    const bulan = this._toRoman(new Date().getMonth() + 1)
+
+    // Add supplier index if available
+    const supplierIndex = supplier.index ? `-${String(supplier.index).padStart(3, '0')}` : ''
+
+    return `KUIT-SWKL-${sequence}${supplierIndex}/${kodeSatker}/${bulan}/${tahunAnggaran}`
   }
 
   /**
@@ -549,6 +724,23 @@ export class SwakelolaPaymentGenerator {
     ]
 
     return `${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`
+  }
+
+  _toRoman(num) {
+    const lookup = {
+      M: 1000, CM: 900, D: 500, CD: 400,
+      C: 100, XC: 90, L: 50, XL: 40,
+      X: 10, IX: 9, V: 5, IV: 4, I: 1
+    }
+
+    let roman = ''
+    for (let i in lookup) {
+      while (num >= lookup[i]) {
+        roman += i
+        num -= lookup[i]
+      }
+    }
+    return roman
   }
 }
 
