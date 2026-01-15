@@ -385,25 +385,27 @@ describe('SPR Template', () => {
 
 ## ✅ Template Completion Status
 
-### Implemented
+### Implemented ✅ (9 templates)
 - [x] SPR (Surat Pendebitan Rekening)
 - [x] SPPR (Surat Perintah Pendebitan Rekening)
 - [x] Berita Acara Pembayaran
+- [x] PPHP (Pemeriksaan Hasil Pekerjaan) ⭐ NEW
+- [x] BAST (Berita Acara Serah Terima) ⭐ NEW
+- [x] Tanda Terima UP/TUP ⭐ NEW
+- [x] RPD (Rencana Penarikan Dana) Bulanan ⭐ NEW
 - [x] SPJ Package Cover
 - [x] SPJ Package Lembar Pengesahan
 
-### Planned
-- [ ] PPHP (Pemeriksaan Hasil Pekerjaan)
-- [ ] BAST (Berita Acara Serah Terima)
+### In Progress 🚧
+- [ ] Template Registry System (index.js) ⭐ NEW - Implemented but needs documentation
+
+### Planned 📋 (5 templates)
 - [ ] Kuitansi
-- [ ] Invoice
 - [ ] SPBy (Surat Perintah Bayar)
 - [ ] SPTJB (Surat Pernyataan Tanggung Jawab Belanja)
-- [ ] RPD (Rencana Penarikan Dana)
-- [ ] Tanda Terima UP/TUP
 - [ ] SSP (Bukti Setor Pajak)
-- [ ] Daftar Isi Otomatis
-- [ ] Kronologi Administratif
+- [ ] Daftar Isi Otomatis (auto-generated)
+- [ ] Kronologi Administratif (auto-generated)
 
 ---
 
