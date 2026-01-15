@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daftar Nominatif Pembayaran Swakelola - {{nama_kegiatan}}</title>
+  <style>
+    @page {
+      size: A4 landscape;
+      margin: 1.5cm;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .no-print {
+        display: none;
+      }
+    }
+
+    body {
+      font-family: "Times New Roman", serif;
+      font-size: 10pt;
+      line-height: 1.4;
+      margin: 1.5cm;
+      color: #000;
+    }
+
+    /* KOP SURAT */
+    .kop {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .kop-logo {
+      height: 60px;
+      margin-bottom: 8px;
+    }
+
+    .kop-text {
+      font-weight: bold;
+      line-height: 1.2;
+    }
+
+    .kop-title {
+      font-size: 12pt;
+      text-transform: uppercase;
+    }
+
+    .kop-subtitle {
+      font-size: 10pt;
+    }
+
+    .kop-line {
+      border: none;
+      border-bottom: 3px solid #000;
+      margin: 8px 0 15px 0;
+    }
+
+    /* JUDUL DOKUMEN */
+    .document-title {
+      text-align: center;
+      margin: 20px 0 15px 0;
+    }
+
+    .document-title h1 {
+      font-size: 12pt;
+      font-weight: bold;
+      text-decoration: underline;
+      margin: 0 0 8px 0;
+      text-transform: uppercase;
+    }
+
+    .document-subtitle {
+      font-size: 10pt;
+      margin: 5px 0;
+    }
+
+    /* DETAIL KEGIATAN */
+    .kegiatan-detail {
+      margin: 15px 0;
+      font-size: 10pt;
+    }
+
+    .detail-row {
+      display: flex;
+      margin: 3px 0;
+    }
+
+    .detail-label {
+      width: 180px;
+      font-weight: bold;
+    }
+
+    .detail-separator {
+      width: 20px;
+    }
+
+    .detail-value {
+      flex: 1;
+    }
+
+    /* TABEL NOMINATIF */
+    .nominatif-table-container {
+      margin: 20px 0;
+    }
+
+    .nominatif-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9pt;
+    }
+
+    .nominatif-table th,
+    .nominatif-table td {
+      border: 1px solid #000;
+      padding: 6px 4px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .nominatif-table th {
+      background-color: #d0d0d0;
+      font-weight: bold;
+      font-size: 9pt;
+    }
+
+    .nominatif-table .col-no {
+      width: 30px;
+    }
+
+    .nominatif-table .col-nama {
+      width: 150px;
+      text-align: left;
+      padding-left: 6px;
+    }
+
+    .nominatif-table .col-npwp {
+      width: 120px;
+      font-size: 8pt;
+    }
+
+    .nominatif-table .col-uraian {
+      width: 180px;
+      text-align: left;
+      padding-left: 6px;
+      font-size: 8pt;
+    }
+
+    .nominatif-table .col-bruto {
+      width: 90px;
+      text-align: right;
+      padding-right: 6px;
+    }
+
+    .nominatif-table .col-pph {
+      width: 80px;
+      text-align: right;
+      padding-right: 6px;
+    }
+
+    .nominatif-table .col-ppn {
+      width: 80px;
+      text-align: right;
+      padding-right: 6px;
+    }
+
+    .nominatif-table .col-netto {
+      width: 90px;
+      text-align: right;
+      padding-right: 6px;
+      font-weight: bold;
+    }
+
+    .nominatif-table .col-ttd {
+      width: 120px;
+      font-size: 8pt;
+    }
+
+    .nominatif-table .row-total {
+      background-color: #e8e8e8;
+      font-weight: bold;
+      font-size: 10pt;
+    }
+
+    .nominatif-table .amount {
+      text-align: right;
+      padding-right: 6px;
+    }
+
+    /* REKAPITULASI BOX */
+    .rekap-box {
+      margin: 20px auto;
+      max-width: 500px;
+      padding: 15px;
+      border: 2px solid #000;
+      background-color: #fffacd;
+    }
+
+    .rekap-title {
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 11pt;
+    }
+
+    .rekap-table {
+      width: 100%;
+      font-size: 10pt;
+    }
+
+    .rekap-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 5px 0;
+      padding: 5px;
+      border-bottom: 1px dotted #999;
+    }
+
+    .rekap-row.total {
+      font-weight: bold;
+      font-size: 11pt;
+      border-top: 2px solid #000;
+      border-bottom: 2px solid #000;
+      margin-top: 10px;
+      background-color: #fff;
+    }
+
+    .rekap-label {
+      font-weight: bold;
+    }
+
+    .rekap-value {
+      text-align: right;
+    }
+
+    /* TANDA TANGAN - 2 PIHAK */
+    .signature-container {
+      margin-top: 30px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .signature-box {
+      width: 45%;
+      text-align: center;
+    }
+
+    .signature-title {
+      margin-bottom: 5px;
+      font-weight: bold;
+      font-size: 10pt;
+    }
+
+    .signature-space {
+      height: 60px;
+      border: 1px dashed #ccc;
+      margin: 8px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      font-size: 9pt;
+    }
+
+    .signature-name {
+      font-weight: bold;
+      text-decoration: underline;
+      margin-top: 5px;
+      font-size: 10pt;
+    }
+
+    .signature-nip {
+      margin-top: 2px;
+      font-size: 9pt;
+    }
+
+    /* CATATAN KAKI */
+    .footer-note {
+      margin-top: 20px;
+      font-size: 9pt;
+      font-style: italic;
+    }
+
+    .footer-note ul {
+      margin: 5px 0;
+      padding-left: 20px;
+    }
+
+    /* WATERMARK */
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 60pt;
+      font-weight: bold;
+      color: rgba(255, 0, 0, 0.12);
+      z-index: -1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .watermark-footer {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 7pt;
+      color: #999;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+<!-- WATERMARK (if reconstruction) -->
+{{#if isReconstruction}}
+<div class="watermark">REKONSTRUKSI ADMINISTRASI TA {{tahunAnggaran}}</div>
+<div class="watermark-footer">
+  Dokumen ini hasil rekonstruksi administrasi tanggal {{reconstructionDate}} - Bukan dokumen asli tahun berjalan
+</div>
+{{/if}}
+
+<!-- KOP SURAT -->
+<div class="kop">
+  {{#if logo_satker}}
+  <img src="{{logo_satker}}" alt="Logo KKP" class="kop-logo">
+  {{/if}}
+
+  <div class="kop-text">
+    <div class="kop-title">KEMENTERIAN KELAUTAN DAN PERIKANAN</div>
+    <div class="kop-subtitle">{{nama_unit_eselon1}}</div>
+    <div class="kop-subtitle">{{nama_satuan_kerja}}</div>
+  </div>
+
+  <hr class="kop-line">
+</div>
+
+<!-- JUDUL DOKUMEN -->
+<div class="document-title">
+  <h1>DAFTAR NOMINATIF PEMBAYARAN SWAKELOLA</h1>
+  <div class="document-subtitle">TAHUN ANGGARAN {{tahun_anggaran}}</div>
+</div>
+
+<!-- DETAIL KEGIATAN -->
+<div class="kegiatan-detail">
+  <div class="detail-row">
+    <span class="detail-label">Nama Kegiatan</span>
+    <span class="detail-separator">:</span>
+    <span class="detail-value">{{nama_kegiatan}}</span>
+  </div>
+  <div class="detail-row">
+    <span class="detail-label">Kode Kegiatan</span>
+    <span class="detail-separator">:</span>
+    <span class="detail-value">{{kode_kegiatan}}</span>
+  </div>
+  <div class="detail-row">
+    <span class="detail-label">Satuan Kerja</span>
+    <span class="detail-separator">:</span>
+    <span class="detail-value">{{nama_satker}}</span>
+  </div>
+  <div class="detail-row">
+    <span class="detail-label">Bulan Pembayaran</span>
+    <span class="detail-separator">:</span>
+    <span class="detail-value">{{bulan_pembayaran}}</span>
+  </div>
+</div>
+
+<!-- TABEL NOMINATIF -->
+<div class="nominatif-table-container">
+  <table class="nominatif-table">
+    <thead>
+      <tr>
+        <th rowspan="2" class="col-no">No</th>
+        <th rowspan="2" class="col-nama">Nama Penyedia/<br>Pemasok</th>
+        <th rowspan="2" class="col-npwp">NPWP</th>
+        <th rowspan="2" class="col-uraian">Uraian Barang/Jasa</th>
+        <th rowspan="2" class="col-bruto">Nilai Bruto<br>(Rp)</th>
+        <th colspan="2">Potongan Pajak</th>
+        <th rowspan="2" class="col-netto">Nilai Netto<br>(Rp)</th>
+        <th rowspan="2" class="col-ttd">Tanda Tangan</th>
+      </tr>
+      <tr>
+        <th class="col-pph">PPh (Rp)</th>
+        <th class="col-ppn">PPN (Rp)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each suppliers}}
+      <tr>
+        <td class="col-no">{{increment @index}}</td>
+        <td class="col-nama">{{this.nama_penyedia}}</td>
+        <td class="col-npwp">{{this.npwp}}</td>
+        <td class="col-uraian">{{this.uraian}}</td>
+        <td class="col-bruto amount">{{formatCurrency this.nilai_bruto}}</td>
+        <td class="col-pph amount">{{formatCurrency this.pph}}</td>
+        <td class="col-ppn amount">{{formatCurrency this.ppn}}</td>
+        <td class="col-netto amount">{{formatCurrency this.nilai_netto}}</td>
+        <td class="col-ttd">(tanda tangan)</td>
+      </tr>
+      {{/each}}
+
+      <!-- ROW TOTAL -->
+      <tr class="row-total">
+        <td colspan="4" style="text-align: center;"><strong>JUMLAH TOTAL</strong></td>
+        <td class="amount">{{total_bruto}}</td>
+        <td class="amount">{{total_pph}}</td>
+        <td class="amount">{{total_ppn}}</td>
+        <td class="amount">{{total_netto}}</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- REKAPITULASI BOX -->
+<div class="rekap-box">
+  <div class="rekap-title">REKAPITULASI PEMBAYARAN</div>
+
+  <div class="rekap-table">
+    <div class="rekap-row">
+      <span class="rekap-label">Total Nilai Bruto</span>
+      <span class="rekap-value">Rp {{total_bruto}}</span>
+    </div>
+    <div class="rekap-row">
+      <span class="rekap-label">Total Potongan PPh</span>
+      <span class="rekap-value">( Rp {{total_pph}} )</span>
+    </div>
+    <div class="rekap-row">
+      <span class="rekap-label">Total Potongan PPN</span>
+      <span class="rekap-value">( Rp {{total_ppn}} )</span>
+    </div>
+    <div class="rekap-row total">
+      <span class="rekap-label">Total Dibayarkan (Netto)</span>
+      <span class="rekap-value">Rp {{total_netto}}</span>
+    </div>
+  </div>
+
+  <div style="margin-top: 10px; font-size: 9pt; text-align: center; font-style: italic;">
+    ({{terbilang_total_netto}})
+  </div>
+</div>
+
+<!-- CATATAN KAKI -->
+<div class="footer-note">
+  <strong>Catatan:</strong>
+  <ul>
+    <li>Daftar nominatif ini merupakan lampiran dari SPM/SP2D Swakelola</li>
+    <li>Setiap penyedia wajib menandatangani pada kolom yang tersedia</li>
+    <li>Pajak akan dipotong sesuai ketentuan perpajakan yang berlaku</li>
+    <li>Pembayaran dilakukan melalui transfer ke rekening masing-masing penyedia</li>
+  </ul>
+</div>
+
+<!-- TANDA TANGAN - 2 PIHAK -->
+<div class="signature-container">
+  <!-- Bendahara (Kiri) -->
+  <div class="signature-box">
+    <div class="signature-title">Bendahara Pengeluaran</div>
+    <div class="signature-space">(tanda tangan)</div>
+    <div class="signature-name">{{nama_bendahara}}</div>
+    <div class="signature-nip">NIP. {{nip_bendahara}}</div>
+  </div>
+
+  <!-- PPK (Kanan) -->
+  <div class="signature-box">
+    <div class="signature-title">{{kota}}, {{tanggal}}</div>
+    <div class="signature-title">Pejabat Pembuat Komitmen</div>
+    <div class="signature-space">(tanda tangan)</div>
+    <div class="signature-name">{{nama_ppk}}</div>
+    <div class="signature-nip">NIP. {{nip_ppk}}</div>
+  </div>
+</div>
+
+</body>
+</html>
